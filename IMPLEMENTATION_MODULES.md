@@ -98,6 +98,20 @@ Implement role/permission checks.
 
 **Done when:** Users cannot perform actions outside their permissions.
 
+## M07A — Authentication UI
+Build the login and logout experience using the existing authentication APIs.
+
+Include:
+
+- Login form connected to `POST /api/auth/login`
+- Logout action connected to `POST /api/auth/logout`
+- Registration and login views that users can switch between
+- A basic signed-in landing view; patient dashboard features remain in M10
+- Loading, validation, API error and success states
+- Keep the access token in memory only; do not store it in `localStorage` or `sessionStorage`
+
+**Done when:** A user can register, log in, see the signed-in view, log out, and return to the login view. Reloading the page ends the browser-side session and requires logging in again.
+
 ---
 
 # FR-03 — PATIENT MANAGEMENT

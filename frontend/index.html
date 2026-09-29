@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -106,55 +106,60 @@
     </div>
 
     <script>
-      const button = document.getElementById('checkHealth');
-      const result = document.getElementById('result');
-      const registerForm = document.getElementById('registerForm');
-      const registerMessage = document.getElementById('registerMessage');
+      const button = document.getElementById("checkHealth");
+      const result = document.getElementById("result");
+      const registerForm = document.getElementById("registerForm");
+      const registerMessage = document.getElementById("registerMessage");
 
-      button.addEventListener('click', async () => {
+      button.addEventListener("click", async () => {
         try {
-          const response = await fetch('http://127.0.0.1:5000/api/health');
+          const response = await fetch("http://127.0.0.1:5000/api/health");
           const data = await response.json();
           result.textContent = JSON.stringify(data, null, 2);
         } catch (error) {
-          result.textContent = 'Backend not reachable. Start the Flask API first.';
+          result.textContent =
+            "Backend not reachable. Start the Flask API first.";
         }
       });
 
-      registerForm.addEventListener('submit', async (event) => {
+      registerForm.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         const payload = {
-          first_name: document.getElementById('first_name').value,
-          last_name: document.getElementById('last_name').value,
-          email: document.getElementById('email').value,
-          password: document.getElementById('password').value,
+          first_name: document.getElementById("first_name").value,
+          last_name: document.getElementById("last_name").value,
+          email: document.getElementById("email").value,
+          password: document.getElementById("password").value,
         };
 
-        registerMessage.textContent = 'Creating account...';
-        registerMessage.className = 'message-box';
+        registerMessage.textContent = "Creating account...";
+        registerMessage.className = "message-box";
 
         try {
-          const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          const response = await fetch(
+            "http://127.0.0.1:5000/api/auth/register",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
             },
-            body: JSON.stringify(payload),
-          });
+          );
 
           const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.error || 'Registration failed');
+            throw new Error(data.error || "Registration failed");
           }
 
-          registerMessage.textContent = 'Registration successful. User created.';
-          registerMessage.classList.add('success');
+          registerMessage.textContent =
+            "Registration successful. User created.";
+          registerMessage.classList.add("success");
           registerForm.reset();
         } catch (error) {
           registerMessage.textContent = error.message;
-          registerMessage.classList.add('error');
+          registerMessage.classList.add("error");
         }
       });
     </script>

@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 
 import jwt
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from backend.auth import require_auth
 from backend.extensions import db
-from backend.models.user import User
+from backend.models import RevokedToken, User
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -27,6 +29,7 @@ def login_user():
     token = jwt.encode(
         {
             "sub": str(user.id),
+            "jti": str(uuid4()),
             "email": user.email,
             "role": user.role,
             "iat": now,
@@ -48,6 +51,37 @@ def login_user():
                 "email": user.email,
                 "role": user.role,
             },
+        }
+    ), 200
+
+
+@auth_bp.post("/auth/logout")
+@require_auth
+def logout_user():
+    claims = g.token_claims
+    revoked_token = RevokedToken(
+        jti=claims["jti"],
+        expires_at=datetime.fromtimestamp(claims["exp"], timezone.utc),
+    )
+    db.session.add(revoked_token)
+    db.session.commit()
+
+    return jsonify({"message": "Logged out successfully"}), 200
+
+
+@auth_bp.get("/auth/me")
+@require_auth
+def current_user():
+    user = g.current_user
+    return jsonify(
+        {
+            "user": {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "role": user.role,
+            }
         }
     ), 200
 

@@ -49,6 +49,7 @@ def test_login_returns_access_token_for_valid_credentials(client):
         algorithms=["HS256"],
     )
     assert claims["sub"] == str(data["user"]["id"])
+    assert claims["jti"]
     assert claims["email"] == "sam@example.com"
     assert claims["role"] == "patient"
 
