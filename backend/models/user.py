@@ -20,6 +20,7 @@ class User(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+    patients = db.relationship("Patient", back_populates="created_by")
 
     def __repr__(self):
         return f"<User {self.email}>"

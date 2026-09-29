@@ -4,164 +4,717 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Medical AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
+      rel="stylesheet"
+    />
     <style>
+      :root {
+        color-scheme: light;
+        --paper: #f1f3ed;
+        --surface: #ffffff;
+        --ink: #202b25;
+        --muted: #68746c;
+        --line: #dce3db;
+        --forest: #235744;
+        --forest-dark: #193f34;
+        --mint: #dce9d8;
+        --error: #a63832;
+        --success: #276847;
+      }
+      * { box-sizing: border-box; }
       body {
-        font-family: Arial, sans-serif;
-        max-width: 960px;
-        margin: 60px auto;
-        padding: 24px;
-        color: #1f2937;
+        min-height: 100vh;
+        margin: 0;
+        padding: 28px;
+        color: var(--ink);
+        background-color: var(--paper);
+        background-image: linear-gradient(rgba(35, 87, 68, .035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(35, 87, 68, .035) 1px, transparent 1px);
+        background-size: 28px 28px;
+        font-family: "DM Sans", "Segoe UI", sans-serif;
       }
-      .card {
-        background: #f8fafc;
-        border: 1px solid #dbe2ea;
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 24px;
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+      [hidden] { display: none !important; }
+      .page { width: min(100%, 1020px); margin: 0 auto; }
+      .topbar {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 4px 0 22px;
       }
-      .register-card {
-        margin-top: 20px;
+      .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; }
+      .brand-mark {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 9px;
+        color: white;
+        background: var(--forest);
+        font-size: 12px;
+        letter-spacing: 0;
       }
-      .field-group {
+      .api-status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+      .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #c58d38; }
+      .api-status.online .status-dot { background: #3c8a5d; }
+      .api-status.offline .status-dot { background: #bd4942; }
+      .auth-layout, .signed-in {
+        min-height: 580px;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(280px, .9fr) minmax(390px, 1.1fr);
+        border: 1px solid rgba(32, 43, 37, .12);
+        border-radius: 10px;
+        background: var(--surface);
+        box-shadow: 0 24px 70px rgba(29, 53, 42, .09);
+      }
+      .identity-panel {
+        position: relative;
         display: flex;
         flex-direction: column;
-        margin-bottom: 14px;
+        justify-content: space-between;
+        padding: 46px 42px;
+        color: #f5f7f0;
+        background-color: var(--forest-dark);
+        background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+        background-size: 30px 30px;
       }
-      label {
-        margin-bottom: 6px;
+      .identity-kicker { margin: 0; color: #c9d9c8; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+      .identity-panel h1 {
+        max-width: 360px;
+        margin: 26px 0 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 40px;
+        font-weight: 500;
+        line-height: 1.12;
+      }
+      .identity-note { max-width: 290px; margin: 22px 0 0; color: #d3ded4; line-height: 1.65; }
+      .identity-footer { color: #c2d1c3; font-size: 12px; }
+      .form-panel { padding: 48px clamp(28px, 6vw, 68px); }
+      .view-switch {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        margin-bottom: 40px;
+        padding: 4px;
+        border-radius: 7px;
+        background: #f0f3ef;
+      }
+      .view-switch button {
+        min-height: 40px;
+        border: 0;
+        border-radius: 5px;
+        color: var(--muted);
+        background: transparent;
         font-weight: 600;
       }
+      .view-switch button[aria-selected="true"] {
+        color: var(--ink);
+        background: white;
+        box-shadow: 0 1px 4px rgba(24, 42, 31, .12);
+      }
+      .form-panel h2, .signed-content h2 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 32px;
+        font-weight: 500;
+        line-height: 1.2;
+      }
+      .form-intro { margin: 9px 0 28px; color: var(--muted); line-height: 1.55; }
+      .field-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 17px; }
+      label { font-size: 13px; font-weight: 600; }
       input {
+        width: 100%;
+        min-height: 46px;
         padding: 10px 12px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        font-size: 1rem;
+        border: 1px solid #cbd6cd;
+        border-radius: 5px;
+        outline: none;
+        color: var(--ink);
+        background: #fff;
       }
-      button {
-        background: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 0.98rem;
+      input:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(35, 87, 68, .12); }
+      .primary-button {
+        width: 100%;
+        min-height: 46px;
+        margin-top: 7px;
+        border: 0;
+        border-radius: 5px;
+        color: #fff;
+        background: var(--forest);
+        font-weight: 700;
       }
-      .message-box {
-        margin-top: 14px;
-        padding: 10px 12px;
-        border-radius: 8px;
-        background: #e2e8f0;
-        color: #1f2937;
+      .primary-button:hover { background: #1a4938; }
+      button:disabled { cursor: wait; opacity: .65; }
+      .message {
+        margin: 0 0 20px;
+        padding: 11px 13px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--muted);
+        background: #f7f9f6;
+        font-size: 14px;
       }
-      .message-box.success {
-        background: #dcfce7;
-        color: #166534;
+      .message.error { border-color: #e7c4c0; color: var(--error); background: #fff7f6; }
+      .message.success { border-color: #c5ddcb; color: var(--success); background: #f4faf5; }
+      .signed-in { display: block; min-height: 500px; }
+      .signed-content { width: 100%; padding: 34px; }
+      .signed-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+      .signed-content h2 { margin-top: 12px; }
+      .signed-email { margin: 10px 0 24px; color: var(--muted); }
+      .role-label { display: inline-block; padding: 5px 9px; border-radius: 4px; color: var(--forest-dark); background: var(--mint); font-size: 12px; font-weight: 700; text-transform: capitalize; }
+      .secondary-button { min-height: 38px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); background: white; font-weight: 600; }
+      .signed-rule { height: 1px; margin: 30px 0 20px; border: 0; background: var(--line); }
+      .patient-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 28px 0 14px; }
+      .patient-toolbar h3 { margin: 0; font-family: "Fraunces", Georgia, serif; font-size: 25px; font-weight: 500; }
+      .patient-count { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+      .small-primary { min-height: 38px; padding: 8px 12px; border: 0; border-radius: 5px; color: white; background: var(--forest); font-weight: 700; }
+      .small-primary:hover { background: #1a4938; }
+      .patient-message { margin: 0 0 14px; }
+      .patient-layout { display: grid; grid-template-columns: minmax(220px, .75fr) minmax(0, 1.25fr); min-height: 310px; border: 1px solid var(--line); border-radius: 6px; }
+      .patient-list-panel { min-width: 0; border-right: 1px solid var(--line); }
+      .patient-list-heading { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+      .patient-list { display: flex; flex-direction: column; }
+      .patient-list-item { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; min-height: 66px; padding: 12px 16px; border: 0; border-bottom: 1px solid #edf0eb; color: var(--ink); background: white; text-align: left; }
+      .patient-list-item:hover, .patient-list-item[aria-current="true"] { background: #f2f6f0; }
+      .patient-list-name { font-weight: 700; }
+      .patient-list-date { color: var(--muted); font-size: 12px; }
+      .patient-list-empty { margin: 0; padding: 18px 16px; color: var(--muted); font-size: 14px; }
+      .patient-detail { min-width: 0; padding: 24px; }
+      .patient-empty { display: grid; min-height: 255px; place-content: center; color: var(--muted); text-align: center; }
+      .patient-empty strong { margin-bottom: 6px; color: var(--ink); font-size: 15px; }
+      .patient-detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+      .patient-detail-header h4 { margin: 0; font-family: "Fraunces", Georgia, serif; font-size: 25px; font-weight: 500; }
+      .patient-detail-meta { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+      .patient-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 26px; }
+      .patient-field { padding: 13px; border: 1px solid var(--line); border-radius: 5px; }
+      .patient-field span { display: block; color: var(--muted); font-size: 12px; }
+      .patient-field strong { display: block; margin-top: 6px; overflow-wrap: anywhere; font-size: 14px; }
+      .patient-form-panel h4 { margin: 0 0 20px; font-family: "Fraunces", Georgia, serif; font-size: 25px; font-weight: 500; }
+      .patient-form-actions { display: flex; gap: 10px; margin-top: 8px; }
+      .patient-form-actions .primary-button { width: auto; flex: 1; margin: 0; }
+      .patient-form-actions .secondary-button { min-width: 90px; }
+      @media (max-width: 700px) {
+        body { padding: 16px; }
+        .auth-layout { grid-template-columns: 1fr; min-height: 0; }
+        .identity-panel { min-height: 210px; padding: 26px; }
+        .identity-panel h1 { max-width: 440px; margin-top: 18px; font-size: 32px; }
+        .identity-note, .identity-footer { display: none; }
+        .form-panel { padding: 28px 24px 34px; }
+        .view-switch { margin-bottom: 28px; }
+        .signed-content { padding: 32px 24px; }
+        .signed-top { flex-direction: column; }
+        .patient-layout { grid-template-columns: 1fr; }
+        .patient-list-panel { border-right: 0; border-bottom: 1px solid var(--line); }
+        .patient-list { max-height: 230px; overflow-y: auto; }
+        .patient-detail { padding: 20px; }
       }
-      .message-box.error {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-      code {
-        background: #e2e8f0;
-        padding: 4px 8px;
-        border-radius: 6px;
+      @media (max-width: 400px) {
+        .api-status { font-size: 11px; }
+        .brand { font-size: 13px; }
+        .identity-panel h1 { font-size: 28px; }
+        .patient-toolbar { align-items: flex-start; flex-direction: column; }
+        .patient-fields { grid-template-columns: 1fr; }
       }
     </style>
   </head>
   <body>
-    <div class="card">
-      <h1>Medical AI Platform</h1>
-      <p>Foundation UI for the backend health check.</p>
-      <button id="checkHealth">Check backend health</button>
-      <pre id="result">Waiting for health check...</pre>
-    </div>
-
-    <div class="card register-card">
-      <h2>Register</h2>
-      <form id="registerForm">
-        <div class="field-group">
-          <label for="first_name">First name</label>
-          <input id="first_name" name="first_name" type="text" required />
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">MR</span>
+          <span>Medical Research Intelligence</span>
         </div>
-
-        <div class="field-group">
-          <label for="last_name">Last name</label>
-          <input id="last_name" name="last_name" type="text" required />
+        <div id="apiStatus" class="api-status" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="apiStatusText">Checking API</span>
         </div>
+      </header>
 
-        <div class="field-group">
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" required />
-        </div>
+      <main id="authView" class="auth-layout">
+        <section class="identity-panel" aria-label="Medical Research Intelligence">
+          <div>
+            <p class="identity-kicker">Medical Research Intelligence</p>
+            <h1>Medical records, research, in context.</h1>
+            <p class="identity-note">A considered workspace for clinical records and research information.</p>
+          </div>
+          <div class="identity-footer">Secure access for your team</div>
+        </section>
 
-        <div class="field-group">
-          <label for="password">Password</label>
-          <input id="password" name="password" type="password" required />
-        </div>
+        <section class="form-panel" aria-label="Account access">
+          <div class="view-switch" role="tablist" aria-label="Account access">
+            <button id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">Sign in</button>
+            <button id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerPanel">Create account</button>
+          </div>
 
-        <button type="submit">Create account</button>
-      </form>
+          <p id="authMessage" class="message" role="status" aria-live="polite" hidden></p>
 
-      <div id="registerMessage" class="message-box"></div>
+          <section id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
+            <h2>Welcome back</h2>
+            <p class="form-intro">Sign in to your account.</p>
+            <form id="loginForm">
+              <div class="field-group">
+                <label for="login_email">Email</label>
+                <input id="login_email" name="email" type="email" autocomplete="email" required />
+              </div>
+              <div class="field-group">
+                <label for="login_password">Password</label>
+                <input id="login_password" name="password" type="password" autocomplete="current-password" required />
+              </div>
+              <button id="loginButton" class="primary-button" type="submit">Sign in</button>
+            </form>
+          </section>
+
+          <section id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
+            <h2>Create your account</h2>
+            <p class="form-intro">Enter your details to get started.</p>
+            <form id="registerForm">
+              <div class="field-group">
+                <label for="first_name">First name</label>
+                <input id="first_name" name="first_name" type="text" autocomplete="given-name" required />
+              </div>
+              <div class="field-group">
+                <label for="last_name">Last name</label>
+                <input id="last_name" name="last_name" type="text" autocomplete="family-name" required />
+              </div>
+              <div class="field-group">
+                <label for="register_email">Email</label>
+                <input id="register_email" name="email" type="email" autocomplete="email" required />
+              </div>
+              <div class="field-group">
+                <label for="register_password">Password</label>
+                <input id="register_password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+              </div>
+              <button id="registerButton" class="primary-button" type="submit">Create account</button>
+            </form>
+          </section>
+        </section>
+      </main>
+
+      <main id="signedInView" class="signed-in" aria-labelledby="signedInHeading" hidden>
+        <section class="signed-content">
+          <div class="signed-top">
+            <div>
+              <p class="identity-kicker">Workspace</p>
+              <h2 id="signedInHeading">You’re signed in</h2>
+              <p id="signedInEmail" class="signed-email"></p>
+              <span id="signedInRole" class="role-label"></span>
+            </div>
+            <button id="logoutButton" class="secondary-button" type="button">Sign out</button>
+          </div>
+          <div class="patient-toolbar">
+            <div>
+              <h3>Patients</h3>
+              <p id="patientCount" class="patient-count">Loading records...</p>
+            </div>
+            <button id="newPatientButton" class="small-primary" type="button">+ New patient</button>
+          </div>
+          <p id="patientMessage" class="message patient-message" role="status" aria-live="polite" hidden></p>
+          <div id="patientsView" class="patient-layout">
+            <section class="patient-list-panel" aria-label="Patient list">
+              <h4 class="patient-list-heading">Patient records</h4>
+              <div id="patientList" class="patient-list"></div>
+            </section>
+            <section id="patientDetail" class="patient-detail" aria-label="Patient details">
+              <div id="patientEmpty" class="patient-empty">
+                <strong>Select a patient</strong>
+                <span>Choose a record to view its details.</span>
+              </div>
+              <div id="patientRecord" hidden>
+                <div class="patient-detail-header">
+                  <div>
+                    <h4 id="patientName"></h4>
+                    <p id="patientDetailMeta" class="patient-detail-meta"></p>
+                  </div>
+                  <button id="editPatientButton" class="secondary-button" type="button">Edit</button>
+                </div>
+                <div class="patient-fields">
+                  <div class="patient-field">
+                    <span>First name</span>
+                    <strong id="patientFirstName"></strong>
+                  </div>
+                  <div class="patient-field">
+                    <span>Last name</span>
+                    <strong id="patientLastName"></strong>
+                  </div>
+                  <div class="patient-field">
+                    <span>Date of birth</span>
+                    <strong id="patientDateOfBirth"></strong>
+                  </div>
+                </div>
+              </div>
+              <div id="patientFormPanel" class="patient-form-panel" hidden>
+                <h4 id="patientFormHeading">New patient</h4>
+                <form id="patientForm">
+                  <div class="field-group">
+                    <label for="patientFirstInput">First name</label>
+                    <input id="patientFirstInput" name="first_name" type="text" maxlength="80" autocomplete="given-name" required />
+                  </div>
+                  <div class="field-group">
+                    <label for="patientLastInput">Last name</label>
+                    <input id="patientLastInput" name="last_name" type="text" maxlength="80" autocomplete="family-name" required />
+                  </div>
+                  <div class="field-group">
+                    <label for="patientDobInput">Date of birth <span>(optional)</span></label>
+                    <input id="patientDobInput" name="date_of_birth" type="date" />
+                  </div>
+                  <div class="patient-form-actions">
+                    <button id="savePatientButton" class="primary-button" type="submit">Save patient</button>
+                    <button id="cancelPatientButton" class="secondary-button" type="button">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
     </div>
 
     <script>
-      const button = document.getElementById("checkHealth");
-      const result = document.getElementById("result");
-      const registerForm = document.getElementById("registerForm");
-      const registerMessage = document.getElementById("registerMessage");
+      const API_BASE = "http://127.0.0.1:5000";
+      let accessToken = null;
 
-      button.addEventListener("click", async () => {
+      const authView = document.getElementById("authView");
+      const signedInView = document.getElementById("signedInView");
+      const authMessage = document.getElementById("authMessage");
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+      const loginTab = document.getElementById("loginTab");
+      const registerTab = document.getElementById("registerTab");
+      const loginPanel = document.getElementById("loginPanel");
+      const registerPanel = document.getElementById("registerPanel");
+      let patients = [];
+      let selectedPatient = null;
+      let editingPatientId = null;
+
+      function showMessage(text, type = "") {
+        authMessage.textContent = text;
+        authMessage.className = `message ${type}`.trim();
+        authMessage.hidden = !text;
+      }
+
+      function showAuthView(view = "login") {
+        authView.hidden = false;
+        signedInView.hidden = true;
+        const isLogin = view === "login";
+        loginTab.setAttribute("aria-selected", String(isLogin));
+        registerTab.setAttribute("aria-selected", String(!isLogin));
+        loginPanel.hidden = !isLogin;
+        registerPanel.hidden = isLogin;
+      }
+
+      function showSignedIn(user) {
+        authView.hidden = true;
+        signedInView.hidden = false;
+        document.getElementById("signedInHeading").textContent = `Welcome, ${user.first_name}`;
+        document.getElementById("signedInEmail").textContent = user.email;
+        document.getElementById("signedInRole").textContent = user.role;
+        loadPatients();
+      }
+
+      async function readResponse(response, fallbackMessage) {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || fallbackMessage);
+        }
+        return data;
+      }
+
+      async function patientRequest(path, options = {}) {
+        const headers = { ...(options.headers || {}), Authorization: `Bearer ${accessToken}` };
+        const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        if (response.status === 401 && accessToken) {
+          accessToken = null;
+          showAuthView("login");
+          showMessage("Your session has ended. Sign in again.", "error");
+        }
+        return readResponse(response, "Patient request failed");
+      }
+
+      function showPatientMessage(text, type = "") {
+        const message = document.getElementById("patientMessage");
+        message.textContent = text;
+        message.className = `message patient-message ${type}`.trim();
+        message.hidden = !text;
+      }
+
+      function formatPatientDate(value) {
+        if (!value) return "Not provided";
+        return new Date(`${value}T00:00:00`).toLocaleDateString();
+      }
+
+      function renderPatientList() {
+        const list = document.getElementById("patientList");
+        const count = document.getElementById("patientCount");
+        list.replaceChildren();
+        count.textContent = `${patients.length} ${patients.length === 1 ? "record" : "records"}`;
+
+        if (patients.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "patient-list-empty";
+          empty.textContent = "No patient records yet.";
+          list.append(empty);
+          return;
+        }
+
+        for (const patient of patients) {
+          const item = document.createElement("button");
+          item.type = "button";
+          item.className = "patient-list-item";
+          item.setAttribute("aria-current", String(selectedPatient?.id === patient.id));
+
+          const name = document.createElement("span");
+          name.className = "patient-list-name";
+          name.textContent = `${patient.first_name} ${patient.last_name}`;
+
+          const date = document.createElement("span");
+          date.className = "patient-list-date";
+          date.textContent = patient.date_of_birth ? `Born ${formatPatientDate(patient.date_of_birth)}` : "Date of birth not provided";
+
+          item.append(name, date);
+          item.addEventListener("click", () => loadPatientDetails(patient.id));
+          list.append(item);
+        }
+      }
+
+      async function loadPatients(preferredPatientId = null) {
+        const count = document.getElementById("patientCount");
+        count.textContent = "Loading records...";
         try {
-          const response = await fetch("http://127.0.0.1:5000/api/health");
-          const data = await response.json();
-          result.textContent = JSON.stringify(data, null, 2);
+          const data = await patientRequest("/api/patients");
+          patients = data.patients;
+          renderPatientList();
+          const nextId = preferredPatientId ?? selectedPatient?.id;
+          const nextPatient = patients.find((patient) => patient.id === nextId);
+          if (nextPatient) {
+            await loadPatientDetails(nextPatient.id);
+          } else {
+            selectedPatient = null;
+            renderPatientList();
+            showPatientDetails(null);
+          }
         } catch (error) {
-          result.textContent =
-            "Backend not reachable. Start the Flask API first.";
+          count.textContent = "Could not load records";
+          showPatientMessage(error.message || "Could not reach the server.", "error");
+        }
+      }
+
+      async function loadPatientDetails(patientId) {
+        showPatientMessage("");
+        try {
+          const data = await patientRequest(`/api/patients/${patientId}`);
+          selectedPatient = data.patient;
+          renderPatientList();
+          showPatientDetails(selectedPatient);
+        } catch (error) {
+          showPatientMessage(error.message || "Could not load patient details.", "error");
+        }
+      }
+
+      function showPatientDetails(patient) {
+        const empty = document.getElementById("patientEmpty");
+        const record = document.getElementById("patientRecord");
+        const formPanel = document.getElementById("patientFormPanel");
+        formPanel.hidden = true;
+        editingPatientId = null;
+
+        if (!patient) {
+          empty.hidden = false;
+          record.hidden = true;
+          return;
+        }
+
+        empty.hidden = true;
+        record.hidden = false;
+        document.getElementById("patientName").textContent = `${patient.first_name} ${patient.last_name}`;
+        document.getElementById("patientDetailMeta").textContent = `Record #${patient.id}`;
+        document.getElementById("patientFirstName").textContent = patient.first_name;
+        document.getElementById("patientLastName").textContent = patient.last_name;
+        document.getElementById("patientDateOfBirth").textContent = formatPatientDate(patient.date_of_birth);
+      }
+
+      function showPatientForm(patient = null) {
+        editingPatientId = patient?.id ?? null;
+        document.getElementById("patientEmpty").hidden = true;
+        document.getElementById("patientRecord").hidden = true;
+        document.getElementById("patientFormPanel").hidden = false;
+        document.getElementById("patientFormHeading").textContent = patient ? "Edit patient" : "New patient";
+        document.getElementById("patientFirstInput").value = patient?.first_name ?? "";
+        document.getElementById("patientLastInput").value = patient?.last_name ?? "";
+        document.getElementById("patientDobInput").value = patient?.date_of_birth ?? "";
+        document.getElementById("savePatientButton").textContent = patient ? "Save changes" : "Save patient";
+        document.getElementById("patientFirstInput").focus();
+      }
+
+      document.getElementById("newPatientButton").addEventListener("click", () => {
+        showPatientMessage("");
+        showPatientForm();
+      });
+
+      document.getElementById("editPatientButton").addEventListener("click", () => {
+        if (selectedPatient) showPatientForm(selectedPatient);
+      });
+
+      document.getElementById("cancelPatientButton").addEventListener("click", () => {
+        showPatientDetails(selectedPatient);
+      });
+
+      document.getElementById("patientForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = document.getElementById("savePatientButton");
+        button.disabled = true;
+        button.textContent = "Saving...";
+        showPatientMessage("");
+
+        const payload = {
+          first_name: document.getElementById("patientFirstInput").value,
+          last_name: document.getElementById("patientLastInput").value,
+          date_of_birth: document.getElementById("patientDobInput").value || null,
+        };
+
+        try {
+          const isEditing = editingPatientId !== null;
+          const path = isEditing ? `/api/patients/${editingPatientId}` : "/api/patients";
+          const data = await patientRequest(path, {
+            method: isEditing ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          selectedPatient = data.patient;
+          showPatientMessage(isEditing ? "Patient record updated." : "Patient record created.", "success");
+          document.getElementById("patientForm").reset();
+          await loadPatients(selectedPatient.id);
+        } catch (error) {
+          showPatientMessage(error.message || "Could not save the patient record.", "error");
+        } finally {
+          button.disabled = false;
+          button.textContent = editingPatientId === null ? "Save patient" : "Save changes";
+        }
+      });
+
+      async function checkApi() {
+        const status = document.getElementById("apiStatus");
+        const statusText = document.getElementById("apiStatusText");
+        try {
+          const response = await fetch(`${API_BASE}/api/health`);
+          if (!response.ok) throw new Error("API unavailable");
+          status.classList.add("online");
+          status.classList.remove("offline");
+          statusText.textContent = "API connected";
+        } catch (error) {
+          status.classList.add("offline");
+          status.classList.remove("online");
+          statusText.textContent = "API unavailable";
+        }
+      }
+
+      loginTab.addEventListener("click", () => {
+        showAuthView("login");
+        showMessage("");
+      });
+
+      registerTab.addEventListener("click", () => {
+        showAuthView("register");
+        showMessage("");
+      });
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = document.getElementById("loginButton");
+        button.disabled = true;
+        button.textContent = "Signing in...";
+        showMessage("");
+
+        try {
+          const response = await fetch(`${API_BASE}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: document.getElementById("login_email").value,
+              password: document.getElementById("login_password").value,
+            }),
+          });
+          const data = await readResponse(response, "Sign in failed");
+          accessToken = data.access_token;
+          loginForm.reset();
+          showSignedIn(data.user);
+        } catch (error) {
+          showMessage(error.message || "Could not reach the server.", "error");
+        } finally {
+          button.disabled = false;
+          button.textContent = "Sign in";
         }
       });
 
       registerForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-
-        const payload = {
-          first_name: document.getElementById("first_name").value,
-          last_name: document.getElementById("last_name").value,
-          email: document.getElementById("email").value,
-          password: document.getElementById("password").value,
-        };
-
-        registerMessage.textContent = "Creating account...";
-        registerMessage.className = "message-box";
+        const button = document.getElementById("registerButton");
+        const emailInput = document.getElementById("register_email");
+        button.disabled = true;
+        button.textContent = "Creating account...";
+        showMessage("");
 
         try {
-          const response = await fetch(
-            "http://127.0.0.1:5000/api/auth/register",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(payload),
-            },
-          );
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.error || "Registration failed");
-          }
-
-          registerMessage.textContent =
-            "Registration successful. User created.";
-          registerMessage.classList.add("success");
+          const response = await fetch(`${API_BASE}/api/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              first_name: document.getElementById("first_name").value,
+              last_name: document.getElementById("last_name").value,
+              email: emailInput.value,
+              password: document.getElementById("register_password").value,
+            }),
+          });
+          await readResponse(response, "Registration failed");
+          const registeredEmail = emailInput.value;
           registerForm.reset();
+          document.getElementById("login_email").value = registeredEmail;
+          showAuthView("login");
+          showMessage("Account created. Sign in to continue.", "success");
         } catch (error) {
-          registerMessage.textContent = error.message;
-          registerMessage.classList.add("error");
+          showMessage(error.message || "Could not reach the server.", "error");
+        } finally {
+          button.disabled = false;
+          button.textContent = "Create account";
         }
       });
+
+      document.getElementById("logoutButton").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        button.textContent = "Signing out...";
+        let message = "You have signed out.";
+        let messageType = "success";
+
+        try {
+          const response = await fetch(`${API_BASE}/api/auth/logout`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          await readResponse(response, "Server could not confirm sign out.");
+        } catch (error) {
+          message = error.message || "Signed out here, but the server could not be reached.";
+          messageType = "error";
+        } finally {
+          accessToken = null;
+          patients = [];
+          selectedPatient = null;
+          document.getElementById("patientList").replaceChildren();
+          showAuthView("login");
+          showMessage(message, messageType);
+          button.disabled = false;
+          button.textContent = "Sign out";
+        }
+      });
+
+      checkApi();
     </script>
   </body>
 </html>
