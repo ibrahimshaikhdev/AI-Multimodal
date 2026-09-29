@@ -1,10 +1,55 @@
-from flask import Blueprint, jsonify, request
-from werkzeug.security import generate_password_hash
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from flask import Blueprint, current_app, jsonify, request
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from backend.extensions import db
 from backend.models.user import User
 
 auth_bp = Blueprint("auth", __name__)
+
+
+@auth_bp.post("/auth/login")
+def login_user():
+    data = request.get_json(silent=True) or {}
+    email = data.get("email")
+    password = data.get("password")
+
+    if not isinstance(email, str) or not isinstance(password, str) or not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+
+    user = db.session.query(User).filter_by(email=email.strip().lower()).first()
+    if user is None or not user.is_active or not check_password_hash(user.password_hash, password):
+        return jsonify({"error": "Invalid email or password"}), 401
+
+    now = datetime.now(timezone.utc)
+    token = jwt.encode(
+        {
+            "sub": str(user.id),
+            "email": user.email,
+            "role": user.role,
+            "iat": now,
+            "exp": now + timedelta(hours=1),
+        },
+        current_app.config["SECRET_KEY"],
+        algorithm="HS256",
+    )
+
+    return jsonify(
+        {
+            "access_token": token,
+            "token_type": "Bearer",
+            "expires_in": 3600,
+            "user": {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "role": user.role,
+            },
+        }
+    ), 200
 
 
 @auth_bp.post("/auth/register")
