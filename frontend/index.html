@@ -24,22 +24,35 @@
         --error: #a63832;
         --success: #276847;
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         min-height: 100vh;
         margin: 0;
         padding: 28px;
         color: var(--ink);
         background-color: var(--paper);
-        background-image: linear-gradient(rgba(35, 87, 68, .035) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(35, 87, 68, .035) 1px, transparent 1px);
+        background-image:
+          linear-gradient(rgba(35, 87, 68, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(35, 87, 68, 0.035) 1px, transparent 1px);
         background-size: 28px 28px;
         font-family: "DM Sans", "Segoe UI", sans-serif;
       }
-      button, input { font: inherit; }
-      button { cursor: pointer; }
-      [hidden] { display: none !important; }
-      .page { width: min(100%, 1020px); margin: 0 auto; }
+      button,
+      input {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .page {
+        width: min(100%, 1180px);
+        margin: 0 auto;
+      }
       .topbar {
         min-height: 48px;
         display: flex;
@@ -48,7 +61,12 @@
         gap: 16px;
         margin: 4px 0 22px;
       }
-      .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-weight: 700;
+      }
       .brand-mark {
         width: 36px;
         height: 36px;
@@ -60,19 +78,35 @@
         font-size: 12px;
         letter-spacing: 0;
       }
-      .api-status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
-      .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #c58d38; }
-      .api-status.online .status-dot { background: #3c8a5d; }
-      .api-status.offline .status-dot { background: #bd4942; }
-      .auth-layout, .signed-in {
+      .api-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #c58d38;
+      }
+      .api-status.online .status-dot {
+        background: #3c8a5d;
+      }
+      .api-status.offline .status-dot {
+        background: #bd4942;
+      }
+      .auth-layout,
+      .signed-in {
         min-height: 580px;
         overflow: hidden;
         display: grid;
-        grid-template-columns: minmax(280px, .9fr) minmax(390px, 1.1fr);
-        border: 1px solid rgba(32, 43, 37, .12);
+        grid-template-columns: minmax(280px, 0.9fr) minmax(390px, 1.1fr);
+        border: 1px solid rgba(32, 43, 37, 0.12);
         border-radius: 10px;
         background: var(--surface);
-        box-shadow: 0 24px 70px rgba(29, 53, 42, .09);
+        box-shadow: 0 24px 70px rgba(29, 53, 42, 0.09);
       }
       .identity-panel {
         position: relative;
@@ -82,11 +116,22 @@
         padding: 46px 42px;
         color: #f5f7f0;
         background-color: var(--forest-dark);
-        background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.045) 1px,
+            transparent 1px
+          );
         background-size: 30px 30px;
       }
-      .identity-kicker { margin: 0; color: #c9d9c8; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+      .identity-kicker {
+        margin: 0;
+        color: #c9d9c8;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
       .identity-panel h1 {
         max-width: 360px;
         margin: 26px 0 0;
@@ -95,9 +140,19 @@
         font-weight: 500;
         line-height: 1.12;
       }
-      .identity-note { max-width: 290px; margin: 22px 0 0; color: #d3ded4; line-height: 1.65; }
-      .identity-footer { color: #c2d1c3; font-size: 12px; }
-      .form-panel { padding: 48px clamp(28px, 6vw, 68px); }
+      .identity-note {
+        max-width: 290px;
+        margin: 22px 0 0;
+        color: #d3ded4;
+        line-height: 1.65;
+      }
+      .identity-footer {
+        color: #c2d1c3;
+        font-size: 12px;
+      }
+      .form-panel {
+        padding: 48px clamp(28px, 6vw, 68px);
+      }
       .view-switch {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -118,18 +173,31 @@
       .view-switch button[aria-selected="true"] {
         color: var(--ink);
         background: white;
-        box-shadow: 0 1px 4px rgba(24, 42, 31, .12);
+        box-shadow: 0 1px 4px rgba(24, 42, 31, 0.12);
       }
-      .form-panel h2, .signed-content h2 {
+      .form-panel h2,
+      .signed-content h2 {
         margin: 0;
         font-family: "Fraunces", Georgia, serif;
         font-size: 32px;
         font-weight: 500;
         line-height: 1.2;
       }
-      .form-intro { margin: 9px 0 28px; color: var(--muted); line-height: 1.55; }
-      .field-group { display: flex; flex-direction: column; gap: 7px; margin-bottom: 17px; }
-      label { font-size: 13px; font-weight: 600; }
+      .form-intro {
+        margin: 9px 0 28px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin-bottom: 17px;
+      }
+      label {
+        font-size: 13px;
+        font-weight: 600;
+      }
       input {
         width: 100%;
         min-height: 46px;
@@ -140,7 +208,10 @@
         color: var(--ink);
         background: #fff;
       }
-      input:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(35, 87, 68, .12); }
+      input:focus {
+        border-color: var(--forest);
+        box-shadow: 0 0 0 3px rgba(35, 87, 68, 0.12);
+      }
       .primary-button {
         width: 100%;
         min-height: 46px;
@@ -151,8 +222,13 @@
         background: var(--forest);
         font-weight: 700;
       }
-      .primary-button:hover { background: #1a4938; }
-      button:disabled { cursor: wait; opacity: .65; }
+      .primary-button:hover {
+        background: #1a4938;
+      }
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
       .message {
         margin: 0 0 20px;
         padding: 11px 13px;
@@ -162,66 +238,693 @@
         background: #f7f9f6;
         font-size: 14px;
       }
-      .message.error { border-color: #e7c4c0; color: var(--error); background: #fff7f6; }
-      .message.success { border-color: #c5ddcb; color: var(--success); background: #f4faf5; }
-      .signed-in { display: block; min-height: 500px; }
-      .signed-content { width: 100%; padding: 34px; }
-      .signed-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
-      .signed-content h2 { margin-top: 12px; }
-      .signed-email { margin: 10px 0 24px; color: var(--muted); }
-      .role-label { display: inline-block; padding: 5px 9px; border-radius: 4px; color: var(--forest-dark); background: var(--mint); font-size: 12px; font-weight: 700; text-transform: capitalize; }
-      .secondary-button { min-height: 38px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); background: white; font-weight: 600; }
-      .signed-rule { height: 1px; margin: 30px 0 20px; border: 0; background: var(--line); }
-      .patient-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 28px 0 14px; }
-      .patient-toolbar h3 { margin: 0; font-family: "Fraunces", Georgia, serif; font-size: 25px; font-weight: 500; }
-      .patient-count { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
-      .small-primary { min-height: 38px; padding: 8px 12px; border: 0; border-radius: 5px; color: white; background: var(--forest); font-weight: 700; }
-      .small-primary:hover { background: #1a4938; }
-      .patient-message { margin: 0 0 14px; }
-      .patient-layout { display: grid; grid-template-columns: minmax(220px, .75fr) minmax(0, 1.25fr); min-height: 310px; border: 1px solid var(--line); border-radius: 6px; }
-      .patient-list-panel { min-width: 0; border-right: 1px solid var(--line); }
-      .patient-list-heading { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
-      .patient-list { display: flex; flex-direction: column; }
-      .patient-list-item { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; min-height: 66px; padding: 12px 16px; border: 0; border-bottom: 1px solid #edf0eb; color: var(--ink); background: white; text-align: left; }
-      .patient-list-item:hover, .patient-list-item[aria-current="true"] { background: #f2f6f0; }
-      .patient-list-name { font-weight: 700; }
-      .patient-list-date { color: var(--muted); font-size: 12px; }
-      .patient-list-empty { margin: 0; padding: 18px 16px; color: var(--muted); font-size: 14px; }
-      .patient-detail { min-width: 0; padding: 24px; }
-      .patient-empty { display: grid; min-height: 255px; place-content: center; color: var(--muted); text-align: center; }
-      .patient-empty strong { margin-bottom: 6px; color: var(--ink); font-size: 15px; }
-      .patient-detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-      .patient-detail-header h4 { margin: 0; font-family: "Fraunces", Georgia, serif; font-size: 25px; font-weight: 500; }
-      .patient-detail-meta { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
-      .patient-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 26px; }
-      .patient-field { padding: 13px; border: 1px solid var(--line); border-radius: 5px; }
-      .patient-field span { display: block; color: var(--muted); font-size: 12px; }
-      .patient-field strong { display: block; margin-top: 6px; overflow-wrap: anywhere; font-size: 14px; }
-      .patient-form-panel h4 { margin: 0 0 20px; font-family: "Fraunces", Georgia, serif; font-size: 25px; font-weight: 500; }
-      .patient-form-actions { display: flex; gap: 10px; margin-top: 8px; }
-      .patient-form-actions .primary-button { width: auto; flex: 1; margin: 0; }
-      .patient-form-actions .secondary-button { min-width: 90px; }
+      .message.error {
+        border-color: #e7c4c0;
+        color: var(--error);
+        background: #fff7f6;
+      }
+      .message.success {
+        border-color: #c5ddcb;
+        color: var(--success);
+        background: #f4faf5;
+      }
+      .signed-in {
+        display: block;
+        min-height: 500px;
+      }
+      .signed-content {
+        width: 100%;
+        padding: 34px;
+      }
+      .signed-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+      }
+      .signed-content h2 {
+        margin-top: 12px;
+      }
+      .signed-email {
+        margin: 10px 0 24px;
+        color: var(--muted);
+      }
+      .role-label {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 4px;
+        color: var(--forest-dark);
+        background: var(--mint);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: capitalize;
+      }
+      .secondary-button {
+        min-height: 38px;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--ink);
+        background: white;
+        font-weight: 600;
+      }
+      .signed-rule {
+        height: 1px;
+        margin: 30px 0 20px;
+        border: 0;
+        background: var(--line);
+      }
+      .patient-toolbar {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 28px 0 14px;
+      }
+      .patient-toolbar h3 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 25px;
+        font-weight: 500;
+      }
+      .patient-count {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .small-primary {
+        min-height: 38px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 5px;
+        color: white;
+        background: var(--forest);
+        font-weight: 700;
+      }
+      .small-primary:hover {
+        background: #1a4938;
+      }
+      .patient-message {
+        margin: 0 0 14px;
+      }
+      .patient-layout {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.25fr);
+        min-height: 310px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: 0 12px 34px rgba(29, 53, 42, 0.055);
+      }
+      .patient-list-panel {
+        min-width: 0;
+        border-right: 1px solid var(--line);
+        background: #f7f9f6;
+      }
+      .patient-list-heading {
+        margin: 0;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .patient-list {
+        display: flex;
+        flex-direction: column;
+      }
+      .patient-list-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        width: 100%;
+        min-height: 66px;
+        padding: 12px 16px;
+        border: 0;
+        border-bottom: 1px solid #edf0eb;
+        color: var(--ink);
+        background: white;
+        text-align: left;
+      }
+      .patient-list-item:hover,
+      .patient-list-item[aria-current="true"] {
+        background: #eaf1e9;
+      }
+      .patient-list-item[aria-current="true"] {
+        box-shadow: inset 3px 0 var(--forest);
+      }
+      .patient-list-name {
+        font-weight: 700;
+      }
+      .patient-list-date {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .patient-list-empty {
+        margin: 0;
+        padding: 18px 16px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .patient-detail {
+        min-width: 0;
+        padding: clamp(20px, 3vw, 34px);
+      }
+      .patient-empty {
+        display: grid;
+        min-height: 255px;
+        place-content: center;
+        color: var(--muted);
+        text-align: center;
+      }
+      .patient-empty strong {
+        margin-bottom: 6px;
+        color: var(--ink);
+        font-size: 15px;
+      }
+      .patient-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .patient-detail-header h4 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 25px;
+        font-weight: 500;
+      }
+      .patient-detail-meta {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .patient-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 26px;
+      }
+      .patient-workspace-tabs {
+        display: flex;
+        gap: 7px;
+        margin-top: 24px;
+        border-bottom: 1px solid #d4ded4;
+      }
+      .patient-workspace-tab {
+        min-height: 44px;
+        padding: 0 14px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 14px;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      .patient-workspace-tab[aria-selected="true"] {
+        border-bottom-color: var(--forest);
+        color: var(--forest);
+      }
+      .patient-workspace-tab:focus-visible {
+        outline: 2px solid var(--forest);
+        outline-offset: 2px;
+      }
+      .patient-field {
+        padding: 13px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+      }
+      .patient-field span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .patient-field strong {
+        display: block;
+        margin-top: 6px;
+        overflow-wrap: anywhere;
+        font-size: 14px;
+      }
+      .patient-form-panel h4 {
+        margin: 0 0 20px;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 25px;
+        font-weight: 500;
+      }
+      .patient-form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .patient-form-actions .primary-button {
+        width: auto;
+        flex: 1;
+        margin: 0;
+      }
+      .patient-form-actions .secondary-button {
+        min-width: 90px;
+      }
+      .report-upload-panel {
+        margin-top: 22px;
+        padding: 24px;
+        border: 1px solid #e3e9e2;
+        border-radius: 8px;
+        background: #fbfcfa;
+      }
+      .report-upload-panel h4 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 24px;
+        font-weight: 500;
+      }
+      .report-upload-panel p {
+        margin: 7px 0 20px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .report-upload-panel .primary-button {
+        margin-top: 0;
+      }
+      .report-upload-panel select {
+        width: 100%;
+        min-height: 46px;
+        padding: 10px 12px;
+        border: 1px solid #cbd6cd;
+        border-radius: 5px;
+        background: #fff;
+        color: var(--ink);
+      }
+      .report-upload-panel select:focus {
+        border-color: var(--forest);
+        box-shadow: 0 0 0 3px rgba(35, 87, 68, 0.12);
+        outline: none;
+      }
+      .report-upload-panel input[type="file"] {
+        min-height: 50px;
+        padding: 7px;
+        border-color: #cbd6cd;
+        background: #fff;
+        font-size: 13px;
+      }
+      .report-upload-panel input[type="file"]::file-selector-button {
+        min-height: 34px;
+        margin-right: 10px;
+        padding: 0 11px;
+        border: 1px solid #cbd6cd;
+        border-radius: 4px;
+        color: var(--forest-dark);
+        background: #f2f6f0;
+        font: inherit;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      .scan-upload-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 16px;
+      }
+      .scan-upload-form .field-group {
+        min-width: 0;
+      }
+      .scan-upload-form #scanPredictionNote,
+      .scan-upload-form #uploadScanButton {
+        grid-column: 1 / -1;
+      }
+      #scanPredictionNote {
+        margin-top: 2px;
+        padding: 10px 12px;
+        border-left: 3px solid #c58d38;
+        color: #5f5746;
+        background: #f8f5ed;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .scan-upload-form:has(#scanBodyRegionInput option[value="Cardiac"]:checked)
+        #scanPredictionNote {
+        border-left-color: var(--forest);
+        color: var(--forest-dark);
+        background: #edf4ed;
+      }
+      .report-results {
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+      }
+      .report-results h5 {
+        margin: 0 0 10px;
+        color: var(--ink);
+        font-size: 15px;
+      }
+      .report-list {
+        display: flex;
+        flex-direction: column;
+      }
+      .report-item {
+        border-bottom: 1px solid var(--line);
+      }
+      .report-item summary {
+        padding: 12px 2px;
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 650;
+        cursor: pointer;
+      }
+      .report-item summary:focus-visible {
+        outline: 2px solid var(--forest);
+        outline-offset: 2px;
+      }
+      .report-processing-message {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .report-metadata {
+        margin: 0 0 12px;
+        padding: 12px;
+        border-left: 3px solid var(--forest);
+        background: #f2f6f0;
+      }
+      .report-metadata h6 {
+        margin: 0 0 10px;
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .report-document-date {
+        margin: 0 0 10px;
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .report-section + .report-section {
+        margin-top: 12px;
+      }
+      .report-section-heading {
+        margin: 0 0 4px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: capitalize;
+      }
+      .report-section-text {
+        margin: 0;
+        color: var(--ink);
+        font-size: 13px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .report-metadata-empty {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .report-parameters {
+        margin: 0 0 14px;
+      }
+      .report-parameters h6 {
+        margin: 0 0 8px;
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .report-parameters-scroll {
+        overflow-x: auto;
+      }
+      .report-parameter-table {
+        width: 100%;
+        min-width: 720px;
+        border-collapse: collapse;
+        text-align: left;
+      }
+      .report-parameter-table th,
+      .report-parameter-table td {
+        padding: 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        font-size: 12px;
+      }
+      .report-parameter-table th {
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .report-parameter-source {
+        max-width: 240px;
+        overflow-wrap: anywhere;
+        color: var(--muted);
+      }
+      .report-parameter-empty {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .scan-library {
+        margin-top: 22px;
+      }
+      .scan-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .scan-item-details {
+        min-width: 0;
+      }
+      .scan-item-title {
+        display: block;
+        color: var(--ink);
+        font-size: 14px;
+        overflow-wrap: anywhere;
+      }
+      .scan-item-meta,
+      .scan-item-status {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .scan-open-button {
+        flex: 0 0 auto;
+      }
+      .scan-analysis {
+        margin: 0 0 18px;
+        padding: 18px;
+        border: 1px solid #dce7dc;
+        border-radius: 8px;
+        background: #f5f8f4;
+      }
+      .scan-analysis h5 {
+        margin: 0 0 7px;
+        color: var(--ink);
+        font-size: 16px;
+      }
+      .scan-analysis-disclaimer {
+        margin: 0 0 14px;
+        padding-left: 10px;
+        border-left: 2px solid #c58d38;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .knee-analysis {
+        margin: 0 0 18px;
+        padding: 18px;
+        border: 1px solid #dce7dc;
+        border-radius: 8px;
+        background: #f5f8f4;
+      }
+      .knee-analysis h5 {
+        margin: 0 0 8px;
+        font-size: 16px;
+      }
+      .knee-analysis-result {
+        margin: 0 0 10px;
+        color: var(--forest-dark);
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .knee-probabilities {
+        display: grid;
+        gap: 8px;
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .knee-probability {
+        display: grid;
+        grid-template-columns: minmax(115px, 1fr) minmax(70px, 1.5fr) auto;
+        align-items: center;
+        gap: 10px;
+        color: #435047;
+        font-size: 12px;
+      }
+      .knee-probability-track {
+        height: 7px;
+        overflow: hidden;
+        border-radius: 4px;
+        background: #dfe7de;
+      }
+      .knee-probability-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--forest);
+      }
+      .knee-probability-value {
+        min-width: 48px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .knee-analysis-meta {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .scan-overlay {
+        display: block;
+        width: min(100%, 512px);
+        height: auto;
+        border: 1px solid #cfd8cf;
+        border-radius: 6px;
+        background: #111;
+        box-shadow: 0 8px 22px rgba(29, 53, 42, 0.12);
+      }
+      .scan-class-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .scan-class-entry {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        max-width: 100%;
+        padding: 7px 9px;
+        border: 1px solid #e0e7df;
+        border-radius: 5px;
+        color: #435047;
+        background: #fff;
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+      }
+      .scan-class-swatch {
+        flex: 0 0 10px;
+        width: 10px;
+        height: 10px;
+        border: 1px solid rgba(0, 0, 0, .2);
+        border-radius: 2px;
+      }
+      .report-extracted-text {
+        max-height: 360px;
+        overflow: auto;
+        margin: 0 0 14px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: #fff;
+        color: var(--ink);
+        font:
+          13px/1.6 "DM Sans",
+          sans-serif;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .report-list-empty {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
       @media (max-width: 700px) {
-        body { padding: 16px; }
-        .auth-layout { grid-template-columns: 1fr; min-height: 0; }
-        .identity-panel { min-height: 210px; padding: 26px; }
-        .identity-panel h1 { max-width: 440px; margin-top: 18px; font-size: 32px; }
-        .identity-note, .identity-footer { display: none; }
-        .form-panel { padding: 28px 24px 34px; }
-        .view-switch { margin-bottom: 28px; }
-        .signed-content { padding: 32px 24px; }
-        .signed-top { flex-direction: column; }
-        .patient-layout { grid-template-columns: 1fr; }
-        .patient-list-panel { border-right: 0; border-bottom: 1px solid var(--line); }
-        .patient-list { max-height: 230px; overflow-y: auto; }
-        .patient-detail { padding: 20px; }
+        body {
+          padding: 16px;
+        }
+        .auth-layout {
+          grid-template-columns: 1fr;
+          min-height: 0;
+        }
+        .identity-panel {
+          min-height: 210px;
+          padding: 26px;
+        }
+        .identity-panel h1 {
+          max-width: 440px;
+          margin-top: 18px;
+          font-size: 32px;
+        }
+        .identity-note,
+        .identity-footer {
+          display: none;
+        }
+        .form-panel {
+          padding: 28px 24px 34px;
+        }
+        .view-switch {
+          margin-bottom: 28px;
+        }
+        .signed-content {
+          padding: 32px 24px;
+        }
+        .signed-top {
+          flex-direction: column;
+        }
+        .patient-layout {
+          grid-template-columns: 1fr;
+        }
+        .patient-list-panel {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+        .patient-list {
+          max-height: 230px;
+          overflow-y: auto;
+        }
+        .patient-detail {
+          padding: 20px;
+        }
+        .report-upload-panel {
+          padding: 18px;
+        }
+        .scan-upload-form {
+          grid-template-columns: 1fr;
+        }
+        .scan-upload-form #scanPredictionNote,
+        .scan-upload-form #uploadScanButton {
+          grid-column: auto;
+        }
+        .scan-analysis {
+          padding: 14px;
+        }
+        .knee-analysis {
+          padding: 14px;
+        }
       }
       @media (max-width: 400px) {
-        .api-status { font-size: 11px; }
-        .brand { font-size: 13px; }
-        .identity-panel h1 { font-size: 28px; }
-        .patient-toolbar { align-items: flex-start; flex-direction: column; }
-        .patient-fields { grid-template-columns: 1fr; }
+        .api-status {
+          font-size: 11px;
+        }
+        .brand {
+          font-size: 13px;
+        }
+        .identity-panel h1 {
+          font-size: 28px;
+        }
+        .patient-toolbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .patient-fields {
+          grid-template-columns: 1fr;
+        }
+        .patient-workspace-tab {
+          flex: 1;
+        }
+        .scan-item {
+          align-items: flex-start;
+          flex-direction: column;
+        }
       }
     </style>
   </head>
@@ -239,22 +942,50 @@
       </header>
 
       <main id="authView" class="auth-layout">
-        <section class="identity-panel" aria-label="Medical Research Intelligence">
+        <section
+          class="identity-panel"
+          aria-label="Medical Research Intelligence"
+        >
           <div>
             <p class="identity-kicker">Medical Research Intelligence</p>
             <h1>Medical records, research, in context.</h1>
-            <p class="identity-note">A considered workspace for clinical records and research information.</p>
+            <p class="identity-note">
+              A considered workspace for clinical records and research
+              information.
+            </p>
           </div>
           <div class="identity-footer">Secure access for your team</div>
         </section>
 
         <section class="form-panel" aria-label="Account access">
           <div class="view-switch" role="tablist" aria-label="Account access">
-            <button id="loginTab" type="button" role="tab" aria-selected="true" aria-controls="loginPanel">Sign in</button>
-            <button id="registerTab" type="button" role="tab" aria-selected="false" aria-controls="registerPanel">Create account</button>
+            <button
+              id="loginTab"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="loginPanel"
+            >
+              Sign in
+            </button>
+            <button
+              id="registerTab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="registerPanel"
+            >
+              Create account
+            </button>
           </div>
 
-          <p id="authMessage" class="message" role="status" aria-live="polite" hidden></p>
+          <p
+            id="authMessage"
+            class="message"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
 
           <section id="loginPanel" role="tabpanel" aria-labelledby="loginTab">
             <h2>Welcome back</h2>
@@ -262,43 +993,94 @@
             <form id="loginForm">
               <div class="field-group">
                 <label for="login_email">Email</label>
-                <input id="login_email" name="email" type="email" autocomplete="email" required />
+                <input
+                  id="login_email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                />
               </div>
               <div class="field-group">
                 <label for="login_password">Password</label>
-                <input id="login_password" name="password" type="password" autocomplete="current-password" required />
+                <input
+                  id="login_password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  required
+                />
               </div>
-              <button id="loginButton" class="primary-button" type="submit">Sign in</button>
+              <button id="loginButton" class="primary-button" type="submit">
+                Sign in
+              </button>
             </form>
           </section>
 
-          <section id="registerPanel" role="tabpanel" aria-labelledby="registerTab" hidden>
+          <section
+            id="registerPanel"
+            role="tabpanel"
+            aria-labelledby="registerTab"
+            hidden
+          >
             <h2>Create your account</h2>
             <p class="form-intro">Enter your details to get started.</p>
             <form id="registerForm">
               <div class="field-group">
                 <label for="first_name">First name</label>
-                <input id="first_name" name="first_name" type="text" autocomplete="given-name" required />
+                <input
+                  id="first_name"
+                  name="first_name"
+                  type="text"
+                  autocomplete="given-name"
+                  required
+                />
               </div>
               <div class="field-group">
                 <label for="last_name">Last name</label>
-                <input id="last_name" name="last_name" type="text" autocomplete="family-name" required />
+                <input
+                  id="last_name"
+                  name="last_name"
+                  type="text"
+                  autocomplete="family-name"
+                  required
+                />
               </div>
               <div class="field-group">
                 <label for="register_email">Email</label>
-                <input id="register_email" name="email" type="email" autocomplete="email" required />
+                <input
+                  id="register_email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                />
               </div>
               <div class="field-group">
                 <label for="register_password">Password</label>
-                <input id="register_password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+                <input
+                  id="register_password"
+                  name="password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="8"
+                  required
+                />
               </div>
-              <button id="registerButton" class="primary-button" type="submit">Create account</button>
+              <button id="registerButton" class="primary-button" type="submit">
+                Create account
+              </button>
             </form>
           </section>
         </section>
       </main>
 
-      <main id="signedInView" class="signed-in" aria-labelledby="signedInHeading" hidden>
+      <main
+        id="signedInView"
+        class="signed-in"
+        aria-labelledby="signedInHeading"
+        hidden
+      >
         <section class="signed-content">
           <div class="signed-top">
             <div>
@@ -307,22 +1089,36 @@
               <p id="signedInEmail" class="signed-email"></p>
               <span id="signedInRole" class="role-label"></span>
             </div>
-            <button id="logoutButton" class="secondary-button" type="button">Sign out</button>
+            <button id="logoutButton" class="secondary-button" type="button">
+              Sign out
+            </button>
           </div>
           <div class="patient-toolbar">
             <div>
               <h3>Patients</h3>
               <p id="patientCount" class="patient-count">Loading records...</p>
             </div>
-            <button id="newPatientButton" class="small-primary" type="button">+ New patient</button>
+            <button id="newPatientButton" class="small-primary" type="button">
+              + New patient
+            </button>
           </div>
-          <p id="patientMessage" class="message patient-message" role="status" aria-live="polite" hidden></p>
+          <p
+            id="patientMessage"
+            class="message patient-message"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></p>
           <div id="patientsView" class="patient-layout">
             <section class="patient-list-panel" aria-label="Patient list">
               <h4 class="patient-list-heading">Patient records</h4>
               <div id="patientList" class="patient-list"></div>
             </section>
-            <section id="patientDetail" class="patient-detail" aria-label="Patient details">
+            <section
+              id="patientDetail"
+              class="patient-detail"
+              aria-label="Patient details"
+            >
               <div id="patientEmpty" class="patient-empty">
                 <strong>Select a patient</strong>
                 <span>Choose a record to view its details.</span>
@@ -333,7 +1129,13 @@
                     <h4 id="patientName"></h4>
                     <p id="patientDetailMeta" class="patient-detail-meta"></p>
                   </div>
-                  <button id="editPatientButton" class="secondary-button" type="button">Edit</button>
+                  <button
+                    id="editPatientButton"
+                    class="secondary-button"
+                    type="button"
+                  >
+                    Edit
+                  </button>
                 </div>
                 <div class="patient-fields">
                   <div class="patient-field">
@@ -350,24 +1152,200 @@
                   </div>
                 </div>
               </div>
+
+              <div
+                id="patientWorkspaceTabs"
+                class="patient-workspace-tabs"
+                role="tablist"
+                aria-label="Patient documents"
+                hidden
+              >
+                <button
+                  id="reportsWorkspaceTab"
+                  class="patient-workspace-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="reportUploadPanel"
+                >
+                  Reports
+                </button>
+                <button
+                  id="scansWorkspaceTab"
+                  class="patient-workspace-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="scanUploadPanel"
+                  tabindex="-1"
+                >
+                  Scans
+                </button>
+              </div>
+
+              <section
+                id="reportUploadPanel"
+                class="report-upload-panel"
+                hidden
+                role="tabpanel"
+                aria-labelledby="reportsWorkspaceTab"
+              >
+                <h4>Upload report</h4>
+                <p>Attach a PDF, DOCX, JPG, or PNG for the selected patient.</p>
+                <form id="reportUploadForm">
+                  <div class="field-group">
+                    <label for="uploadPatientSelect">Patient</label>
+                    <select id="uploadPatientSelect" name="patient_id"></select>
+                  </div>
+                  <div class="field-group">
+                    <label for="reportTypeInput">Report type</label>
+                    <input
+                      id="reportTypeInput"
+                      name="report_type"
+                      type="text"
+                      maxlength="80"
+                      placeholder="lab_results, imaging, summary..."
+                    />
+                  </div>
+                  <div class="field-group">
+                    <label for="reportDateInput">Report date</label>
+                    <input
+                      id="reportDateInput"
+                      name="report_date"
+                      type="date"
+                      max=""
+                    />
+                  </div>
+                  <div class="field-group">
+                    <label for="reportFileInput">Report file</label>
+                    <input
+                      id="reportFileInput"
+                      name="file"
+                      type="file"
+                      accept=".pdf,.docx,.jpg,.jpeg,.png"
+                      required
+                    />
+                  </div>
+                  <button
+                    id="uploadReportButton"
+                    class="primary-button"
+                    type="submit"
+                  >
+                    Upload report
+                  </button>
+                </form>
+                <p
+                  id="uploadMessage"
+                  class="message"
+                  role="status"
+                  aria-live="polite"
+                  hidden
+                ></p>
+                <section
+                  class="report-results"
+                  aria-labelledby="reportResultsHeading"
+                >
+                  <h5 id="reportResultsHeading">Uploaded reports</h5>
+                  <p id="reportListEmpty" class="report-list-empty">
+                    No reports uploaded for this patient.
+                  </p>
+                  <div id="reportList" class="report-list"></div>
+                </section>
+              </section>
+
+              <section
+                id="scanUploadPanel"
+                class="report-upload-panel"
+                hidden
+                role="tabpanel"
+                aria-labelledby="scansWorkspaceTab"
+              >
+                <h4>Scans</h4>
+                <p>Store imaging separately from written reports. Cardiac MRI segmentation and ACL predictions are experimental and require professional review.</p>
+                <form id="scanUploadForm" class="scan-upload-form">
+                  <div class="field-group">
+                    <label for="scanModalityInput">Modality</label>
+                    <select id="scanModalityInput" name="modality" required>
+                      <option value="MRI">MRI</option>
+                      <option value="CT">CT</option>
+                      <option value="X_RAY">X-ray</option>
+                      <option value="ULTRASOUND">Ultrasound</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                  <div class="field-group">
+                    <label for="scanBodyRegionInput">Scan region</label>
+                    <select id="scanBodyRegionInput" name="body_region" required></select>
+                    <p id="scanPredictionNote" class="report-metadata-empty" aria-live="polite"></p>
+                  </div>
+                  <div class="field-group">
+                    <label for="scanStudyDateInput">Study date <span>(optional)</span></label>
+                    <input id="scanStudyDateInput" name="study_date" type="date" max="" />
+                  </div>
+                  <div class="field-group">
+                    <label for="scanFileInput">Scan file</label>
+                    <input id="scanFileInput" name="file" type="file" accept=".pdf,.jpg,.jpeg,.png" required />
+                  </div>
+                  <button id="uploadScanButton" class="primary-button" type="submit">Upload scan</button>
+                </form>
+                <p id="scanMessage" class="message" role="status" aria-live="polite" hidden></p>
+                <section class="report-results scan-library" aria-labelledby="scanListHeading">
+                  <h5 id="scanListHeading">Uploaded scans</h5>
+                  <p id="scanListEmpty" class="report-list-empty">No scans uploaded for this patient.</p>
+                  <div id="scanList" class="report-list"></div>
+                </section>
+              </section>
+
               <div id="patientFormPanel" class="patient-form-panel" hidden>
                 <h4 id="patientFormHeading">New patient</h4>
                 <form id="patientForm">
                   <div class="field-group">
                     <label for="patientFirstInput">First name</label>
-                    <input id="patientFirstInput" name="first_name" type="text" maxlength="80" autocomplete="given-name" required />
+                    <input
+                      id="patientFirstInput"
+                      name="first_name"
+                      type="text"
+                      maxlength="80"
+                      autocomplete="given-name"
+                      required
+                    />
                   </div>
                   <div class="field-group">
                     <label for="patientLastInput">Last name</label>
-                    <input id="patientLastInput" name="last_name" type="text" maxlength="80" autocomplete="family-name" required />
+                    <input
+                      id="patientLastInput"
+                      name="last_name"
+                      type="text"
+                      maxlength="80"
+                      autocomplete="family-name"
+                      required
+                    />
                   </div>
                   <div class="field-group">
-                    <label for="patientDobInput">Date of birth <span>(optional)</span></label>
-                    <input id="patientDobInput" name="date_of_birth" type="date" />
+                    <label for="patientDobInput"
+                      >Date of birth <span>(optional)</span></label
+                    >
+                    <input
+                      id="patientDobInput"
+                      name="date_of_birth"
+                      type="date"
+                    />
                   </div>
                   <div class="patient-form-actions">
-                    <button id="savePatientButton" class="primary-button" type="submit">Save patient</button>
-                    <button id="cancelPatientButton" class="secondary-button" type="button">Cancel</button>
+                    <button
+                      id="savePatientButton"
+                      class="primary-button"
+                      type="submit"
+                    >
+                      Save patient
+                    </button>
+                    <button
+                      id="cancelPatientButton"
+                      class="secondary-button"
+                      type="button"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </form>
               </div>
@@ -390,9 +1368,130 @@
       const registerTab = document.getElementById("registerTab");
       const loginPanel = document.getElementById("loginPanel");
       const registerPanel = document.getElementById("registerPanel");
+      const uploadMessage = document.getElementById("uploadMessage");
+      const uploadPatientSelect = document.getElementById(
+        "uploadPatientSelect",
+      );
+      const scanMessage = document.getElementById("scanMessage");
+      const scanModalityInput = document.getElementById("scanModalityInput");
+      const scanBodyRegionInput = document.getElementById("scanBodyRegionInput");
+      const scanFileInput = document.getElementById("scanFileInput");
+      const scanPredictionNote = document.getElementById("scanPredictionNote");
+      const patientWorkspaceTabs = document.getElementById("patientWorkspaceTabs");
+      const reportsWorkspaceTab = document.getElementById("reportsWorkspaceTab");
+      const scansWorkspaceTab = document.getElementById("scansWorkspaceTab");
+      const reportUploadPanel = document.getElementById("reportUploadPanel");
+      const scanUploadPanel = document.getElementById("scanUploadPanel");
+      const SCAN_SUBTYPES = {
+        MRI: ["Brain", "Knee", "Spine", "Cardiac", "Other"],
+        CT: ["Brain/head", "Chest", "Abdomen/pelvis", "Spine", "Cardiac", "Other"],
+        X_RAY: ["Chest", "Bone/joint", "Spine", "Dental", "Other"],
+        ULTRASOUND: [
+          "Abdomen",
+          "Obstetric",
+          "Cardiac/echocardiogram",
+          "Vascular",
+          "Thyroid",
+          "Other",
+        ],
+        OTHER: ["Other"],
+      };
       let patients = [];
       let selectedPatient = null;
       let editingPatientId = null;
+
+      function updateScanBodyRegionOptions() {
+        const modality = scanModalityInput.value;
+        const regions = SCAN_SUBTYPES[modality] || [];
+        scanBodyRegionInput.replaceChildren();
+
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Choose a scan region";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        scanBodyRegionInput.append(placeholder);
+
+        for (const region of regions) {
+          const option = document.createElement("option");
+          option.value = region;
+          option.textContent = region === "Other" ? "Other (no prediction)" : region;
+          scanBodyRegionInput.append(option);
+        }
+
+        updateScanPredictionNote();
+      }
+
+      function updateScanPredictionNote() {
+        const isCardiacMRI =
+          scanModalityInput.value === "MRI" &&
+          scanBodyRegionInput.value === "Cardiac";
+        const isKneeMRI =
+          scanModalityInput.value === "MRI" &&
+          scanBodyRegionInput.value === "Knee";
+        const isSpineMRI =
+          scanModalityInput.value === "MRI" &&
+          scanBodyRegionInput.value === "Spine";
+        const isBrainMRI =
+          scanModalityInput.value === "MRI" &&
+          scanBodyRegionInput.value === "Brain";
+        scanFileInput.accept = isCardiacMRI || isKneeMRI || isSpineMRI || isBrainMRI
+          ? ".png,.jpg,.jpeg"
+          : ".pdf,.jpg,.jpeg,.png";
+        scanFileInput.multiple = isKneeMRI;
+
+        if (isKneeMRI) {
+          scanPredictionNote.textContent =
+            "Upload a sagittal knee MRI image (JPG/PNG). ACL localization and preprocessing are handled automatically.";
+        } else if (isSpineMRI) {
+          scanPredictionNote.textContent =
+            "Upload one sagittal Spine MRI JPG/PNG. This experimental model returns a raw score; its label meaning is unspecified. The image is repeated to form 12 model frames.";
+        } else if (isBrainMRI) {
+          scanPredictionNote.textContent =
+            "Upload a Brain MRI JPG/PNG. The experimental model returns four class-index scores; class meanings are unspecified and this is not a diagnosis.";
+        } else if (isCardiacMRI) {
+          scanPredictionNote.textContent =
+            "Please upload a cardiac MRI image in PNG or JPG format. Experimental segmentation is not a confirmed diagnosis.";
+        } else if (scanBodyRegionInput.value === "Other" || scanModalityInput.value === "OTHER") {
+          scanPredictionNote.textContent =
+            "Other scans are stored for reference only and are not eligible for prediction.";
+        } else {
+          scanPredictionNote.textContent =
+            "Experimental analysis is available for Brain, Spine, and Cardiac MRI only. Other scans are stored for reference.";
+        }
+      }
+
+      scanModalityInput.addEventListener("change", updateScanBodyRegionOptions);
+      scanBodyRegionInput.addEventListener("change", updateScanPredictionNote);
+      updateScanBodyRegionOptions();
+
+      let activePatientWorkspace = "reports";
+
+      function selectPatientWorkspace(workspace) {
+        activePatientWorkspace = workspace === "scans" ? "scans" : "reports";
+        const showReports = activePatientWorkspace === "reports";
+        reportsWorkspaceTab.setAttribute("aria-selected", String(showReports));
+        scansWorkspaceTab.setAttribute("aria-selected", String(!showReports));
+        reportsWorkspaceTab.tabIndex = showReports ? 0 : -1;
+        scansWorkspaceTab.tabIndex = showReports ? -1 : 0;
+        reportUploadPanel.hidden = !showReports;
+        scanUploadPanel.hidden = showReports;
+      }
+
+      reportsWorkspaceTab.addEventListener("click", () =>
+        selectPatientWorkspace("reports"),
+      );
+      scansWorkspaceTab.addEventListener("click", () =>
+        selectPatientWorkspace("scans"),
+      );
+      patientWorkspaceTabs.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+        event.preventDefault();
+        const nextWorkspace =
+          activePatientWorkspace === "reports" ? "scans" : "reports";
+        selectPatientWorkspace(nextWorkspace);
+        (nextWorkspace === "reports" ? reportsWorkspaceTab : scansWorkspaceTab).focus();
+      });
 
       function showMessage(text, type = "") {
         authMessage.textContent = text;
@@ -413,7 +1512,8 @@
       function showSignedIn(user) {
         authView.hidden = true;
         signedInView.hidden = false;
-        document.getElementById("signedInHeading").textContent = `Welcome, ${user.first_name}`;
+        document.getElementById("signedInHeading").textContent =
+          `Welcome, ${user.first_name}`;
         document.getElementById("signedInEmail").textContent = user.email;
         document.getElementById("signedInRole").textContent = user.role;
         loadPatients();
@@ -428,8 +1528,14 @@
       }
 
       async function patientRequest(path, options = {}) {
-        const headers = { ...(options.headers || {}), Authorization: `Bearer ${accessToken}` };
-        const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        const headers = {
+          ...(options.headers || {}),
+          Authorization: `Bearer ${accessToken}`,
+        };
+        const response = await fetch(`${API_BASE}${path}`, {
+          ...options,
+          headers,
+        });
         if (response.status === 401 && accessToken) {
           accessToken = null;
           showAuthView("login");
@@ -443,6 +1549,16 @@
         message.textContent = text;
         message.className = `message patient-message ${type}`.trim();
         message.hidden = !text;
+      }
+
+      function setTodayMaxDateForInput(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        input.max = `${yyyy}-${mm}-${dd}`;
       }
 
       function formatPatientDate(value) {
@@ -468,7 +1584,10 @@
           const item = document.createElement("button");
           item.type = "button";
           item.className = "patient-list-item";
-          item.setAttribute("aria-current", String(selectedPatient?.id === patient.id));
+          item.setAttribute(
+            "aria-current",
+            String(selectedPatient?.id === patient.id),
+          );
 
           const name = document.createElement("span");
           name.className = "patient-list-name";
@@ -476,7 +1595,9 @@
 
           const date = document.createElement("span");
           date.className = "patient-list-date";
-          date.textContent = patient.date_of_birth ? `Born ${formatPatientDate(patient.date_of_birth)}` : "Date of birth not provided";
+          date.textContent = patient.date_of_birth
+            ? `Born ${formatPatientDate(patient.date_of_birth)}`
+            : "Date of birth not provided";
 
           item.append(name, date);
           item.addEventListener("click", () => loadPatientDetails(patient.id));
@@ -502,7 +1623,10 @@
           }
         } catch (error) {
           count.textContent = "Could not load records";
-          showPatientMessage(error.message || "Could not reach the server.", "error");
+          showPatientMessage(
+            error.message || "Could not reach the server.",
+            "error",
+          );
         }
       }
 
@@ -514,7 +1638,10 @@
           renderPatientList();
           showPatientDetails(selectedPatient);
         } catch (error) {
-          showPatientMessage(error.message || "Could not load patient details.", "error");
+          showPatientMessage(
+            error.message || "Could not load patient details.",
+            "error",
+          );
         }
       }
 
@@ -528,76 +1655,666 @@
         if (!patient) {
           empty.hidden = false;
           record.hidden = true;
+          patientWorkspaceTabs.hidden = true;
+          reportUploadPanel.hidden = true;
+          scanUploadPanel.hidden = true;
           return;
         }
 
         empty.hidden = true;
         record.hidden = false;
-        document.getElementById("patientName").textContent = `${patient.first_name} ${patient.last_name}`;
-        document.getElementById("patientDetailMeta").textContent = `Record #${patient.id}`;
-        document.getElementById("patientFirstName").textContent = patient.first_name;
-        document.getElementById("patientLastName").textContent = patient.last_name;
-        document.getElementById("patientDateOfBirth").textContent = formatPatientDate(patient.date_of_birth);
+        patientWorkspaceTabs.hidden = false;
+        selectPatientWorkspace(activePatientWorkspace);
+        document.getElementById("patientName").textContent =
+          `${patient.first_name} ${patient.last_name}`;
+        document.getElementById("patientDetailMeta").textContent =
+          `Record #${patient.id}`;
+        document.getElementById("patientFirstName").textContent =
+          patient.first_name;
+        document.getElementById("patientLastName").textContent =
+          patient.last_name;
+        document.getElementById("patientDateOfBirth").textContent =
+          formatPatientDate(patient.date_of_birth);
+        refreshUploadPatientOptions();
+        loadPatientReports(patient.id);
+        loadPatientScans(patient.id);
+      }
+
+      function refreshUploadPatientOptions() {
+        uploadPatientSelect.replaceChildren();
+        const currentPatientId = selectedPatient
+          ? selectedPatient.id
+          : (patients[0]?.id ?? "");
+
+        for (const patient of patients) {
+          const option = document.createElement("option");
+          option.value = String(patient.id);
+          option.textContent = `${patient.first_name} ${patient.last_name}`;
+          if (String(patient.id) === String(currentPatientId)) {
+            option.selected = true;
+          }
+          uploadPatientSelect.append(option);
+        }
+
+        if (patients.length === 0) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "No patients available";
+          option.disabled = true;
+          option.selected = true;
+          uploadPatientSelect.append(option);
+        }
       }
 
       function showPatientForm(patient = null) {
         editingPatientId = patient?.id ?? null;
         document.getElementById("patientEmpty").hidden = true;
         document.getElementById("patientRecord").hidden = true;
+        patientWorkspaceTabs.hidden = true;
+        reportUploadPanel.hidden = true;
+        scanUploadPanel.hidden = true;
         document.getElementById("patientFormPanel").hidden = false;
-        document.getElementById("patientFormHeading").textContent = patient ? "Edit patient" : "New patient";
-        document.getElementById("patientFirstInput").value = patient?.first_name ?? "";
-        document.getElementById("patientLastInput").value = patient?.last_name ?? "";
-        document.getElementById("patientDobInput").value = patient?.date_of_birth ?? "";
-        document.getElementById("savePatientButton").textContent = patient ? "Save changes" : "Save patient";
+        document.getElementById("patientFormHeading").textContent = patient
+          ? "Edit patient"
+          : "New patient";
+        document.getElementById("patientFirstInput").value =
+          patient?.first_name ?? "";
+        document.getElementById("patientLastInput").value =
+          patient?.last_name ?? "";
+        document.getElementById("patientDobInput").value =
+          patient?.date_of_birth ?? "";
+        document.getElementById("savePatientButton").textContent = patient
+          ? "Save changes"
+          : "Save patient";
         document.getElementById("patientFirstInput").focus();
       }
 
-      document.getElementById("newPatientButton").addEventListener("click", () => {
-        showPatientMessage("");
-        showPatientForm();
-      });
+      document
+        .getElementById("newPatientButton")
+        .addEventListener("click", () => {
+          showPatientMessage("");
+          showPatientForm();
+        });
 
-      document.getElementById("editPatientButton").addEventListener("click", () => {
-        if (selectedPatient) showPatientForm(selectedPatient);
-      });
+      document
+        .getElementById("editPatientButton")
+        .addEventListener("click", () => {
+          if (selectedPatient) showPatientForm(selectedPatient);
+        });
 
-      document.getElementById("cancelPatientButton").addEventListener("click", () => {
-        showPatientDetails(selectedPatient);
-      });
+      document
+        .getElementById("cancelPatientButton")
+        .addEventListener("click", () => {
+          showPatientDetails(selectedPatient);
+        });
 
-      document.getElementById("patientForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const button = document.getElementById("savePatientButton");
-        button.disabled = true;
-        button.textContent = "Saving...";
-        showPatientMessage("");
+      document
+        .getElementById("patientForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const button = document.getElementById("savePatientButton");
+          button.disabled = true;
+          button.textContent = "Saving...";
+          showPatientMessage("");
 
-        const payload = {
-          first_name: document.getElementById("patientFirstInput").value,
-          last_name: document.getElementById("patientLastInput").value,
-          date_of_birth: document.getElementById("patientDobInput").value || null,
-        };
+          const payload = {
+            first_name: document.getElementById("patientFirstInput").value,
+            last_name: document.getElementById("patientLastInput").value,
+            date_of_birth:
+              document.getElementById("patientDobInput").value || null,
+          };
+
+          try {
+            const isEditing = editingPatientId !== null;
+            const path = isEditing
+              ? `/api/patients/${editingPatientId}`
+              : "/api/patients";
+            const data = await patientRequest(path, {
+              method: isEditing ? "PUT" : "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            selectedPatient = data.patient;
+            showPatientMessage(
+              isEditing ? "Patient record updated." : "Patient record created.",
+              "success",
+            );
+            document.getElementById("patientForm").reset();
+            await loadPatients(selectedPatient.id);
+          } catch (error) {
+            showPatientMessage(
+              error.message || "Could not save the patient record.",
+              "error",
+            );
+          } finally {
+            button.disabled = false;
+            button.textContent =
+              editingPatientId === null ? "Save patient" : "Save changes";
+          }
+        });
+
+      document
+        .getElementById("reportUploadForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fileInput = document.getElementById("reportFileInput");
+          const button = document.getElementById("uploadReportButton");
+          const selectedPatientId = uploadPatientSelect.value;
+
+          if (!selectedPatientId || !fileInput.files.length) {
+            showUploadMessage(
+              "Please choose a patient and a file to upload.",
+              "error",
+            );
+            return;
+          }
+
+          button.disabled = true;
+          button.textContent = "Uploading...";
+          showUploadMessage("");
+
+          const formData = new FormData();
+          formData.append("patient_id", selectedPatientId);
+          const reportType = document
+            .getElementById("reportTypeInput")
+            .value.trim();
+          const reportDate = document.getElementById("reportDateInput").value;
+          if (reportType) formData.append("report_type", reportType);
+          if (reportDate) formData.append("report_date", reportDate);
+          for (const file of fileInput.files) {
+            formData.append("file", file);
+          }
+
+          try {
+            const response = await fetch(`${API_BASE}/api/reports/upload`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${accessToken}` },
+              body: formData,
+            });
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+              throw new Error(data.error || "Report upload failed");
+            }
+
+            const uploadedReport = data.report;
+            const processed = uploadedReport.processing_status === "processed";
+            showUploadMessage(
+              processed
+                ? "Report uploaded and text extracted."
+                : uploadedReport.processing_message,
+              processed ? "success" : "error",
+            );
+            document.getElementById("reportUploadForm").reset();
+            refreshUploadPatientOptions();
+            await loadPatientReports(uploadedReport.patient_id, true);
+          } catch (error) {
+            showUploadMessage(
+              error.message || "Could not upload the report.",
+              "error",
+            );
+          } finally {
+            button.disabled = false;
+            button.textContent = "Upload report";
+          }
+        });
+
+      function showUploadMessage(text, type = "") {
+        uploadMessage.textContent = text;
+        uploadMessage.className = `message ${type}`.trim();
+        uploadMessage.hidden = !text;
+      }
+
+      function showScanMessage(text, type = "") {
+        scanMessage.textContent = text;
+        scanMessage.className = `message ${type}`.trim();
+        scanMessage.hidden = !text;
+      }
+
+      document
+        .getElementById("scanUploadForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const fileInput = document.getElementById("scanFileInput");
+          const button = document.getElementById("uploadScanButton");
+          if (!selectedPatient || !fileInput.files.length) {
+            showScanMessage("Choose a patient and scan file first.", "error");
+            return;
+          }
+
+          button.disabled = true;
+          button.textContent = "Uploading...";
+          showScanMessage("");
+          const formData = new FormData();
+          formData.append("patient_id", String(selectedPatient.id));
+          formData.append(
+            "modality",
+            document.getElementById("scanModalityInput").value,
+          );
+          formData.append(
+            "body_region",
+            document.getElementById("scanBodyRegionInput").value.trim(),
+          );
+          const studyDate = document.getElementById("scanStudyDateInput").value;
+          if (studyDate) formData.append("study_date", studyDate);
+          formData.append("file", fileInput.files[0]);
+
+          try {
+            const data = await patientRequest("/api/scans/upload", {
+              method: "POST",
+              body: formData,
+            });
+            const uploadedScans = data.scans || [data.scan];
+            const statusMessages = [
+              ...new Set(uploadedScans.map((scan) => scan.processing_message)),
+            ];
+            const uploadMessage =
+              uploadedScans.length > 1
+                ? `${uploadedScans.length} slices uploaded. ${statusMessages.join(" ")}`
+                : statusMessages[0];
+            showScanMessage(
+              uploadMessage,
+              uploadedScans.every((scan) => scan.processing_status === "analysis_complete")
+                ? "success"
+                : "",
+            );
+            document.getElementById("scanUploadForm").reset();
+            updateScanBodyRegionOptions();
+            setTodayMaxDateForInput("scanStudyDateInput");
+            await loadPatientScans(uploadedScans[0].patient_id, true);
+          } catch (error) {
+            showScanMessage(error.message || "Could not upload the scan.", "error");
+          } finally {
+            button.disabled = false;
+            button.textContent = "Upload scan";
+          }
+        });
+
+      async function loadPatientScans(patientId, expandNewest = false) {
+        const list = document.getElementById("scanList");
+        const empty = document.getElementById("scanListEmpty");
+        empty.textContent = "Loading scans...";
+        empty.hidden = false;
+        list.replaceChildren();
 
         try {
-          const isEditing = editingPatientId !== null;
-          const path = isEditing ? `/api/patients/${editingPatientId}` : "/api/patients";
-          const data = await patientRequest(path, {
-            method: isEditing ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+          const data = await patientRequest(`/api/scans?patient_id=${patientId}`);
+          if (selectedPatient?.id !== Number(patientId)) return;
+          empty.hidden = data.scans.length > 0;
+          empty.textContent = data.scans.length ? "" : "No scans uploaded for this patient.";
+
+          data.scans.forEach((scan, index) => {
+            const item = document.createElement("div");
+            item.className = "scan-item";
+            const details = document.createElement("div");
+            details.className = "scan-item-details";
+            const title = document.createElement("strong");
+            title.className = "scan-item-title";
+            title.textContent = scan.original_filename;
+            const metadata = document.createElement("p");
+            metadata.className = "scan-item-meta";
+            const bodyRegion = scan.body_region ? ` | ${scan.body_region}` : "";
+            const studyDate = scan.study_date
+              ? ` | ${formatPatientDate(scan.study_date)}`
+              : "";
+            metadata.textContent = `${scan.modality}${bodyRegion}${studyDate}`;
+            const status = document.createElement("p");
+            status.className = "scan-item-status";
+            status.textContent = scan.processing_message;
+            details.append(title, metadata, status);
+
+            const openButton = document.createElement("button");
+            openButton.type = "button";
+            openButton.className = "secondary-button scan-open-button";
+            openButton.textContent = "Open original";
+            openButton.setAttribute(
+              "aria-label",
+              `Open original scan ${scan.original_filename}`,
+            );
+            openButton.addEventListener("click", () =>
+              openOriginalFile(scan.original_url, showScanMessage),
+            );
+            item.append(details, openButton);
+            list.append(item);
+            if (scan.analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "scan-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Experimental AI segmentation";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.analysis.disclaimer;
+              const overlay = document.createElement("img");
+              overlay.className = "scan-overlay";
+              overlay.alt = "Experimental cardiac MRI segmentation overlay";
+              const legend = document.createElement("div");
+              legend.className = "scan-class-legend";
+
+              for (const className of scan.analysis.class_names) {
+                const entry = document.createElement("span");
+                entry.className = "scan-class-entry";
+                const swatch = document.createElement("span");
+                swatch.className = "scan-class-swatch";
+                swatch.style.backgroundColor = scan.analysis.class_colors[className];
+                const label = document.createElement("span");
+                const pixelCount = scan.analysis.pixel_counts[className] ?? 0;
+                  const pixelPercent = ((pixelCount / (256 * 256)) * 100).toFixed(1);
+                  label.textContent = `${className} · ${pixelPercent}% (${pixelCount.toLocaleString()} px)`;
+                entry.append(swatch, label);
+                legend.append(entry);
+              }
+
+              analysisPanel.append(analysisHeading, disclaimer, overlay, legend);
+              list.append(analysisPanel);
+              loadProtectedOverlay(scan.analysis.overlay_url, overlay);
+            }
+            if (scan.knee_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent =
+                `Experimental ACL prediction · Slice ${scan.knee_analysis.slice_index + 1}`;
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.knee_analysis.disclaimer;
+              const result = document.createElement("p");
+              result.className = "knee-analysis-result";
+              result.textContent =
+                `${scan.knee_analysis.class_name} · ${(scan.knee_analysis.confidence * 100).toFixed(1)}%`;
+              const localization = document.createElement("p");
+              localization.className = "knee-analysis-meta";
+              localization.textContent =
+                `Localization: ${scan.knee_analysis.localization_status}. ` +
+                "The ROI was cropped from the original image before classifier preprocessing.";
+              const probabilities = document.createElement("ul");
+              probabilities.className = "knee-probabilities";
+
+              for (const [className, probability] of Object.entries(
+                scan.knee_analysis.probabilities,
+              )) {
+                const row = document.createElement("li");
+                row.className = "knee-probability";
+                const label = document.createElement("span");
+                label.textContent = className;
+                const track = document.createElement("span");
+                track.className = "knee-probability-track";
+                const fill = document.createElement("span");
+                fill.className = "knee-probability-fill";
+                fill.style.display = "block";
+                fill.style.width = `${Math.max(0, Math.min(1, probability)) * 100}%`;
+                track.append(fill);
+                const value = document.createElement("strong");
+                value.className = "knee-probability-value";
+                value.textContent = `${(probability * 100).toFixed(1)}%`;
+                row.append(label, track, value);
+                probabilities.append(row);
+              }
+
+              analysisPanel.append(
+                analysisHeading,
+                disclaimer,
+                result,
+                localization,
+                probabilities,
+              );
+              list.append(analysisPanel);
+            }
+            if (scan.spine_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Experimental Spine MRI model score";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.spine_analysis.disclaimer;
+              const score = document.createElement("p");
+              score.className = "knee-analysis-result";
+              score.textContent = `Model score: ${scan.spine_analysis.model_score.toFixed(4)}`;
+              const inputDetails = document.createElement("p");
+              inputDetails.className = "knee-analysis-meta";
+              inputDetails.textContent =
+                `${scan.spine_analysis.frame_count} frames from ${scan.spine_analysis.frame_source.replaceAll("_", " ")}.`;
+              analysisPanel.append(analysisHeading, disclaimer, score, inputDetails);
+              list.append(analysisPanel);
+            }
+            if (scan.brain_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Experimental Brain MRI model scores";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.brain_analysis.disclaimer;
+              const result = document.createElement("p");
+              result.className = "knee-analysis-result";
+              result.textContent =
+                `Model class ${scan.brain_analysis.predicted_class_index} · ` +
+                `Model score ${scan.brain_analysis.model_score.toFixed(4)}`;
+              const scores = document.createElement("ul");
+              scores.className = "knee-probabilities";
+              for (const [className, value] of Object.entries(
+                scan.brain_analysis.class_scores,
+              )) {
+                const item = document.createElement("li");
+                item.className = "knee-probability";
+                const label = document.createElement("span");
+                label.textContent = className;
+                const track = document.createElement("span");
+                track.className = "knee-probability-track";
+                const fill = document.createElement("span");
+                fill.className = "knee-probability-fill";
+                fill.style.display = "block";
+                fill.style.width = `${Math.max(0, Math.min(1, value)) * 100}%`;
+                track.append(fill);
+                const score = document.createElement("strong");
+                score.className = "knee-probability-value";
+                score.textContent = value.toFixed(4);
+                item.append(label, track, score);
+                scores.append(item);
+              }
+              analysisPanel.append(analysisHeading, disclaimer, result, scores);
+              list.append(analysisPanel);
+            }
+            if (expandNewest && index === 0) {
+              item.scrollIntoView({ block: "nearest" });
+            }
           });
-          selectedPatient = data.patient;
-          showPatientMessage(isEditing ? "Patient record updated." : "Patient record created.", "success");
-          document.getElementById("patientForm").reset();
-          await loadPatients(selectedPatient.id);
         } catch (error) {
-          showPatientMessage(error.message || "Could not save the patient record.", "error");
-        } finally {
-          button.disabled = false;
-          button.textContent = editingPatientId === null ? "Save patient" : "Save changes";
+          if (selectedPatient?.id !== Number(patientId)) return;
+          empty.textContent = error.message || "Could not load scans.";
         }
-      });
+      }
+
+      async function loadProtectedOverlay(overlayUrl, imageElement) {
+        try {
+          const response = await fetch(`${API_BASE}${overlayUrl}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (!response.ok) throw new Error("Could not load segmentation overlay.");
+          imageElement.src = URL.createObjectURL(await response.blob());
+        } catch (error) {
+          imageElement.alt = error.message || "Could not load segmentation overlay.";
+        }
+      }
+
+      async function openOriginalFile(originalUrl, showError) {
+        const previewWindow = window.open("about:blank", "_blank");
+        if (!previewWindow) {
+          showError("Allow pop-ups to preview the original file.", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_BASE}${originalUrl}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || "Could not open the original file.");
+          }
+          const blobUrl = URL.createObjectURL(await response.blob());
+          previewWindow.location.replace(blobUrl);
+        } catch (error) {
+          previewWindow.close();
+          showError(error.message || "Could not open the original file.", "error");
+        }
+      }
+
+      async function loadPatientReports(patientId, expandNewest = false) {
+        const list = document.getElementById("reportList");
+        const empty = document.getElementById("reportListEmpty");
+        empty.textContent = "Loading reports...";
+        empty.hidden = false;
+        list.replaceChildren();
+
+        try {
+          const data = await patientRequest(
+            `/api/reports?patient_id=${patientId}`,
+          );
+          if (selectedPatient?.id !== Number(patientId)) return;
+
+          empty.hidden = data.reports.length > 0;
+          empty.textContent = data.reports.length
+            ? ""
+            : "No reports uploaded for this patient.";
+
+          data.reports.forEach((report, index) => {
+            const item = document.createElement("details");
+            item.className = "report-item";
+            item.open = expandNewest && index === 0;
+
+            const summary = document.createElement("summary");
+            const reportDate = report.report_date
+              ? formatPatientDate(report.report_date)
+              : "Date not provided";
+            summary.textContent = `${report.report_type} | ${reportDate} | ${report.processing_status.replaceAll("_", " ")}`;
+
+            const processingMessage = document.createElement("p");
+            processingMessage.className = "report-processing-message";
+            processingMessage.textContent = report.processing_message;
+
+            if (report.original_url) {
+              const openOriginalButton = document.createElement("button");
+              openOriginalButton.type = "button";
+              openOriginalButton.className = "secondary-button scan-open-button";
+              openOriginalButton.textContent = "Open original";
+              openOriginalButton.addEventListener("click", () =>
+                openOriginalFile(report.original_url, showUploadMessage),
+              );
+              item.append(openOriginalButton);
+            }
+
+            if (report.metadata) {
+              const metadataPanel = document.createElement("div");
+              metadataPanel.className = "report-metadata";
+              const metadataHeading = document.createElement("h6");
+              metadataHeading.textContent = "Details found in document";
+              metadataPanel.append(metadataHeading);
+
+              if (report.metadata.document_date) {
+                const documentDate = document.createElement("p");
+                documentDate.className = "report-document-date";
+                documentDate.textContent = `Date stated in document: ${formatPatientDate(report.metadata.document_date)}`;
+                metadataPanel.append(documentDate);
+              }
+
+              for (const section of report.metadata.sections) {
+                const sectionElement = document.createElement("section");
+                sectionElement.className = "report-section";
+                const sectionHeading = document.createElement("h6");
+                sectionHeading.className = "report-section-heading";
+                sectionHeading.textContent = section.name.replaceAll("_", " ");
+                const sectionText = document.createElement("p");
+                sectionText.className = "report-section-text";
+                sectionText.textContent = section.text;
+                sectionElement.append(sectionHeading, sectionText);
+                metadataPanel.append(sectionElement);
+              }
+
+              if (
+                !report.metadata.document_date &&
+                report.metadata.sections.length === 0
+              ) {
+                const emptyMetadata = document.createElement("p");
+                emptyMetadata.className = "report-metadata-empty";
+                emptyMetadata.textContent =
+                  "No explicitly labeled report date or sections were detected.";
+                metadataPanel.append(emptyMetadata);
+              }
+
+              item.append(metadataPanel);
+            }
+
+            if (report.parameters?.length) {
+              const parameterPanel = document.createElement("div");
+              parameterPanel.className = "report-parameters";
+              const parameterHeading = document.createElement("h6");
+              parameterHeading.textContent = "Values found in document";
+              const tableScroller = document.createElement("div");
+              tableScroller.className = "report-parameters-scroll";
+              const table = document.createElement("table");
+              table.className = "report-parameter-table";
+              const tableHead = document.createElement("thead");
+              const headerRow = document.createElement("tr");
+              for (const columnName of [
+                "Parameter",
+                "Value",
+                "Unit",
+                "Date",
+                "Confidence",
+                "Source line",
+              ]) {
+                const header = document.createElement("th");
+                header.scope = "col";
+                header.textContent = columnName;
+                headerRow.append(header);
+              }
+              tableHead.append(headerRow);
+              const tableBody = document.createElement("tbody");
+
+              for (const parameter of report.parameters) {
+                const row = document.createElement("tr");
+                const values = [
+                  parameter.parameter,
+                  parameter.value,
+                  parameter.unit,
+                  parameter.date
+                    ? formatPatientDate(parameter.date)
+                    : "Not stated",
+                  parameter.confidence === null
+                    ? "Not scored"
+                    : String(parameter.confidence),
+                  parameter.source,
+                ];
+                values.forEach((value, index) => {
+                  const cell = document.createElement("td");
+                  cell.textContent = value;
+                  if (index === 5) cell.className = "report-parameter-source";
+                  row.append(cell);
+                });
+                tableBody.append(row);
+              }
+
+              table.append(tableHead, tableBody);
+              tableScroller.append(table);
+              parameterPanel.append(parameterHeading, tableScroller);
+              item.append(parameterPanel);
+            }
+
+            const extractedText = document.createElement("pre");
+            extractedText.className = "report-extracted-text";
+            extractedText.textContent =
+              report.extracted_text ||
+              "No extracted text is available for this report.";
+
+            item.append(summary, processingMessage, extractedText);
+            list.append(item);
+          });
+        } catch (error) {
+          if (selectedPatient?.id !== Number(patientId)) return;
+          empty.textContent = error.message || "Could not load reports.";
+        }
+      }
 
       async function checkApi() {
         const status = document.getElementById("apiStatus");
@@ -686,34 +2403,40 @@
         }
       });
 
-      document.getElementById("logoutButton").addEventListener("click", async (event) => {
-        const button = event.currentTarget;
-        button.disabled = true;
-        button.textContent = "Signing out...";
-        let message = "You have signed out.";
-        let messageType = "success";
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", async (event) => {
+          const button = event.currentTarget;
+          button.disabled = true;
+          button.textContent = "Signing out...";
+          let message = "You have signed out.";
+          let messageType = "success";
 
-        try {
-          const response = await fetch(`${API_BASE}/api/auth/logout`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-          await readResponse(response, "Server could not confirm sign out.");
-        } catch (error) {
-          message = error.message || "Signed out here, but the server could not be reached.";
-          messageType = "error";
-        } finally {
-          accessToken = null;
-          patients = [];
-          selectedPatient = null;
-          document.getElementById("patientList").replaceChildren();
-          showAuthView("login");
-          showMessage(message, messageType);
-          button.disabled = false;
-          button.textContent = "Sign out";
-        }
-      });
+          try {
+            const response = await fetch(`${API_BASE}/api/auth/logout`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            await readResponse(response, "Server could not confirm sign out.");
+          } catch (error) {
+            message =
+              error.message ||
+              "Signed out here, but the server could not be reached.";
+            messageType = "error";
+          } finally {
+            accessToken = null;
+            patients = [];
+            selectedPatient = null;
+            document.getElementById("patientList").replaceChildren();
+            showAuthView("login");
+            showMessage(message, messageType);
+            button.disabled = false;
+            button.textContent = "Sign out";
+          }
+        });
 
+      setTodayMaxDateForInput("reportDateInput");
+      setTodayMaxDateForInput("scanStudyDateInput");
       checkApi();
     </script>
   </body>

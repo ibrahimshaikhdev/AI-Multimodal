@@ -29,6 +29,8 @@ class Patient(db.Model):
     )
 
     created_by = db.relationship("User", back_populates="patients")
+    reports = db.relationship("MedicalReport", back_populates="patient", cascade="all, delete-orphan")
+    scans = db.relationship("ScanAsset", back_populates="patient", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Patient {self.id}: {self.first_name} {self.last_name}>"

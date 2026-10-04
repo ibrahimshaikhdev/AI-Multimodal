@@ -199,6 +199,11 @@ Normalize OCR/parser output while preserving useful structure.
 
 **Done when:** Downstream NLP receives clean consistent text.
 
+## M18A — Extraction Workflow and Results UI
+Run extraction and text cleaning when a supported report is uploaded, persist the result and processing status, and show report history and extracted text in the patient view.
+
+**Done when:** The uploader can view saved extracted text for selectable-text PDFs, scanned PDFs, images, and DOCX files, with a clear status when no text can be extracted.
+
 ---
 
 # FR-06 — MEDICAL INFORMATION EXTRACTION
@@ -216,12 +221,14 @@ Possible model:
 **Done when:** NLP can be called without the application being tightly coupled to one model.
 
 ## M20 — Report Metadata Extraction
-Extract available report metadata, dates, observations and relevant entities.
+Extract explicitly labeled report dates and standard sections (such as Findings and Impression) from cleaned text. Preserve observation wording and its section; do not infer diagnoses or missing values. This initial implementation is deterministic and model-free so it can run on the current hardware; an NLP provider can improve coverage later without changing the output contract.
 
-**Done when:** Structured metadata is returned from sample reports.
+**Done when:** The upload API and patient report view return/display source-grounded dates, sections and verbatim observation excerpts from sample reports.
 
 ## M21 — Parameter / Value / Unit Extraction
-Extract:
+Extract explicit numeric rows only when both a parameter and recognized unit are present. Preserve the source line and report date; leave confidence unscored for deterministic matches instead of presenting a fabricated probability. Unsupported or ambiguous values are omitted.
+
+Return:
 
 ```text
 Parameter
@@ -232,12 +239,24 @@ Confidence
 Source
 ```
 
-**Done when:** Structured parameters are available.
+**Done when:** Extracted parameter rows and their source lines are available in the upload API and patient report view.
 
 ## M22 — Persist Extracted Information
-Store extracted information in PostgreSQL.
+Persist report parameter rows in a child table linked to the source report. Use a report-scoped fingerprint to make repeated processing idempotent; retain the exact source excerpt and keep confidence nullable when no calibrated score exists.
 
-**Done when:** Extracted data is associated with the correct report and duplicates are controlled.
+**Done when:** Extracted data is stored with the correct report, survives later reads, and repeated extraction does not create duplicate rows.
+
+## M22A — Separate Scan Library and Original File Viewer (Implemented)
+The patient view has a Scans section separate from written medical reports. Users can upload PDF, JPG/JPEG, and PNG scan files, associate them with a patient, and securely open the exact original through an authenticated endpoint. The region selector changes with modality: MRI offers Brain, Knee, Spine, Cardiac, and Other; CT offers Brain/head, Chest, Abdomen/pelvis, Spine, Cardiac, and Other; X-ray offers Chest, Bone/joint, Spine, Dental, and Other; ultrasound offers Abdomen, Obstetric, Cardiac/echocardiogram, Vascular, Thyroid, and Other. The API enforces the same taxonomy. Other is stored for reference but is explicitly ineligible for prediction. The Reports section also has an owner-authenticated original-file viewer alongside extracted text and parameter results. Named regions remain awaiting a compatible model.
+
+The initial upload does not support DICOM study/series ingestion and does not perform image analysis. Do not claim per-scan "accuracy": a model's per-case score/confidence is distinct from accuracy measured on a labeled evaluation dataset. Add model predictions only after a selected model and its supported input format are integrated.
+
+**Done when:** Users can upload scans separately from reports, see their patient-scoped scan list, and securely open original report and scan files; no diagnosis is implied before model integration.
+
+## M22B — Reports and Scans Workspace UI (Implemented)
+Present Reports and Scans as separate accessible tabs within the shared patient workspace. Preserve the patient context and existing upload/history flows; hide the document workspace while creating or editing a patient. Keep scan prediction status explicit until a compatible model is connected.
+
+**Done when:** Users can switch between Reports and Scans without stacking both workflows, and keyboard navigation exposes the selected panel correctly.
 
 ---
 
@@ -281,7 +300,7 @@ Display generated summary separately from source content.
 # FR-08 — MEDICAL IMAGE ANALYSIS
 
 ## M26 — Medical Image Model & Storage
-Create Medical Image structure and storage flow.
+After M22A, define the model-facing image/study record around the actual input/output contract of the selected Kaggle-trained model. Keep model version, task, preprocessing version and evaluation metrics identifiable; do not guess a format or substitute sample confidence for measured accuracy.
 
 **Done when:** Supported images are linked to patient/report records.
 
@@ -301,7 +320,7 @@ Possible:
 - ViT
 - MONAI
 
-Return model output and confidence where supported.
+Return the model's task-specific output and per-case score only as defined by that model. Keep dataset-level validation metrics separate and label both clearly; never present them as a confirmed diagnosis.
 
 **Done when:** Supported sample runs through the model.
 

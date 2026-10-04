@@ -10,6 +10,7 @@ ENV/
 
 # Database
 *.sqlite3
+instance/cardiac_debug/
 
 # Logs
 *.log
