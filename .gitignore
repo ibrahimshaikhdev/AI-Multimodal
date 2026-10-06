@@ -11,6 +11,11 @@ ENV/
 # Database
 *.sqlite3
 instance/cardiac_debug/
+models/lumbar_spine_mrimperium_best.pth
+models/obstetric_ultrasound_swin/model.safetensors
+models/abdominal_aorta_ultrasound_best.pt
+models/echoview47/TTE47_Classifier_Model.h5
+models/echoview47/EchoView47.keras
 
 # Logs
 *.log

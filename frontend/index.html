@@ -729,6 +729,51 @@
         font-size: 13px;
         line-height: 1.5;
       }
+      .model-interpretation-warning {
+        margin: 10px 0;
+        padding: 12px;
+        border-left: 3px solid #a66019;
+        background: #fff8ed;
+        color: #503b27;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+      .model-technical-details {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .model-technical-details summary {
+        cursor: pointer;
+        color: var(--forest-dark);
+        font-weight: 700;
+      }
+      .dental-detection {
+        display: grid;
+        gap: 3px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .dental-detection:last-child {
+        border-bottom: 0;
+      }
+      .dental-detection strong {
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .dental-detection span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .scan-analysis-image {
+        display: block;
+        width: min(100%, 512px);
+        height: auto;
+        margin-top: 12px;
+        border: 1px solid #dce7dc;
+        border-radius: 6px;
+      }
       .knee-analysis {
         margin: 0 0 18px;
         padding: 18px;
@@ -926,6 +971,911 @@
           flex-direction: column;
         }
       }
+      body.dashboard-active {
+        padding: 0;
+        color: #1e293b;
+        background: #f4f7fa;
+        background-image: none;
+      }
+      body.dashboard-active .page {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+      }
+      body.dashboard-active > .page > .topbar {
+        display: none;
+      }
+      .app-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 252px minmax(0, 1fr);
+        border: 0;
+        border-radius: 0;
+        background: #f4f7fa;
+        box-shadow: none;
+      }
+      .app-sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px 18px;
+        border-right: 1px solid #e6ebf0;
+        background: #fff;
+      }
+      .app-brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 2px 8px 24px;
+        color: #172c3c;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+      .app-brand-mark {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        flex: 0 0 38px;
+        place-items: center;
+        border-radius: 12px;
+        color: #fff;
+        background: #147d72;
+        font-size: 13px;
+        letter-spacing: .04em;
+      }
+      .nav-label {
+        margin: 18px 10px 7px;
+        color: #8794a2;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+      }
+      .workspace-nav {
+        display: grid;
+        gap: 3px;
+      }
+      .workspace-nav button {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 11px;
+        border: 0;
+        border-radius: 8px;
+        color: #526273;
+        background: transparent;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: left;
+      }
+      .workspace-nav button:hover {
+        color: #116e65;
+        background: #f1f8f6;
+      }
+      .workspace-nav button[aria-current="page"] {
+        color: #116e65;
+        background: #eaf5f2;
+      }
+      .nav-icon {
+        width: 20px;
+        color: #78908f;
+        font-size: 15px;
+        text-align: center;
+      }
+      .workspace-nav button[aria-current="page"] .nav-icon {
+        color: #147d72;
+      }
+      .sidebar-footer {
+        margin-top: auto;
+        padding: 14px 10px 0;
+        border-top: 1px solid #edf0f4;
+        color: #81909d;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      .dashboard-main {
+        min-width: 0;
+        padding: 28px clamp(20px, 4vw, 52px) 48px;
+      }
+      .dashboard-header {
+        min-height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+      .dashboard-header h1 {
+        margin: 2px 0 0;
+        color: #172c3c;
+        font-size: 23px;
+        letter-spacing: -.025em;
+      }
+      .header-greeting {
+        margin: 3px 0 0;
+        color: #82909d;
+        font-size: 11px;
+      }
+      .header-breadcrumb {
+        margin: 0;
+        color: #82909d;
+        font-size: 11px;
+      }
+      .header-account {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .header-user {
+        display: grid;
+        gap: 3px;
+        text-align: right;
+      }
+      .header-user .signed-email {
+        margin: 0;
+        color: #596979;
+        font-size: 12px;
+      }
+      .header-user .role-label {
+        justify-self: end;
+        padding: 3px 7px;
+        border-radius: 999px;
+        color: #17675f;
+        background: #eaf5f2;
+        font-size: 10px;
+        letter-spacing: .02em;
+        text-transform: capitalize;
+      }
+      .dashboard-header .secondary-button {
+        min-height: 36px;
+        border-color: #e0e7ed;
+        border-radius: 8px;
+        color: #526273;
+        font-size: 12px;
+      }
+      .workspace-content {
+        width: min(100%, 1240px);
+        margin: 0 auto;
+      }
+      .content-view[hidden] {
+        display: none !important;
+      }
+      .welcome-panel {
+        overflow: hidden;
+        position: relative;
+        padding: clamp(24px, 4vw, 42px);
+        border: 1px solid #dcebe8;
+        border-radius: 16px;
+        background: linear-gradient(120deg, #eaf6f3, #f4faf8 72%, #f5f7fd);
+      }
+      .welcome-panel::after {
+        position: absolute;
+        right: 8%;
+        bottom: -85px;
+        width: 220px;
+        height: 220px;
+        border: 1px solid rgba(20, 125, 114, .12);
+        border-radius: 50%;
+        content: "";
+        box-shadow: 0 0 0 24px rgba(20, 125, 114, .035), 0 0 0 48px rgba(20, 125, 114, .025);
+      }
+      .welcome-panel .eyebrow,
+      .profile-card .eyebrow,
+      .coming-soon-card .eyebrow {
+        margin: 0 0 10px;
+        color: #168074;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .11em;
+        text-transform: uppercase;
+      }
+      .welcome-panel h2 {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        color: #163c44;
+        font-size: clamp(25px, 3vw, 34px);
+        letter-spacing: -.04em;
+      }
+      .welcome-panel p:last-child {
+        position: relative;
+        z-index: 1;
+        max-width: 560px;
+        margin: 10px 0 0;
+        color: #587376;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+      .dashboard-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin: 18px 0 26px;
+      }
+      .metric-card,
+      .dashboard-card,
+      .profile-card,
+      .coming-soon-card {
+        border: 1px solid #e5ebf0;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 3px 12px rgba(34, 55, 72, .025);
+      }
+      .metric-card {
+        min-height: 112px;
+        padding: 17px 18px;
+      }
+      button.metric-card {
+        width: 100%;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+      }
+      .metric-card-link {
+        cursor: pointer;
+        transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+      }
+      .metric-card-link:hover,
+      .metric-card-link:focus-visible {
+        border-color: #b9d8d0;
+        box-shadow: 0 8px 22px rgba(20, 125, 114, .08);
+        transform: translateY(-2px);
+      }
+      .metric-label {
+        margin: 0;
+        color: #728191;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .metric-value {
+        display: block;
+        margin-top: 11px;
+        color: #173b43;
+        font-size: 25px;
+        font-weight: 700;
+        letter-spacing: -.04em;
+      }
+      .metric-note {
+        margin: 3px 0 0;
+        color: #8a98a5;
+        font-size: 11px;
+      }
+      .dashboard-columns {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr);
+        gap: 16px;
+      }
+      .dashboard-card {
+        min-width: 0;
+        padding: 20px;
+      }
+      .dashboard-card-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .dashboard-card-heading h3 {
+        margin: 0;
+        color: #243847;
+        font-size: 15px;
+      }
+      .dashboard-card-heading span {
+        color: #8895a2;
+        font-size: 11px;
+      }
+      .dashboard-patient-list {
+        display: grid;
+        gap: 4px;
+      }
+      .dashboard-patient-list button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 2px;
+        border: 0;
+        border-bottom: 1px solid #f0f2f5;
+        color: #314655;
+        background: transparent;
+        text-align: left;
+      }
+      .dashboard-patient-list button:last-child {
+        border-bottom: 0;
+      }
+      .dashboard-patient-list button:hover strong {
+        color: #147d72;
+      }
+      .dashboard-patient-list strong {
+        font-size: 12px;
+      }
+      .dashboard-patient-list span {
+        color: #8693a0;
+        font-size: 11px;
+      }
+      .dashboard-empty {
+        margin: 0;
+        padding: 14px 0;
+        color: #7a8997;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      .quick-actions {
+        display: grid;
+        gap: 9px;
+      }
+      .quick-actions button {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border: 1px solid #e6ecef;
+        border-radius: 8px;
+        color: #34505a;
+        background: #fbfcfd;
+        font-size: 12px;
+        font-weight: 600;
+        text-align: left;
+      }
+      .quick-actions button:hover {
+        border-color: #c8e1dc;
+        background: #f4faf8;
+      }
+      .quick-actions button span {
+        color: #168074;
+        font-size: 16px;
+      }
+      .section-toolbar {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 0 0 18px;
+      }
+      .section-toolbar h2 {
+        margin: 0;
+        color: #172c3c;
+        font-size: 22px;
+      }
+      .section-toolbar p {
+        margin: 5px 0 0;
+        color: #768594;
+        font-size: 12px;
+      }
+      .workspace-notice {
+        margin: 0 0 16px;
+        padding: 11px 13px;
+        border: 1px solid #dcebe8;
+        border-radius: 8px;
+        color: #45666a;
+        background: #f4faf8;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+      #patientsView.patient-layout {
+        border-color: #e3e9ee;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(34, 55, 72, .035);
+      }
+      #patientsView .patient-list-panel {
+        border-color: #e7edf1;
+        background: #f8fafb;
+      }
+      #patientsView .patient-list-heading {
+        color: #758491;
+        background: #fbfcfd;
+      }
+      #patientsView .patient-list-item {
+        background: #fff;
+      }
+      #patientsView .patient-list-item:hover,
+      #patientsView .patient-list-item[aria-current="true"] {
+        background: #edf7f4;
+      }
+      #patientsView .patient-list-item[aria-current="true"] {
+        box-shadow: inset 3px 0 #147d72;
+      }
+      .patients-content .patient-toolbar h3,
+      .patients-content .patient-detail-header h4 {
+        font-family: "DM Sans", "Segoe UI", sans-serif;
+        color: #1e3544;
+        font-weight: 700;
+      }
+      .patients-content .signed-content {
+        width: auto;
+        padding: 0;
+      }
+      .patients-content .small-primary,
+      .patients-content .primary-button {
+        border-radius: 8px;
+        background: #147d72;
+      }
+      .patients-content .small-primary:hover,
+      .patients-content .primary-button:hover {
+        background: #106c63;
+      }
+      .patients-content .secondary-button,
+      .patients-content .patient-workspace-tab {
+        border-radius: 8px;
+      }
+      .patients-content .report-upload-panel {
+        border-color: #e3e9ee;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(34, 55, 72, .035);
+      }
+      .coming-soon-card,
+      .profile-card {
+        max-width: 780px;
+        padding: clamp(22px, 4vw, 34px);
+      }
+      .coming-soon-mark {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 18px;
+        border-radius: 12px;
+        color: #147d72;
+        background: #eaf5f2;
+        font-size: 19px;
+      }
+      .coming-soon-card h2,
+      .profile-card h2 {
+        margin: 0;
+        color: #203746;
+        font-size: 21px;
+      }
+      .coming-soon-card > p:last-child,
+      .profile-card > p {
+        margin: 9px 0 0;
+        color: #70808e;
+        font-size: 13px;
+        line-height: 1.65;
+      }
+      .profile-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin: 23px 0 16px;
+      }
+      .profile-field {
+        min-width: 0;
+        padding: 13px;
+        border: 1px solid #e9eef2;
+        border-radius: 9px;
+        background: #fbfcfd;
+      }
+      .profile-field span {
+        display: block;
+        margin-bottom: 5px;
+        color: #82909c;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .profile-field strong {
+        overflow-wrap: anywhere;
+        color: #344a59;
+        font-size: 12px;
+      }
+      .profile-note {
+        padding-top: 14px;
+        border-top: 1px solid #edf0f3;
+      }
+      .library-view,
+      .timeline-view,
+      .research-view {
+        min-width: 0;
+      }
+      .library-toolbar,
+      .research-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 0 0 16px;
+      }
+      .library-toolbar input,
+      .research-toolbar input {
+        max-width: 440px;
+        min-height: 42px;
+      }
+      .library-grid,
+      .research-paper-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px;
+      }
+      .library-card,
+      .timeline-event,
+      .research-paper-card {
+        min-width: 0;
+        padding: 17px;
+        border: 1px solid #e3eaf0;
+        border-radius: 11px;
+        background: #fff;
+        box-shadow: 0 4px 15px rgba(34, 55, 72, .035);
+      }
+      .library-card h3,
+      .timeline-event h3,
+      .research-paper-card h3 {
+        margin: 0;
+        color: #233d4b;
+        font-size: 15px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+      .library-card-meta,
+      .timeline-event-meta,
+      .research-paper-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        margin: 8px 0 0;
+        color: #788995;
+        font-size: 11px;
+        line-height: 1.55;
+      }
+      .library-card-actions,
+      .research-paper-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .library-card-actions .secondary-button,
+      .research-paper-actions .secondary-button {
+        min-height: 34px;
+        border-radius: 7px;
+        font-size: 11px;
+      }
+      .library-status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 23px;
+        margin-top: 11px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        color: #42665f;
+        background: #eef6f2;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .library-empty {
+        grid-column: 1 / -1;
+        margin: 0;
+        padding: 24px;
+        border: 1px dashed #cbd8d7;
+        border-radius: 10px;
+        color: #71828c;
+        background: rgba(255, 255, 255, .72);
+        font-size: 13px;
+        text-align: center;
+      }
+      .timeline-layout {
+        display: grid;
+        grid-template-columns: minmax(210px, .7fr) minmax(0, 1.8fr);
+        gap: 16px;
+      }
+      .timeline-patient-panel,
+      .timeline-detail-panel,
+      .research-upload-panel {
+        min-width: 0;
+        padding: 18px;
+        border: 1px solid #e4eaf0;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 4px 16px rgba(34, 55, 72, .035);
+      }
+      .timeline-patient-panel h3,
+      .timeline-detail-panel h3,
+      .research-upload-panel h3 {
+        margin: 0 0 12px;
+        color: #2b414e;
+        font-size: 14px;
+      }
+      .timeline-patient-list {
+        display: grid;
+        gap: 6px;
+      }
+      .timeline-patient-list button {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 11px 12px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        color: #354c58;
+        background: #f8faf9;
+        text-align: left;
+      }
+      .timeline-patient-list button:hover,
+      .timeline-patient-list button[aria-current="true"] {
+        border-color: #c8e0d8;
+        color: #174f46;
+        background: #eff7f3;
+      }
+      .timeline-patient-list strong {
+        font-size: 12px;
+      }
+      .timeline-patient-list span {
+        color: #87949c;
+        font-size: 10px;
+      }
+      .timeline-detail-heading {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 13px;
+      }
+      .timeline-detail-heading h3 {
+        margin: 0;
+        font-family: "Fraunces", Georgia, serif;
+        font-size: 20px;
+        font-weight: 500;
+      }
+      .timeline-detail-heading span {
+        color: #87949c;
+        font-size: 11px;
+      }
+      .timeline-events {
+        position: relative;
+        display: grid;
+        gap: 11px;
+        padding-left: 19px;
+      }
+      .timeline-events::before {
+        position: absolute;
+        top: 10px;
+        bottom: 10px;
+        left: 6px;
+        width: 2px;
+        background: #deebe5;
+        content: "";
+      }
+      .timeline-event {
+        position: relative;
+        padding: 14px;
+        box-shadow: none;
+      }
+      .timeline-event::before {
+        position: absolute;
+        top: 19px;
+        left: -18px;
+        width: 9px;
+        height: 9px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: #36826f;
+        box-shadow: 0 0 0 1px #8bbdaf;
+        content: "";
+      }
+      .timeline-event-type {
+        display: inline-block;
+        margin-bottom: 5px;
+        color: #42816f;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+      .timeline-event .secondary-button {
+        min-height: 32px;
+        margin-top: 11px;
+        border-radius: 7px;
+        font-size: 11px;
+      }
+      .research-library-layout {
+        display: grid;
+        grid-template-columns: minmax(260px, .85fr) minmax(0, 1.5fr);
+        align-items: start;
+        gap: 16px;
+      }
+      .research-upload-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 12px;
+      }
+      .research-upload-form .field-group:first-child,
+      .research-upload-form .field-group:nth-child(2),
+      .research-upload-form .field-group:last-of-type,
+      .research-upload-form .primary-button {
+        grid-column: 1 / -1;
+      }
+      .research-upload-form .field-group {
+        margin-bottom: 11px;
+      }
+      .research-upload-form input {
+        min-height: 40px;
+        font-size: 12px;
+      }
+      .research-upload-form .primary-button {
+        min-height: 40px;
+        margin-top: 0;
+        border-radius: 7px;
+        background: #147d72;
+        font-size: 12px;
+      }
+      .research-upload-form .primary-button:hover {
+        background: #106c63;
+      }
+      .research-upload-note {
+        margin: 10px 0 0;
+        color: #7e8b94;
+        font-size: 10px;
+        line-height: 1.5;
+      }
+      @media (max-width: 900px) {
+        .research-library-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 700px) {
+        .library-grid,
+        .research-paper-list {
+          grid-template-columns: 1fr;
+        }
+        .timeline-layout {
+          grid-template-columns: 1fr;
+        }
+        .timeline-patient-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .research-upload-form {
+          grid-template-columns: 1fr;
+        }
+        .research-upload-form .field-group {
+          grid-column: 1 / -1;
+        }
+      }
+      .assistant-preview {
+        width: 100%;
+        min-height: 82px;
+        margin-top: 18px;
+        padding: 12px;
+        border: 1px solid #e4eaef;
+        border-radius: 9px;
+        color: #8794a1;
+        background: #f8fafb;
+        font: inherit;
+        resize: vertical;
+      }
+      .assistant-preview:disabled {
+        cursor: not-allowed;
+        opacity: 1;
+      }
+      .coming-soon-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .coming-soon-actions button {
+        min-height: 36px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 8px;
+        color: #fff;
+        background: #94a3ad;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .coming-soon-actions span {
+        color: #82909c;
+        font-size: 11px;
+      }
+      @media (max-width: 920px) {
+        .app-shell {
+          grid-template-columns: 210px minmax(0, 1fr);
+        }
+        .dashboard-columns {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 700px) {
+        body.dashboard-active {
+          padding: 0;
+        }
+        .app-shell {
+          display: block;
+        }
+        .app-sidebar {
+          position: sticky;
+          z-index: 5;
+          top: 0;
+          width: 100%;
+          height: auto;
+          padding: 10px 12px 8px;
+          border-right: 0;
+          border-bottom: 1px solid #e6ebf0;
+        }
+        .app-brand {
+          padding: 0 3px 9px;
+          font-size: 12px;
+        }
+        .app-brand-mark {
+          width: 32px;
+          height: 32px;
+          flex-basis: 32px;
+          border-radius: 9px;
+        }
+        .nav-label,
+        .sidebar-footer {
+          display: none;
+        }
+        .workspace-nav {
+          display: flex;
+          gap: 4px;
+          overflow-x: auto;
+          padding-bottom: 2px;
+          scrollbar-width: thin;
+        }
+        .workspace-nav button {
+          min-height: 35px;
+          flex: 0 0 auto;
+          gap: 6px;
+          padding: 7px 9px;
+          font-size: 11px;
+        }
+        .nav-icon {
+          width: auto;
+        }
+        .dashboard-main {
+          padding: 18px 16px 32px;
+        }
+        .dashboard-header {
+          align-items: flex-start;
+          margin-bottom: 18px;
+        }
+        .dashboard-header h1 {
+          font-size: 19px;
+        }
+        .header-account {
+          gap: 8px;
+        }
+        .header-user {
+          display: none;
+        }
+        .dashboard-header .secondary-button {
+          min-height: 33px;
+          padding: 6px 9px;
+          font-size: 11px;
+        }
+        .dashboard-metrics {
+          grid-template-columns: 1fr;
+          gap: 9px;
+          margin: 12px 0 18px;
+        }
+        .metric-card {
+          min-height: 86px;
+        }
+        .metric-value {
+          margin-top: 5px;
+          font-size: 22px;
+        }
+        .patient-layout {
+          grid-template-columns: 1fr;
+        }
+        .patients-content .patient-list-panel {
+          border-right: 0;
+          border-bottom: 1px solid #e7edf1;
+        }
+        .patients-content .patient-list {
+          max-height: 220px;
+          overflow-y: auto;
+        }
+        .profile-fields {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1077,22 +2027,146 @@
 
       <main
         id="signedInView"
-        class="signed-in"
+        class="signed-in app-shell"
         aria-labelledby="signedInHeading"
         hidden
       >
-        <section class="signed-content">
-          <div class="signed-top">
-            <div>
-              <p class="identity-kicker">Workspace</p>
-              <h2 id="signedInHeading">You’re signed in</h2>
-              <p id="signedInEmail" class="signed-email"></p>
-              <span id="signedInRole" class="role-label"></span>
-            </div>
-            <button id="logoutButton" class="secondary-button" type="button">
-              Sign out
-            </button>
+        <aside class="app-sidebar" aria-label="Workspace navigation">
+          <div class="app-brand">
+            <span class="app-brand-mark" aria-hidden="true">MR</span>
+            <span>Medical Research<br />Intelligence</span>
           </div>
+          <p class="nav-label">Workspace</p>
+          <nav class="workspace-nav" aria-label="Main navigation">
+            <button type="button" data-workspace-nav="dashboard" aria-current="page">
+              <span class="nav-icon" aria-hidden="true">⌂</span>Dashboard
+            </button>
+            <button type="button" data-workspace-nav="patients">
+              <span class="nav-icon" aria-hidden="true">♙</span>Patients
+            </button>
+            <button type="button" data-workspace-nav="reports">
+              <span class="nav-icon" aria-hidden="true">▤</span>Medical Reports
+            </button>
+            <button type="button" data-workspace-nav="scans">
+              <span class="nav-icon" aria-hidden="true">▧</span>Medical Scans
+            </button>
+            <button type="button" data-workspace-nav="report-comparison">
+              <span class="nav-icon" aria-hidden="true">⇄</span>Report Comparison
+            </button>
+            <button type="button" data-workspace-nav="timeline">
+              <span class="nav-icon" aria-hidden="true">◷</span>Health Timeline
+            </button>
+            <button type="button" data-workspace-nav="assistant">
+              <span class="nav-icon" aria-hidden="true">✳</span>AI Assistant
+            </button>
+          </nav>
+          <p class="nav-label">Research</p>
+          <nav class="workspace-nav" aria-label="Research navigation">
+            <button type="button" data-workspace-nav="research-papers">
+              <span class="nav-icon" aria-hidden="true">▧</span>Research Papers
+            </button>
+            <button type="button" data-workspace-nav="research-rag">
+              <span class="nav-icon" aria-hidden="true">⌕</span>Research RAG
+            </button>
+            <button type="button" data-workspace-nav="research-comparison">
+              <span class="nav-icon" aria-hidden="true">⇆</span>Research Comparison
+            </button>
+          </nav>
+          <p class="nav-label">Account</p>
+          <nav class="workspace-nav" aria-label="Account navigation">
+            <button type="button" data-workspace-nav="profile">
+              <span class="nav-icon" aria-hidden="true">◎</span>Profile
+            </button>
+            <button type="button" data-workspace-nav="settings">
+              <span class="nav-icon" aria-hidden="true">⚙</span>Settings
+            </button>
+            <button type="button" data-workspace-nav="activity">
+              <span class="nav-icon" aria-hidden="true">☷</span>Activity
+            </button>
+          </nav>
+          <div class="sidebar-footer">
+            Research workspace<br />AI output is experimental, not a diagnosis.
+          </div>
+        </aside>
+
+        <div class="dashboard-main">
+          <header class="dashboard-header">
+            <div class="dashboard-page-heading">
+              <p class="header-breadcrumb">Workspace <span aria-hidden="true">/</span> <span id="workspaceBreadcrumb">Dashboard</span></p>
+              <h1 id="workspacePageTitle">Dashboard</h1>
+              <p id="signedInHeading" class="header-greeting">You’re signed in</p>
+            </div>
+            <div class="header-account">
+              <div class="header-user">
+                <p id="signedInEmail" class="signed-email"></p>
+                <span id="signedInRole" class="role-label"></span>
+              </div>
+              <span id="dashboardApiStatus" class="api-status" role="status" aria-live="polite">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span>Checking API</span>
+              </span>
+              <button id="logoutButton" class="secondary-button" type="button">
+                Sign out
+              </button>
+            </div>
+          </header>
+
+          <div class="workspace-content">
+            <section id="dashboardSection" class="content-view" aria-labelledby="workspacePageTitle">
+              <div class="welcome-panel">
+                <p class="eyebrow">Your workspace</p>
+                <h2>Welcome, <span id="dashboardFirstName">there</span></h2>
+                <p>Manage patient records, reports, and imaging from one research workspace. AI outputs are experimental and are not confirmed medical diagnoses.</p>
+              </div>
+              <div class="dashboard-metrics" aria-label="Workspace summary">
+                <article class="metric-card">
+                  <p class="metric-label">Patient records</p>
+                  <strong id="dashboardPatientCount" class="metric-value">—</strong>
+                  <p class="metric-note">Loaded from your existing records</p>
+                </article>
+                <button class="metric-card metric-card-link" type="button" data-workspace-nav="reports">
+                  <span class="metric-label">Medical reports</span>
+                  <strong class="metric-value">Available</strong>
+                  <span class="metric-note">Browse and download uploaded documents →</span>
+                </button>
+                <button class="metric-card metric-card-link" type="button" data-workspace-nav="scans">
+                  <span class="metric-label">Medical scans</span>
+                  <strong class="metric-value">Available</strong>
+                  <span class="metric-note">Browse and download uploaded imaging →</span>
+                </button>
+              </div>
+              <div class="dashboard-columns">
+                <section class="dashboard-card" aria-labelledby="dashboardPatientsHeading">
+                  <div class="dashboard-card-heading">
+                    <h3 id="dashboardPatientsHeading">Patient records</h3>
+                    <span>From your current patient list</span>
+                  </div>
+                  <div id="dashboardPatientList" class="dashboard-patient-list">
+                    <p class="dashboard-empty">Loading patient records…</p>
+                  </div>
+                </section>
+                <section class="dashboard-card" aria-labelledby="quickActionsHeading">
+                  <div class="dashboard-card-heading">
+                    <h3 id="quickActionsHeading">Quick actions</h3>
+                  </div>
+                  <div class="quick-actions">
+                    <button type="button" data-workspace-nav="patients">Open patient workspace <span aria-hidden="true">→</span></button>
+                    <button type="button" data-workspace-nav="reports">Review medical reports <span aria-hidden="true">→</span></button>
+                    <button type="button" data-workspace-nav="scans">Review medical scans <span aria-hidden="true">→</span></button>
+                  </div>
+                </section>
+              </div>
+            </section>
+
+            <section id="patientSection" class="content-view patients-content" aria-labelledby="patientsSectionHeading" hidden>
+              <div class="section-toolbar">
+                <div>
+                  <h2 id="patientsSectionHeading">Patients</h2>
+                  <p>Patient records and their associated reports and scans.</p>
+                </div>
+              </div>
+              <p id="workspaceContextNotice" class="workspace-notice" hidden></p>
+              <section class="signed-content">
           <div class="patient-toolbar">
             <div>
               <h3>Patients</h3>
@@ -1351,12 +2425,194 @@
               </div>
             </section>
           </div>
-        </section>
+              </section>
+            </section>
+
+            <section id="reportsLibrarySection" class="content-view library-view" hidden>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Medical Reports</h2>
+                  <p>Uploaded report documents from your patient records, in one searchable library.</p>
+                </div>
+              </div>
+              <div class="library-toolbar">
+                <label class="field-group" for="reportsLibrarySearch">
+                  <span>Search reports</span>
+                  <input id="reportsLibrarySearch" type="search" placeholder="Patient, report type, or filename" />
+                </label>
+              </div>
+              <p id="reportsLibraryMessage" class="message" role="status" aria-live="polite" hidden></p>
+              <div id="reportsLibraryList" class="library-grid"></div>
+              <p id="reportsLibraryEmpty" class="library-empty" hidden></p>
+            </section>
+
+            <section id="scansLibrarySection" class="content-view library-view" hidden>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Medical Scans</h2>
+                  <p>Uploaded imaging files grouped by patient. Original files remain available to download.</p>
+                </div>
+              </div>
+              <div class="library-toolbar">
+                <label class="field-group" for="scansLibrarySearch">
+                  <span>Search scans</span>
+                  <input id="scansLibrarySearch" type="search" placeholder="Patient, modality, region, or filename" />
+                </label>
+              </div>
+              <p id="scansLibraryMessage" class="message" role="status" aria-live="polite" hidden></p>
+              <div id="scansLibraryList" class="library-grid"></div>
+              <p id="scansLibraryEmpty" class="library-empty" hidden></p>
+            </section>
+
+            <section id="reportComparisonSection" class="content-view" hidden>
+              <div class="coming-soon-card">
+                <div class="coming-soon-mark" aria-hidden="true">⇄</div>
+                <p class="eyebrow">Patient records</p>
+                <h2>Report comparison</h2>
+                <p>Side-by-side report comparison is not implemented yet. Your existing report history and extracted source text remain available from each patient’s Reports workspace.</p>
+              </div>
+            </section>
+            <section id="timelineSection" class="content-view" hidden>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Health Timeline</h2>
+                  <p>Choose a patient to see uploaded reports and scans in date order.</p>
+                </div>
+              </div>
+              <p class="workspace-notice">Events are ordered by upload date. A report or study date is also shown when one was recorded; dates are not inferred.</p>
+              <div class="timeline-layout">
+                <section class="timeline-patient-panel" aria-labelledby="timelinePatientHeading">
+                  <h3 id="timelinePatientHeading">Patients</h3>
+                  <div id="timelinePatientList" class="timeline-patient-list"></div>
+                </section>
+                <section class="timeline-detail-panel" aria-labelledby="timelineDetailHeading">
+                  <div class="timeline-detail-heading">
+                    <h3 id="timelineDetailHeading">Select a patient</h3>
+                    <span id="timelineEventCount"></span>
+                  </div>
+                  <p id="timelineMessage" class="message" role="status" aria-live="polite" hidden></p>
+                  <div id="timelineEvents" class="timeline-events"></div>
+                  <p id="timelineEmpty" class="library-empty">Choose a patient to load their record timeline.</p>
+                </section>
+              </div>
+            </section>
+            <section id="assistantSection" class="content-view" hidden>
+              <div class="coming-soon-card">
+                <div class="coming-soon-mark" aria-hidden="true">✳</div>
+                <p class="eyebrow">AI assistant</p>
+                <h2>Research and records assistant</h2>
+                <p>This is a visual preview only. No question is sent, no AI response is generated, and no patient data is shared from this screen.</p>
+                <textarea class="assistant-preview" aria-label="AI assistant preview input" placeholder="Chat will be available when the assistant is implemented." disabled></textarea>
+                <div class="coming-soon-actions">
+                  <button type="button" disabled>Coming soon</button>
+                  <span>Assistant responses are not enabled.</span>
+                </div>
+              </div>
+            </section>
+            <section id="researchPapersSection" class="content-view" hidden>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Research Papers</h2>
+                  <p>A private library for your research documents, searchable by title, topic, and author.</p>
+                </div>
+              </div>
+              <p id="researchPaperMessage" class="message" role="status" aria-live="polite" hidden></p>
+              <div class="research-library-layout">
+                <section class="research-upload-panel" aria-labelledby="researchUploadHeading">
+                  <h3 id="researchUploadHeading">Add a paper</h3>
+                  <form id="researchPaperUploadForm" class="research-upload-form">
+                    <div class="field-group">
+                      <label for="researchPaperTitle">Title</label>
+                      <input id="researchPaperTitle" name="title" maxlength="200" required />
+                    </div>
+                    <div class="field-group">
+                      <label for="researchPaperTopic">Topic</label>
+                      <input id="researchPaperTopic" name="topic" maxlength="120" placeholder="e.g. Echocardiography" required />
+                    </div>
+                    <div class="field-group">
+                      <label for="researchPaperAuthors">Authors (optional)</label>
+                      <input id="researchPaperAuthors" name="authors" maxlength="255" />
+                    </div>
+                    <div class="field-group">
+                      <label for="researchPaperDate">Publication date (optional)</label>
+                      <input id="researchPaperDate" name="paper_date" type="date" />
+                    </div>
+                    <div class="field-group">
+                      <label for="researchPaperJournal">Journal / source (optional)</label>
+                      <input id="researchPaperJournal" name="journal" maxlength="255" />
+                    </div>
+                    <div class="field-group">
+                      <label for="researchPaperFile">Paper file</label>
+                      <input id="researchPaperFile" name="file" type="file" accept=".pdf,.docx" required />
+                    </div>
+                    <button id="uploadResearchPaperButton" class="primary-button" type="submit">Upload paper</button>
+                  </form>
+                  <p class="research-upload-note">PDF or DOCX, up to 10 MB. Papers are private to your signed-in account. Search matches saved details; it does not search inside paper text.</p>
+                </section>
+                <section class="research-view" aria-labelledby="researchLibraryHeading">
+                  <div class="research-toolbar">
+                    <label class="field-group" for="researchPaperSearch">
+                      <span id="researchLibraryHeading">Your library</span>
+                      <input id="researchPaperSearch" type="search" placeholder="Search title, topic, author, or journal" />
+                    </label>
+                  </div>
+                  <div id="researchPaperList" class="research-paper-list"></div>
+                  <p id="researchPaperEmpty" class="library-empty" hidden></p>
+                </section>
+              </div>
+            </section>
+            <section id="researchRagSection" class="content-view" hidden>
+              <div class="coming-soon-card">
+                <div class="coming-soon-mark" aria-hidden="true">⌕</div>
+                <p class="eyebrow">Research tools</p>
+                <h2>Research RAG</h2>
+                <p>Grounded search and question answering over research papers are not implemented yet. This screen does not produce answers or citations.</p>
+              </div>
+            </section>
+            <section id="researchComparisonSection" class="content-view" hidden>
+              <div class="coming-soon-card">
+                <div class="coming-soon-mark" aria-hidden="true">⇆</div>
+                <p class="eyebrow">Research tools</p>
+                <h2>Research comparison</h2>
+                <p>Structured comparison of research papers is not implemented yet. No study findings or comparisons are generated here.</p>
+              </div>
+            </section>
+            <section id="profileSection" class="content-view" hidden>
+              <div class="profile-card">
+                <p class="eyebrow">Account</p>
+                <h2>Profile</h2>
+                <p>These details come from the authenticated account information available to this session.</p>
+                <div class="profile-fields">
+                  <div class="profile-field"><span>Name</span><strong id="profileName">—</strong></div>
+                  <div class="profile-field"><span>Email</span><strong id="profileEmail">—</strong></div>
+                  <div class="profile-field"><span>Role</span><strong id="profileRole">—</strong></div>
+                </div>
+                <p class="profile-note">Profile editing is not available through the existing account API.</p>
+              </div>
+            </section>
+            <section id="settingsSection" class="content-view" hidden>
+              <div class="coming-soon-card">
+                <div class="coming-soon-mark" aria-hidden="true">⚙</div>
+                <p class="eyebrow">Account</p>
+                <h2>Settings</h2>
+                <p>Workspace preferences are not implemented yet. There are no settings to save on this screen.</p>
+              </div>
+            </section>
+            <section id="activitySection" class="content-view" hidden>
+              <div class="coming-soon-card">
+                <div class="coming-soon-mark" aria-hidden="true">☷</div>
+                <p class="eyebrow">Workspace activity</p>
+                <h2>Activity and audit history</h2>
+                <p>An activity log is not available from the existing API, so no audit events are displayed here.</p>
+              </div>
+            </section>
+          </div>
+        </div>
       </main>
     </div>
 
     <script>
-      const API_BASE = "http://127.0.0.1:5000";
+      const API_BASE = "";
       let accessToken = null;
 
       const authView = document.getElementById("authView");
@@ -1384,14 +2640,13 @@
       const scanUploadPanel = document.getElementById("scanUploadPanel");
       const SCAN_SUBTYPES = {
         MRI: ["Brain", "Knee", "Spine", "Cardiac", "Other"],
-        CT: ["Brain/head", "Chest", "Abdomen/pelvis", "Spine", "Cardiac", "Other"],
-        X_RAY: ["Chest", "Bone/joint", "Spine", "Dental", "Other"],
+        CT: ["Brain/head", "Chest", "Abdomen/pelvis", "Spine", "Other"],
+        X_RAY: ["Chest", "Bone/joint", "Dental", "Other"],
         ULTRASOUND: [
           "Abdomen",
           "Obstetric",
           "Cardiac/echocardiogram",
           "Vascular",
-          "Thyroid",
           "Other",
         ],
         OTHER: ["Other"],
@@ -1399,6 +2654,12 @@
       let patients = [];
       let selectedPatient = null;
       let editingPatientId = null;
+      let activeWorkspaceView = "dashboard";
+      let timelineSelectedPatientId = null;
+      let timelineRequestVersion = 0;
+      let reportLibraryItems = [];
+      let scanLibraryItems = [];
+      let researchPapers = [];
 
       function updateScanBodyRegionOptions() {
         const modality = scanModalityInput.value;
@@ -1422,44 +2683,84 @@
         updateScanPredictionNote();
       }
 
-      function updateScanPredictionNote() {
-        const isCardiacMRI =
-          scanModalityInput.value === "MRI" &&
-          scanBodyRegionInput.value === "Cardiac";
-        const isKneeMRI =
-          scanModalityInput.value === "MRI" &&
-          scanBodyRegionInput.value === "Knee";
-        const isSpineMRI =
-          scanModalityInput.value === "MRI" &&
-          scanBodyRegionInput.value === "Spine";
-        const isBrainMRI =
-          scanModalityInput.value === "MRI" &&
-          scanBodyRegionInput.value === "Brain";
-        scanFileInput.accept = isCardiacMRI || isKneeMRI || isSpineMRI || isBrainMRI
-          ? ".png,.jpg,.jpeg"
-          : ".pdf,.jpg,.jpeg,.png";
-        scanFileInput.multiple = isKneeMRI;
+      function getAcceptedExtensions(modality, region) {
+        if (modality === "CT" && region === "Brain/head") {
+          return [".zip", ".nii", ".nii.gz"];
+        }
+        const isImageOnly =
+          (modality === "MRI" && ["Brain", "Knee", "Spine", "Cardiac"].includes(region)) ||
+          (modality === "X_RAY" && ["Chest", "Bone/joint", "Dental"].includes(region)) ||
+          (modality === "ULTRASOUND" && ["Abdomen", "Obstetric", "Cardiac/echocardiogram"].includes(region));
+        return isImageOnly ? [".jpg", ".jpeg", ".png"] : [".pdf", ".jpg", ".jpeg", ".png"];
+      }
 
-        if (isKneeMRI) {
-          scanPredictionNote.textContent =
-            "Upload a sagittal knee MRI image (JPG/PNG). ACL localization and preprocessing are handled automatically.";
-        } else if (isSpineMRI) {
-          scanPredictionNote.textContent =
-            "Upload one sagittal Spine MRI JPG/PNG. This experimental model returns a raw score; its label meaning is unspecified. The image is repeated to form 12 model frames.";
-        } else if (isBrainMRI) {
-          scanPredictionNote.textContent =
-            "Upload a Brain MRI JPG/PNG. The experimental model returns four class-index scores; class meanings are unspecified and this is not a diagnosis.";
-        } else if (isCardiacMRI) {
-          scanPredictionNote.textContent =
-            "Please upload a cardiac MRI image in PNG or JPG format. Experimental segmentation is not a confirmed diagnosis.";
-        } else if (scanBodyRegionInput.value === "Other" || scanModalityInput.value === "OTHER") {
-          scanPredictionNote.textContent =
-            "Other scans are stored for reference only and are not eligible for prediction.";
+      function updateScanPredictionNote() {
+        const modality = scanModalityInput.value;
+        const region = scanBodyRegionInput.value;
+        const acceptedExts = getAcceptedExtensions(modality, region);
+
+        scanFileInput.accept = acceptedExts.join(",");
+        scanFileInput.multiple = modality === "MRI" && region === "Knee";
+
+        const extText = acceptedExts.map(e => e.toUpperCase().replace(".", "")).join(", ");
+        let note = `Accepted formats: ${extText}. `;
+
+        if (modality === "MRI" && region === "Knee") {
+          note += "Upload a sagittal knee MRI image. ACL localization and preprocessing are handled automatically.";
+        } else if (modality === "MRI" && region === "Spine") {
+          note += "Upload a lumbar spine MRI JPG/PNG image for experimental scores across three finding groups and three severity levels. This analyzes one image, not a full MRI series, and is not a diagnosis.";
+        } else if (modality === "MRI" && region === "Brain") {
+          note += "Upload a Brain MRI. Experimental model classes are Glioma, Meningioma, No tumor, and Pituitary tumor; scores are not confirmed diagnoses.";
+        } else if (modality === "X_RAY" && region === "Chest") {
+          note += "Upload a Chest X-ray. The AI model returns 18 finding scores (e.g., Cardiomegaly, Effusion). These are model scores, not confirmed diagnoses.";
+        } else if (modality === "X_RAY" && region === "Bone/joint") {
+          note += "Upload a Bone/Joint X-ray. The AI model detects fractures with a confidence score. This is not a confirmed diagnosis.";
+        } else if (modality === "X_RAY" && region === "Dental") {
+          note += "Upload a panoramic Dental X-ray. The OralGuard model detects caries, deep caries, periapical lesions, and impacted teeth with model scores and boxes. These are not confirmed diagnoses.";
+        } else if (modality === "CT" && region === "Brain/head") {
+          note += "Upload a non-contrast head CT as a ZIP containing one DICOM series, or a 3D NIfTI volume (.nii/.nii.gz). Single JPG/PNG screenshots are not supported. Model output is experimental and not a diagnosis.";
+        } else if (modality === "MRI" && region === "Cardiac") {
+          note += "Please upload a cardiac MRI image. Experimental segmentation is not a confirmed diagnosis.";
+        } else if (modality === "ULTRASOUND" && region === "Obstetric") {
+          note += "Upload one fetal ultrasound JPG/PNG image for experimental view classification (for example, fetal brain or abdomen). This does not assess fetal health or diagnose a condition.";
+        } else if (modality === "ULTRASOUND" && region === "Abdomen") {
+          note += "Aorta POCUS segmentation only: upload one suitable abdominal aorta-view JPG/PNG image. This is not general abdominal analysis, aneurysm detection, or a diagnosis.";
+        } else if (modality === "ULTRASOUND" && region === "Cardiac/echocardiogram") {
+          note += "Upload one echocardiogram JPG/PNG still image for an experimental heart-view label (for example, apical four-chamber). It identifies the image view only, not a heart condition or diagnosis.";
+        } else if (region === "Other" || modality === "OTHER") {
+          note += "Stored for reference only; not eligible for prediction.";
         } else {
-          scanPredictionNote.textContent =
-            "Experimental analysis is available for Brain, Spine, and Cardiac MRI only. Other scans are stored for reference.";
+          note += "This ultrasound subtype is stored for reference; experimental view classification is currently available for Obstetric and cardiac ultrasound images.";
+        }
+        scanPredictionNote.textContent = note;
+        validateScanFile(); // Re-validate if modality/region changes
+      }
+
+      function validateScanFile() {
+        const file = scanFileInput.files[0];
+        const uploadBtn = document.getElementById("uploadScanButton");
+        if (!file || !uploadBtn) return;
+
+        const fileName = file.name.toLowerCase();
+        const modality = scanModalityInput.value;
+        const region = scanBodyRegionInput.value;
+        const acceptedExts = getAcceptedExtensions(modality, region);
+
+        const isValid = acceptedExts.some(ext => fileName.endsWith(ext));
+
+        if (!isValid) {
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = "Invalid Format";
+          scanPredictionNote.style.color = "red";
+          scanPredictionNote.textContent += " ⚠️ Selected file format is not supported for this scan type.";
+        } else {
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = "Upload scan";
+          scanPredictionNote.style.color = "";
         }
       }
+
+      scanFileInput.addEventListener("change", validateScanFile);
 
       scanModalityInput.addEventListener("change", updateScanBodyRegionOptions);
       scanBodyRegionInput.addEventListener("change", updateScanPredictionNote);
@@ -1493,6 +2794,153 @@
         (nextWorkspace === "reports" ? reportsWorkspaceTab : scansWorkspaceTab).focus();
       });
 
+      const WORKSPACE_VIEWS = {
+        dashboard: {
+          section: "dashboardSection",
+          title: "Dashboard",
+        },
+        patients: {
+          section: "patientSection",
+          title: "Patients",
+          workspace: "reports",
+        },
+        reports: {
+          section: "reportsLibrarySection",
+          title: "Medical Reports",
+        },
+        scans: {
+          section: "scansLibrarySection",
+          title: "Medical Scans",
+        },
+        "report-comparison": {
+          section: "reportComparisonSection",
+          title: "Report Comparison",
+        },
+        timeline: {
+          section: "timelineSection",
+          title: "Health Timeline",
+        },
+        assistant: {
+          section: "assistantSection",
+          title: "AI Assistant",
+        },
+        "research-papers": {
+          section: "researchPapersSection",
+          title: "Research Papers",
+        },
+        "research-rag": {
+          section: "researchRagSection",
+          title: "Research RAG",
+        },
+        "research-comparison": {
+          section: "researchComparisonSection",
+          title: "Research Comparison",
+        },
+        profile: {
+          section: "profileSection",
+          title: "Profile",
+        },
+        settings: {
+          section: "settingsSection",
+          title: "Settings",
+        },
+        activity: {
+          section: "activitySection",
+          title: "Activity",
+        },
+      };
+
+      const WORKSPACE_PAGE_PATHS = {
+        reports: "/medicalreports.html",
+        scans: "/scan.html",
+        timeline: "/healthtimeline.html",
+        "research-papers": "/researchpapers.html",
+      };
+
+      function workspaceViewFromLocation() {
+        const path = window.location.pathname;
+        return (
+          Object.entries(WORKSPACE_PAGE_PATHS).find(
+            ([, pagePath]) => pagePath === path,
+          )?.[0] || "dashboard"
+        );
+      }
+
+      function navigateToWorkspace(viewName, updateHistory = true) {
+        const view = WORKSPACE_VIEWS[viewName] || WORKSPACE_VIEWS.dashboard;
+        activeWorkspaceView = WORKSPACE_VIEWS[viewName] ? viewName : "dashboard";
+        if (updateHistory) {
+          const path = WORKSPACE_PAGE_PATHS[activeWorkspaceView] || "/";
+          if (window.location.pathname !== path) {
+            window.history.pushState({ view: activeWorkspaceView }, "", path);
+          }
+        }
+        for (const section of document.querySelectorAll(
+          ".workspace-content > .content-view",
+        )) {
+          section.hidden = section.id !== view.section;
+        }
+        document.getElementById(view.section).hidden = false;
+        document.getElementById("workspacePageTitle").textContent = view.title;
+        document.getElementById("workspaceBreadcrumb").textContent = view.title;
+        for (const button of document.querySelectorAll(".workspace-nav [data-workspace-nav]")) {
+          button.setAttribute(
+            "aria-current",
+            String(button.dataset.workspaceNav === viewName),
+          );
+        }
+        const notice = document.getElementById("workspaceContextNotice");
+        notice.textContent = view.notice || "";
+        notice.hidden = !view.notice;
+        if (view.workspace) selectPatientWorkspace(view.workspace);
+        if (["reports", "scans", "timeline", "research-papers"].includes(activeWorkspaceView)) {
+          refreshWorkspaceView(activeWorkspaceView);
+        }
+      }
+
+      window.addEventListener("popstate", () => {
+        if (accessToken) {
+          navigateToWorkspace(workspaceViewFromLocation(), false);
+        }
+      });
+
+      function renderDashboardPatients() {
+        const count = document.getElementById("dashboardPatientCount");
+        const list = document.getElementById("dashboardPatientList");
+        count.textContent = String(patients.length);
+        list.replaceChildren();
+        if (patients.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "dashboard-empty";
+          empty.textContent = "No patient records are available in this workspace yet.";
+          list.append(empty);
+          return;
+        }
+
+        for (const patient of patients.slice(0, 5)) {
+          const item = document.createElement("button");
+          item.type = "button";
+          const name = document.createElement("strong");
+          name.textContent = `${patient.first_name} ${patient.last_name}`;
+          const date = document.createElement("span");
+          date.textContent = patient.date_of_birth
+            ? `Born ${formatPatientDate(patient.date_of_birth)}`
+            : "Date of birth not provided";
+          item.append(name, date);
+          item.addEventListener("click", async () => {
+            navigateToWorkspace("patients");
+            await loadPatientDetails(patient.id);
+          });
+          list.append(item);
+        }
+      }
+
+      document.querySelectorAll("[data-workspace-nav]").forEach((button) => {
+        button.addEventListener("click", () =>
+          navigateToWorkspace(button.dataset.workspaceNav),
+        );
+      });
+
       function showMessage(text, type = "") {
         authMessage.textContent = text;
         authMessage.className = `message ${type}`.trim();
@@ -1500,6 +2948,7 @@
       }
 
       function showAuthView(view = "login") {
+        document.body.classList.remove("dashboard-active");
         authView.hidden = false;
         signedInView.hidden = true;
         const isLogin = view === "login";
@@ -1512,10 +2961,18 @@
       function showSignedIn(user) {
         authView.hidden = true;
         signedInView.hidden = false;
+        document.body.classList.add("dashboard-active");
         document.getElementById("signedInHeading").textContent =
           `Welcome, ${user.first_name}`;
         document.getElementById("signedInEmail").textContent = user.email;
         document.getElementById("signedInRole").textContent = user.role;
+        document.getElementById("dashboardFirstName").textContent =
+          user.first_name;
+        document.getElementById("profileName").textContent =
+          `${user.first_name} ${user.last_name}`;
+        document.getElementById("profileEmail").textContent = user.email;
+        document.getElementById("profileRole").textContent = user.role;
+        navigateToWorkspace(workspaceViewFromLocation());
         loadPatients();
       }
 
@@ -1571,6 +3028,7 @@
         const count = document.getElementById("patientCount");
         list.replaceChildren();
         count.textContent = `${patients.length} ${patients.length === 1 ? "record" : "records"}`;
+        renderDashboardPatients();
 
         if (patients.length === 0) {
           const empty = document.createElement("p");
@@ -1621,8 +3079,20 @@
             renderPatientList();
             showPatientDetails(null);
           }
+          if (["reports", "scans", "timeline", "research-papers"].includes(activeWorkspaceView)) {
+            refreshWorkspaceView(activeWorkspaceView);
+          }
         } catch (error) {
           count.textContent = "Could not load records";
+          document.getElementById("dashboardPatientCount").textContent =
+            "Unavailable";
+          const dashboardList = document.getElementById("dashboardPatientList");
+          dashboardList.replaceChildren();
+          const errorMessage = document.createElement("p");
+          errorMessage.className = "dashboard-empty";
+          errorMessage.textContent =
+            error.message || "Could not load patient records.";
+          dashboardList.append(errorMessage);
           showPatientMessage(
             error.message || "Could not reach the server.",
             "error",
@@ -1945,37 +3415,131 @@
 
           data.scans.forEach((scan, index) => {
             const item = document.createElement("div");
-            item.className = "scan-item";
-            const details = document.createElement("div");
-            details.className = "scan-item-details";
-            const title = document.createElement("strong");
-            title.className = "scan-item-title";
-            title.textContent = scan.original_filename;
-            const metadata = document.createElement("p");
-            metadata.className = "scan-item-meta";
-            const bodyRegion = scan.body_region ? ` | ${scan.body_region}` : "";
-            const studyDate = scan.study_date
-              ? ` | ${formatPatientDate(scan.study_date)}`
-              : "";
-            metadata.textContent = `${scan.modality}${bodyRegion}${studyDate}`;
-            const status = document.createElement("p");
-            status.className = "scan-item-status";
-            status.textContent = scan.processing_message;
-            details.append(title, metadata, status);
+            item.className = "scan-history-item";
+            item.style.cursor = "pointer";
+            item.style.border = "1px solid #ddd";
+            item.style.marginBottom = "8px";
+            item.style.padding = "12px";
+            item.style.borderRadius = "4px";
+            item.style.background = "#fff";
 
+            // Header: Date, Time, Modality, Region
+            const header = document.createElement("div");
+            header.className = "scan-history-header";
+            header.style.display = "flex";
+            header.style.justifyContent = "space-between";
+            header.style.alignItems = "center";
+
+            const info = document.createElement("div");
+            const dateStr = scan.created_at ? new Date(scan.created_at).toLocaleString() : "Unknown Date";
+            info.innerHTML = `<strong>${dateStr}</strong><br><span style="color:#666">${scan.modality} | ${scan.body_region || "N/A"}</span>`;
+
+            const statusBadge = document.createElement("span");
+            const isSpineMRI =
+              scan.modality === "MRI" && scan.body_region === "Spine";
+            const isObstetricUltrasound =
+              scan.modality === "ULTRASOUND" && scan.body_region === "Obstetric";
+            const isAbdominalAortaUltrasound =
+              scan.modality === "ULTRASOUND" && scan.body_region === "Abdomen";
+            const isEchoView47Ultrasound =
+              scan.modality === "ULTRASOUND" &&
+              scan.body_region === "Cardiac/echocardiogram";
+            const hasModelOutput =
+              Boolean(scan.brain_analysis) ||
+              Boolean(scan.spine_analysis) ||
+              Boolean(scan.obstetric_ultrasound_analysis) ||
+              Boolean(scan.echoview47_analysis) ||
+              Boolean(
+                scan.abdominal_aorta_ultrasound_analysis &&
+                  scan.abdominal_aorta_ultrasound_analysis.has_mask,
+              );
+            const hasNoSpineOutput = isSpineMRI && !scan.spine_analysis;
+            const hasNoObstetricOutput =
+              isObstetricUltrasound &&
+              !scan.obstetric_ultrasound_analysis &&
+              ["model_unavailable", "analysis_failed"].includes(scan.processing_status);
+            const hasNoAortaOutput =
+              isAbdominalAortaUltrasound &&
+              !scan.abdominal_aorta_ultrasound_analysis &&
+              ["model_unavailable", "analysis_failed"].includes(scan.processing_status);
+            const hasNoEchoView47Output =
+              isEchoView47Ultrasound &&
+              !scan.echoview47_analysis &&
+              ["model_unavailable", "analysis_failed"].includes(scan.processing_status);
+            statusBadge.textContent = hasModelOutput
+              ? "Model output available"
+              : hasNoSpineOutput
+                ? "Stored · AI paused"
+                : hasNoObstetricOutput
+                  ? "Stored · AI unavailable"
+                : hasNoAortaOutput
+                  ? "Stored · AI unavailable"
+                  : hasNoEchoView47Output
+                    ? "Stored · AI unavailable"
+              : scan.processing_status === "analysis_complete"
+                ? "Analysis complete"
+                : "⏳ Processing";
+            statusBadge.style.fontSize = "0.85em";
+            statusBadge.style.padding = "2px 6px";
+            statusBadge.style.borderRadius = "4px";
+            statusBadge.style.background = hasModelOutput
+              ? "#e6f4ea"
+              : hasNoSpineOutput
+                ? "#f1f4f6"
+                : hasNoObstetricOutput
+                  ? "#f1f4f6"
+                : hasNoAortaOutput
+                  ? "#f1f4f6"
+                  : hasNoEchoView47Output
+                    ? "#f1f4f6"
+              : scan.processing_status === "analysis_complete"
+                ? "#e6f4ea"
+                : "#fef7e0";
+            statusBadge.style.color = hasModelOutput
+              ? "#137333"
+              : hasNoSpineOutput
+                ? "#60717e"
+                : hasNoObstetricOutput
+                  ? "#60717e"
+                : hasNoAortaOutput
+                  ? "#60717e"
+                  : hasNoEchoView47Output
+                    ? "#60717e"
+              : scan.processing_status === "analysis_complete"
+                ? "#137333"
+                : "#b06000";
+
+            header.append(info, statusBadge);
+            item.append(header);
+
+            // Hidden Details Container
+            const detailsContainer = document.createElement("div");
+            detailsContainer.className = "scan-details-container";
+            detailsContainer.hidden = true;
+            detailsContainer.style.marginTop = "12px";
+            detailsContainer.style.borderTop = "1px solid #eee";
+            detailsContainer.style.paddingTop = "12px";
+
+            // Original Image Link/Button
             const openButton = document.createElement("button");
             openButton.type = "button";
-            openButton.className = "secondary-button scan-open-button";
-            openButton.textContent = "Open original";
-            openButton.setAttribute(
-              "aria-label",
-              `Open original scan ${scan.original_filename}`,
-            );
-            openButton.addEventListener("click", () =>
-              openOriginalFile(scan.original_url, showScanMessage),
-            );
-            item.append(details, openButton);
-            list.append(item);
+            openButton.className = "secondary-button";
+            openButton.textContent = "View Original Image";
+            openButton.style.marginBottom = "10px";
+            openButton.addEventListener("click", (e) => {
+              e.stopPropagation();
+              openOriginalFile(scan.original_url, showScanMessage);
+            });
+            detailsContainer.append(openButton);
+
+            // Toggle Logic
+            item.addEventListener("click", () => {
+              const isHidden = detailsContainer.hidden;
+              detailsContainer.hidden = !isHidden;
+              item.style.background = isHidden ? "#f9f9f9" : "#fff";
+            });
+
+            list.append(item, detailsContainer);
             if (scan.analysis) {
               const analysisPanel = document.createElement("section");
               analysisPanel.className = "scan-analysis";
@@ -2007,6 +3571,44 @@
               analysisPanel.append(analysisHeading, disclaimer, overlay, legend);
               list.append(analysisPanel);
               loadProtectedOverlay(scan.analysis.overlay_url, overlay);
+            }
+            if (
+              (scan.modality === "ULTRASOUND" && scan.body_region === "Abdomen") ||
+              scan.abdominal_aorta_ultrasound_analysis
+            ) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Experimental abdominal aorta POCUS segmentation";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.abdominal_aorta_ultrasound_analysis
+                ? scan.abdominal_aorta_ultrasound_analysis.disclaimer
+                : scan.processing_message;
+              analysisPanel.append(analysisHeading, disclaimer);
+
+              const prediction = scan.abdominal_aorta_ultrasound_analysis;
+              if (prediction?.has_mask) {
+                const overlay = document.createElement("img");
+                overlay.className = "scan-overlay";
+                overlay.alt = "Experimental abdominal aorta segmentation overlay";
+                analysisPanel.append(overlay);
+                loadProtectedOverlay(prediction.overlay_url, overlay);
+                const modelInfo = document.createElement("p");
+                modelInfo.className = "knee-analysis-meta";
+                modelInfo.textContent =
+                  `Aorta-like region mask · ${prediction.mask_area_pixels.toLocaleString()} pixels · ` +
+                  `highest detection score ${(prediction.confidence_score * 100).toFixed(1)}% · ` +
+                  `Model: ${prediction.model_name}. Score is an uncalibrated model output.`;
+                analysisPanel.append(modelInfo);
+              } else if (prediction) {
+                const noMask = document.createElement("p");
+                noMask.className = "knee-analysis-meta";
+                noMask.textContent =
+                  "No segmentation mask was returned. This does not establish that the aorta is absent or abnormal.";
+                analysisPanel.append(noMask);
+              }
+              list.append(analysisPanel);
             }
             if (scan.knee_analysis) {
               const analysisPanel = document.createElement("section");
@@ -2059,42 +3661,202 @@
               );
               list.append(analysisPanel);
             }
-            if (scan.spine_analysis) {
+            if (
+              (scan.modality === "MRI" && scan.body_region === "Spine") ||
+              scan.spine_analysis
+            ) {
               const analysisPanel = document.createElement("section");
               analysisPanel.className = "knee-analysis";
               const analysisHeading = document.createElement("h5");
-              analysisHeading.textContent = "Experimental Spine MRI model score";
+              analysisHeading.textContent = "Spine MRI AI model scores";
+              const note = document.createElement("p");
+              note.className = "scan-analysis-disclaimer";
+              note.textContent = scan.spine_analysis
+                ? scan.spine_analysis.disclaimer
+                : scan.processing_message;
+              analysisPanel.append(analysisHeading, note);
+              if (scan.spine_analysis) {
+                const table = document.createElement("table");
+                table.className = "data-table";
+                const header = document.createElement("thead");
+                const headerRow = document.createElement("tr");
+                const conditionHeader = document.createElement("th");
+                conditionHeader.textContent = "Finding group";
+                headerRow.append(conditionHeader);
+                for (const severity of scan.spine_analysis.severities) {
+                  const cell = document.createElement("th");
+                  cell.textContent = `${severity} score`;
+                  headerRow.append(cell);
+                }
+                header.append(headerRow);
+                const body = document.createElement("tbody");
+                for (const [condition, values] of Object.entries(
+                  scan.spine_analysis.condition_scores,
+                )) {
+                  const row = document.createElement("tr");
+                  const label = document.createElement("th");
+                  label.scope = "row";
+                  label.textContent = condition;
+                  row.append(label);
+                  for (const severity of scan.spine_analysis.severities) {
+                    const cell = document.createElement("td");
+                    cell.textContent = values[severity].toFixed(3);
+                    row.append(cell);
+                  }
+                  body.append(row);
+                }
+                table.append(header, body);
+                const modelInfo = document.createElement("p");
+                modelInfo.className = "knee-analysis-meta";
+                modelInfo.textContent =
+                  `Model: ${scan.spine_analysis.model_name}. Values are independent raw scores from 0 to 1, not calibrated probabilities; one 2D image was analyzed, not a full series.`;
+                analysisPanel.append(table, modelInfo);
+              }
+              list.append(analysisPanel);
+            }
+            if (
+              (scan.modality === "ULTRASOUND" && scan.body_region === "Obstetric") ||
+              scan.obstetric_ultrasound_analysis
+            ) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Experimental fetal ultrasound view";
               const disclaimer = document.createElement("p");
               disclaimer.className = "scan-analysis-disclaimer";
-              disclaimer.textContent = scan.spine_analysis.disclaimer;
-              const score = document.createElement("p");
-              score.className = "knee-analysis-result";
-              score.textContent = `Model score: ${scan.spine_analysis.model_score.toFixed(4)}`;
-              const inputDetails = document.createElement("p");
-              inputDetails.className = "knee-analysis-meta";
-              inputDetails.textContent =
-                `${scan.spine_analysis.frame_count} frames from ${scan.spine_analysis.frame_source.replaceAll("_", " ")}.`;
-              analysisPanel.append(analysisHeading, disclaimer, score, inputDetails);
+              disclaimer.textContent = scan.obstetric_ultrasound_analysis
+                ? scan.obstetric_ultrasound_analysis.disclaimer
+                : scan.processing_message;
+              analysisPanel.append(analysisHeading, disclaimer);
+              if (scan.obstetric_ultrasound_analysis) {
+                const prediction = scan.obstetric_ultrasound_analysis;
+                const topClass = document.createElement("p");
+                topClass.className = "knee-analysis-result";
+                topClass.textContent =
+                  `Highest-scoring view: ${prediction.predicted_class} · ` +
+                  `${(prediction.model_score * 100).toFixed(1)}% model score`;
+                analysisPanel.append(topClass);
+
+                const scores = document.createElement("ul");
+                scores.className = "knee-probabilities";
+                const rankedScores = Object.entries(prediction.class_scores).sort(
+                  (left, right) => right[1] - left[1],
+                );
+                for (const [className, score] of rankedScores) {
+                  const row = document.createElement("li");
+                  row.className = "knee-probability";
+                  const label = document.createElement("span");
+                  label.textContent = className;
+                  const track = document.createElement("span");
+                  track.className = "knee-probability-track";
+                  const fill = document.createElement("span");
+                  fill.className = "knee-probability-fill";
+                  fill.style.display = "block";
+                  fill.style.width = `${Math.max(0, Math.min(1, score)) * 100}%`;
+                  track.append(fill);
+                  const value = document.createElement("strong");
+                  value.className = "knee-probability-value";
+                  value.textContent = `${(score * 100).toFixed(1)}%`;
+                  row.append(label, track, value);
+                  scores.append(row);
+                }
+                const modelInfo = document.createElement("p");
+                modelInfo.className = "knee-analysis-meta";
+                modelInfo.textContent =
+                  `Model: ${prediction.model_name}. Scores are uncalibrated model outputs, ` +
+                  "not confidence estimates or measures of fetal health.";
+                analysisPanel.append(scores, modelInfo);
+              }
+              list.append(analysisPanel);
+            }
+            if (
+              (scan.modality === "ULTRASOUND" &&
+                scan.body_region === "Cardiac/echocardiogram") ||
+              scan.echoview47_analysis
+            ) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent =
+                "Experimental echocardiogram view suggestion";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.echoview47_analysis
+                ? scan.echoview47_analysis.disclaimer
+                : scan.processing_message;
+              analysisPanel.append(analysisHeading, disclaimer);
+
+              if (scan.echoview47_analysis) {
+                const prediction = scan.echoview47_analysis;
+                const result = document.createElement("p");
+                result.className = "knee-analysis-result";
+                result.textContent =
+                  `Top-ranked view label: ${prediction.display_label}`;
+                const meaning = document.createElement("p");
+                meaning.className = "knee-analysis-meta";
+                meaning.textContent = `What this means: ${prediction.meaning}`;
+                const score = document.createElement("p");
+                score.className = "knee-analysis-meta";
+                score.textContent =
+                  `Model output: ${(prediction.model_score * 100).toFixed(1)}% ` +
+                  "(uncalibrated; not a measure of correctness).";
+                analysisPanel.append(result, meaning, score);
+
+                const alternatives = prediction.top_views.slice(1);
+                if (alternatives.length) {
+                  const alternativesHeading = document.createElement("p");
+                  alternativesHeading.className = "knee-analysis-meta";
+                  alternativesHeading.textContent =
+                    "Other high-ranked view labels:";
+                  const alternativesList = document.createElement("ul");
+                  alternativesList.className = "knee-probabilities";
+                  for (const alternative of alternatives) {
+                    const item = document.createElement("li");
+                    item.className = "knee-probability";
+                    const label = document.createElement("span");
+                    label.textContent = alternative.display_label;
+                    const value = document.createElement("strong");
+                    value.className = "knee-probability-value";
+                    value.textContent =
+                      `${(alternative.model_score * 100).toFixed(1)}%`;
+                    item.append(label, value);
+                    alternativesList.append(item);
+                  }
+                  analysisPanel.append(alternativesHeading, alternativesList);
+                }
+                const modelInfo = document.createElement("p");
+                modelInfo.className = "knee-analysis-meta";
+                modelInfo.textContent =
+                  `Model: ${prediction.model_name}. Scores are uncalibrated outputs. ` +
+                  "The model labels the still-image view only; it does not assess " +
+                  "heart function, diagnose disease, or establish normality.";
+                analysisPanel.append(modelInfo);
+              }
               list.append(analysisPanel);
             }
             if (scan.brain_analysis) {
               const analysisPanel = document.createElement("section");
               analysisPanel.className = "knee-analysis";
               const analysisHeading = document.createElement("h5");
-              analysisHeading.textContent = "Experimental Brain MRI model scores";
+              analysisHeading.textContent = "Brain MRI model outputs";
               const disclaimer = document.createElement("p");
               disclaimer.className = "scan-analysis-disclaimer";
               disclaimer.textContent = scan.brain_analysis.disclaimer;
-              const result = document.createElement("p");
-              result.className = "knee-analysis-result";
-              result.textContent =
-                `Model class ${scan.brain_analysis.predicted_class_index} · ` +
-                `Model score ${scan.brain_analysis.model_score.toFixed(4)}`;
+              const sortedScores = Object.entries(
+                scan.brain_analysis.class_scores,
+              ).sort((left, right) => right[1] - left[1]);
+              const topClass = scan.brain_analysis.predicted_class;
+              const top = document.createElement("p");
+              top.className = "knee-analysis-meta";
+              const topLabel = document.createElement("strong");
+              topLabel.textContent = "Highest-scoring model class: ";
+              const topValue = document.createElement("strong");
+              topValue.textContent =
+                `${topClass} · ${(scan.brain_analysis.model_score * 100).toFixed(1)}%`;
+              top.append(topLabel, topValue);
               const scores = document.createElement("ul");
               scores.className = "knee-probabilities";
-              for (const [className, value] of Object.entries(
-                scan.brain_analysis.class_scores,
-              )) {
+              for (const [className, value] of sortedScores) {
                 const item = document.createElement("li");
                 item.className = "knee-probability";
                 const label = document.createElement("span");
@@ -2107,16 +3869,202 @@
                 fill.style.width = `${Math.max(0, Math.min(1, value)) * 100}%`;
                 track.append(fill);
                 const score = document.createElement("strong");
-                score.className = "knee-probability-value";
-                score.textContent = value.toFixed(4);
+                score.textContent = `${(value * 100).toFixed(1)}%`;
                 item.append(label, track, score);
                 scores.append(item);
               }
-              analysisPanel.append(analysisHeading, disclaimer, result, scores);
+              const modelInfo = document.createElement("p");
+              modelInfo.className = "knee-analysis-meta";
+              modelInfo.textContent = `Model: ${scan.brain_analysis.model_name}. Class order: Glioma, Meningioma, No tumor, Pituitary tumor. Scores are model outputs, not confirmed diagnoses.`;
+              analysisPanel.append(analysisHeading, disclaimer, top, scores, modelInfo);
               list.append(analysisPanel);
             }
+            if (scan.chest_xray_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Chest X-ray AI Model Findings";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.chest_xray_analysis.disclaimer;
+              const findingsList = document.createElement("ul");
+              findingsList.className = "knee-probabilities";
+              for (const finding of scan.chest_xray_analysis.findings) {
+                const item = document.createElement("li");
+                item.className = "knee-probability";
+                const label = document.createElement("span");
+                label.textContent = finding.name;
+                const track = document.createElement("span");
+                track.className = "knee-probability-track";
+                const fill = document.createElement("span");
+                fill.className = "knee-probability-fill";
+                fill.style.display = "block";
+                fill.style.width = `${Math.max(0, Math.min(1, finding.score)) * 100}%`;
+                track.append(fill);
+                const score = document.createElement("strong");
+                score.className = "knee-probability-value";
+                score.textContent = `${(finding.score * 100).toFixed(1)}%`;
+                item.append(label, track, score);
+                findingsList.append(item);
+              }
+              analysisPanel.append(analysisHeading, disclaimer, findingsList);
+              list.append(analysisPanel);
+            }
+            if (scan.bone_xray_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Bone/Joint X-ray AI Analysis";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.bone_xray_analysis.disclaimer;
+              const result = document.createElement("p");
+              result.className = "knee-analysis-result";
+              // confidence_score is already stored as a percentage (0-100) in the backend
+              const confidence = scan.bone_xray_analysis.confidence_score.toFixed(1);
+              result.textContent = `${scan.bone_xray_analysis.predicted_label} — ${confidence}%`;
+              analysisPanel.append(analysisHeading, disclaimer, result);
+              list.append(analysisPanel);
+            }
+            if (scan.dental_xray_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Dental X-ray: candidate detections";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "model-interpretation-warning";
+              disclaimer.textContent = scan.dental_xray_analysis.disclaimer;
+              const modelNote = document.createElement("p");
+              modelNote.className = "scan-analysis-disclaimer";
+              modelNote.textContent =
+                "The detector proposes regions for review; it does not confirm disease. " +
+                "Its score is not a calibrated probability. Coordinates below are " +
+                "x1, y1, x2, y2 in pixels on the uploaded image.";
+              const sourceLink = document.createElement("a");
+              sourceLink.href = "https://huggingface.co/Enosh729/oralguard";
+              sourceLink.target = "_blank";
+              sourceLink.rel = "noopener noreferrer";
+              sourceLink.textContent = `Model card: ${scan.dental_xray_analysis.model_name}`;
+              const benchmark = document.createElement("p");
+              benchmark.className = "knee-analysis-meta";
+              benchmark.textContent =
+                "The model card reports training on DENTEX 2023 (678 annotated panoramic " +
+                "X-rays) and per-class detector mAP@50: caries 0.544, deep caries 0.431, " +
+                "periapical lesion 0.263, impacted tooth 0.955. These are dataset metrics, " +
+                "not accuracy or a patient-specific probability; lesion detection scores " +
+                "were lower than impacted-tooth detection.";
+              analysisPanel.append(
+                analysisHeading,
+                disclaimer,
+                modelNote,
+                sourceLink,
+                benchmark,
+              );
+              if (scan.dental_xray_analysis.findings.length === 0) {
+                const none = document.createElement("p");
+                none.className = "knee-analysis-result";
+                none.textContent =
+                  "The detector returned no candidate boxes above its threshold. " +
+                  "This does not rule out a dental condition.";
+                analysisPanel.append(none);
+              } else {
+                const findingsList = document.createElement("ul");
+                findingsList.className = "knee-probabilities";
+                const descriptions = {
+                  Caries: "Possible tooth-decay candidate; requires dental review.",
+                  "Deep caries":
+                    "Possible deeper tooth-decay candidate; requires dental review.",
+                  "Periapical lesion":
+                    "Possible candidate near a tooth-root tip; requires dental review.",
+                  "Impacted tooth":
+                    "Possible unerupted/impacted-tooth candidate; verify on the original image.",
+                };
+                for (const finding of scan.dental_xray_analysis.findings) {
+                  const item = document.createElement("li");
+                  item.className = "dental-detection";
+                  const label = document.createElement("strong");
+                  label.textContent = finding.name;
+                  const description = document.createElement("span");
+                  description.textContent =
+                    descriptions[finding.name] ||
+                    "Model-marked candidate region; requires professional review.";
+                  const box = document.createElement("span");
+                  box.textContent =
+                    `Image box (x1, y1, x2, y2): ` +
+                    finding.box.map((value) => Math.round(value)).join(", ");
+                  const score = document.createElement("span");
+                  score.textContent =
+                    `Detector score: ${finding.score.toFixed(3)} (not a probability)`;
+                  item.append(label, description, box, score);
+                  findingsList.append(item);
+                }
+                analysisPanel.append(findingsList);
+              }
+              list.append(analysisPanel);
+            }
+            if (scan.ct_head_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Head CT AI Model Results";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.ct_head_analysis.disclaimer;
+              const modelNote = document.createElement("p");
+              modelNote.className = "scan-analysis-disclaimer";
+              modelNote.textContent =
+                `Model: ${scan.ct_head_analysis.model_name} · ` +
+                `${scan.ct_head_analysis.input_format} · ` +
+                `${scan.ct_head_analysis.slice_count} slices · ` +
+                `highest any-hemorrhage slice index ${scan.ct_head_analysis.highest_any_slice_index}`;
+              const findingsList = document.createElement("ul");
+              findingsList.className = "knee-probabilities";
+              for (const [name, score] of Object.entries(
+                scan.ct_head_analysis.series_classification,
+              )) {
+                const item = document.createElement("li");
+                item.className = "knee-probability";
+                const label = document.createElement("span");
+                label.textContent = name.replaceAll("_", " ");
+                const track = document.createElement("span");
+                track.className = "knee-probability-track";
+                const fill = document.createElement("span");
+                fill.className = "knee-probability-fill";
+                fill.style.display = "block";
+                fill.style.width = `${Math.max(0, Math.min(1, score)) * 100}%`;
+                track.append(fill);
+                const scoreLabel = document.createElement("strong");
+                scoreLabel.className = "knee-probability-value";
+                scoreLabel.textContent = `${(score * 100).toFixed(1)}%`;
+                item.append(label, track, scoreLabel);
+                findingsList.append(item);
+              }
+              analysisPanel.append(
+                analysisHeading,
+                disclaimer,
+                modelNote,
+                findingsList,
+              );
+              if (scan.ct_head_analysis.localization_url) {
+                const heatmap = document.createElement("img");
+                heatmap.alt =
+                  "Qualitative AI localization overlay on the model-selected CT slice";
+                heatmap.className = "scan-analysis-image";
+                loadProtectedOverlay(
+                  scan.ct_head_analysis.localization_url,
+                  heatmap,
+                );
+                analysisPanel.append(heatmap);
+              }
+              list.append(analysisPanel);
+            }
+            // Move all analysis panels into detailsContainer
+            // (This block is reached after all if(scan.xxx_analysis) blocks)
+
             if (expandNewest && index === 0) {
-              item.scrollIntoView({ block: "nearest" });
+              // Optionally expand the newest item
+              detailsContainer.hidden = false;
+              item.style.background = "#f9f9f9";
             }
           });
         } catch (error) {
@@ -2134,6 +4082,36 @@
           imageElement.src = URL.createObjectURL(await response.blob());
         } catch (error) {
           imageElement.alt = error.message || "Could not load segmentation overlay.";
+        }
+      }
+
+      async function downloadOriginalFile(originalUrl, filename, showError) {
+        try {
+          if (!originalUrl) {
+            throw new Error("The original document is not available for download.");
+          }
+          const response = await fetch(`${API_BASE}${originalUrl}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (response.status === 401 && accessToken) {
+            accessToken = null;
+            showAuthView("login");
+            showMessage("Your session has ended. Sign in again.", "error");
+          }
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || "Could not download the original file.");
+          }
+          const blobUrl = URL.createObjectURL(await response.blob());
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.download = filename;
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        } catch (error) {
+          showError(error.message || "Could not download the original file.", "error");
         }
       }
 
@@ -2316,19 +4294,524 @@
         }
       }
 
+      function showWorkspaceMessage(elementId, text, type = "") {
+        const message = document.getElementById(elementId);
+        message.textContent = text;
+        message.className = `message ${type}`.trim();
+        message.hidden = !text;
+      }
+
+      function formatLibraryDate(value) {
+        if (!value) return "Date not provided";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          return formatPatientDate(value);
+        }
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime())
+          ? value
+          : parsed.toLocaleDateString();
+      }
+
+      function patientDisplayName(patient) {
+        return `${patient.first_name} ${patient.last_name}`;
+      }
+
+      async function loadPatientCollection(endpoint, collectionKey) {
+        const collections = await Promise.all(
+          patients.map(async (patient) => {
+            const data = await patientRequest(
+              `${endpoint}?patient_id=${encodeURIComponent(patient.id)}`,
+            );
+            return data[collectionKey].map((record) => ({
+              ...record,
+              patient,
+            }));
+          }),
+        );
+        return collections.flat();
+      }
+
+      function renderReportsLibrary() {
+        const list = document.getElementById("reportsLibraryList");
+        const empty = document.getElementById("reportsLibraryEmpty");
+        const query = document
+          .getElementById("reportsLibrarySearch")
+          .value.trim()
+          .toLocaleLowerCase();
+        const matches = reportLibraryItems.filter((report) => {
+          const searchable = [
+            patientDisplayName(report.patient),
+            report.report_type,
+            report.file_reference,
+            report.processing_status,
+          ]
+            .join(" ")
+            .toLocaleLowerCase();
+          return searchable.includes(query);
+        });
+        list.replaceChildren();
+        empty.hidden = matches.length > 0;
+        empty.textContent = reportLibraryItems.length
+          ? "No reports match that search."
+          : "No reports have been uploaded to your patient records yet.";
+
+        for (const report of matches) {
+          const card = document.createElement("article");
+          card.className = "library-card";
+          const heading = document.createElement("h3");
+          heading.textContent = report.report_type || "Medical report";
+          const meta = document.createElement("p");
+          meta.className = "library-card-meta";
+          meta.textContent = `${patientDisplayName(report.patient)} · ${report.report_date ? `Report date ${formatLibraryDate(report.report_date)}` : `Uploaded ${formatLibraryDate(report.created_at)}`}`;
+          const status = document.createElement("span");
+          status.className = "library-status";
+          status.textContent = (report.processing_status || "uploaded").replaceAll("_", " ");
+          const actions = document.createElement("div");
+          actions.className = "library-card-actions";
+          if (report.original_url) {
+            const extension = report.file_reference?.split(".").pop()?.toLowerCase();
+            const filename = `report-${report.id}${extension ? `.${extension}` : ""}`;
+            const download = document.createElement("button");
+            download.type = "button";
+            download.className = "secondary-button";
+            download.textContent = "Download document";
+            download.addEventListener("click", () =>
+              downloadOriginalFile(
+                report.original_url,
+                filename,
+                (text, type) =>
+                  showWorkspaceMessage("reportsLibraryMessage", text, type),
+              ),
+            );
+            actions.append(download);
+          } else {
+            const unavailable = document.createElement("span");
+            unavailable.className = "library-card-meta";
+            unavailable.textContent = "Original document unavailable";
+            actions.append(unavailable);
+          }
+          card.append(heading, meta, status, actions);
+          list.append(card);
+        }
+      }
+
+      async function loadReportsLibrary() {
+        showWorkspaceMessage("reportsLibraryMessage", "Loading patient reports…");
+        document.getElementById("reportsLibraryEmpty").hidden = true;
+        try {
+          reportLibraryItems = await loadPatientCollection(
+            "/api/reports",
+            "reports",
+          );
+          reportLibraryItems.sort(
+            (left, right) =>
+              new Date(right.created_at || 0) - new Date(left.created_at || 0),
+          );
+          renderReportsLibrary();
+          showWorkspaceMessage(
+            "reportsLibraryMessage",
+            `${reportLibraryItems.length} ${reportLibraryItems.length === 1 ? "document" : "documents"} across ${patients.length} ${patients.length === 1 ? "patient" : "patients"}.`,
+          );
+        } catch (error) {
+          reportLibraryItems = [];
+          renderReportsLibrary();
+          showWorkspaceMessage(
+            "reportsLibraryMessage",
+            error.message || "Could not load patient reports.",
+            "error",
+          );
+        }
+      }
+
+      function renderScansLibrary() {
+        const list = document.getElementById("scansLibraryList");
+        const empty = document.getElementById("scansLibraryEmpty");
+        const query = document
+          .getElementById("scansLibrarySearch")
+          .value.trim()
+          .toLocaleLowerCase();
+        const matches = scanLibraryItems.filter((scan) =>
+          [
+            patientDisplayName(scan.patient),
+            scan.modality,
+            scan.body_region,
+            scan.original_filename,
+            scan.processing_status,
+          ]
+            .join(" ")
+            .toLocaleLowerCase()
+            .includes(query),
+        );
+        list.replaceChildren();
+        empty.hidden = matches.length > 0;
+        empty.textContent = scanLibraryItems.length
+          ? "No scans match that search."
+          : "No scans have been uploaded to your patient records yet.";
+
+        for (const scan of matches) {
+          const card = document.createElement("article");
+          card.className = "library-card";
+          const heading = document.createElement("h3");
+          heading.textContent = scan.original_filename || "Medical scan";
+          const meta = document.createElement("p");
+          meta.className = "library-card-meta";
+          meta.textContent = `${patientDisplayName(scan.patient)} · ${scan.modality}${scan.body_region ? ` · ${scan.body_region}` : ""} · ${scan.study_date ? `Study date ${formatLibraryDate(scan.study_date)}` : `Uploaded ${formatLibraryDate(scan.created_at)}`}`;
+          const status = document.createElement("span");
+          status.className = "library-status";
+          status.textContent = scan.processing_status === "analysis_complete"
+            ? "Experimental output available"
+            : "File stored";
+          const actions = document.createElement("div");
+          actions.className = "library-card-actions";
+          const view = document.createElement("button");
+          view.type = "button";
+          view.className = "secondary-button";
+          view.textContent = "View original";
+          view.addEventListener("click", () =>
+            openOriginalFile(scan.original_url, (text, type) =>
+              showWorkspaceMessage("scansLibraryMessage", text, type),
+            ),
+          );
+          const download = document.createElement("button");
+          download.type = "button";
+          download.className = "secondary-button";
+          download.textContent = "Download scan";
+          download.addEventListener("click", () =>
+            downloadOriginalFile(
+              scan.original_url,
+              scan.original_filename || `scan-${scan.id}`,
+              (text, type) =>
+                showWorkspaceMessage("scansLibraryMessage", text, type),
+            ),
+          );
+          actions.append(view, download);
+          card.append(heading, meta, status, actions);
+          list.append(card);
+        }
+      }
+
+      async function loadScansLibrary() {
+        showWorkspaceMessage("scansLibraryMessage", "Loading patient scans…");
+        document.getElementById("scansLibraryEmpty").hidden = true;
+        try {
+          scanLibraryItems = await loadPatientCollection("/api/scans", "scans");
+          scanLibraryItems.sort(
+            (left, right) =>
+              new Date(right.created_at || 0) - new Date(left.created_at || 0),
+          );
+          renderScansLibrary();
+          showWorkspaceMessage(
+            "scansLibraryMessage",
+            `${scanLibraryItems.length} ${scanLibraryItems.length === 1 ? "scan" : "scans"} across ${patients.length} ${patients.length === 1 ? "patient" : "patients"}.`,
+          );
+        } catch (error) {
+          scanLibraryItems = [];
+          renderScansLibrary();
+          showWorkspaceMessage(
+            "scansLibraryMessage",
+            error.message || "Could not load patient scans.",
+            "error",
+          );
+        }
+      }
+
+      function renderTimelinePatientList() {
+        const list = document.getElementById("timelinePatientList");
+        list.replaceChildren();
+        if (patients.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "dashboard-empty";
+          empty.textContent = "No patient records are available yet.";
+          list.append(empty);
+          return;
+        }
+
+        if (!patients.some((patient) => patient.id === timelineSelectedPatientId)) {
+          timelineSelectedPatientId = patients[0].id;
+        }
+        for (const patient of patients) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.setAttribute(
+            "aria-current",
+            String(patient.id === timelineSelectedPatientId),
+          );
+          const name = document.createElement("strong");
+          name.textContent = patientDisplayName(patient);
+          const hint = document.createElement("span");
+          hint.textContent = "View report and scan history";
+          button.append(name, hint);
+          button.addEventListener("click", () =>
+            loadTimelineForPatient(patient.id),
+          );
+          list.append(button);
+        }
+      }
+
+      async function loadTimelineForPatient(patientId) {
+        const requestVersion = ++timelineRequestVersion;
+        const patient = patients.find((item) => item.id === Number(patientId));
+        if (!patient) return;
+        timelineSelectedPatientId = patient.id;
+        renderTimelinePatientList();
+        document.getElementById("timelineDetailHeading").textContent =
+          patientDisplayName(patient);
+        document.getElementById("timelineEventCount").textContent = "";
+        document.getElementById("timelineEvents").replaceChildren();
+        document.getElementById("timelineEmpty").hidden = false;
+        document.getElementById("timelineEmpty").textContent =
+          "Loading this patient's records…";
+        showWorkspaceMessage("timelineMessage", "");
+
+        try {
+          const [reportData, scanData] = await Promise.all([
+            patientRequest(`/api/reports?patient_id=${patient.id}`),
+            patientRequest(`/api/scans?patient_id=${patient.id}`),
+          ]);
+          if (requestVersion !== timelineRequestVersion) return;
+          const events = [
+            ...reportData.reports.map((report) => ({
+              kind: "Medical report",
+              title: report.report_type || "Medical report",
+              uploadedAt: report.created_at,
+              sourceDate: report.report_date,
+              sourceDateLabel: "Report date",
+              url: report.original_url,
+              filename: `report-${report.id}.${report.file_reference?.split(".").pop() || "file"}`,
+            })),
+            ...scanData.scans.map((scan) => ({
+              kind: "Medical scan",
+              title: `${scan.modality}${scan.body_region ? ` · ${scan.body_region}` : ""}`,
+              filename: scan.original_filename,
+              uploadedAt: scan.created_at,
+              sourceDate: scan.study_date,
+              sourceDateLabel: "Study date",
+              url: scan.original_url,
+            })),
+          ].sort(
+            (left, right) =>
+              new Date(right.uploadedAt || 0).getTime() -
+              new Date(left.uploadedAt || 0).getTime(),
+          );
+          const timeline = document.getElementById("timelineEvents");
+          const empty = document.getElementById("timelineEmpty");
+          timeline.replaceChildren();
+          empty.hidden = events.length > 0;
+          empty.textContent = events.length
+            ? ""
+            : "No reports or scans have been uploaded for this patient yet.";
+          document.getElementById("timelineEventCount").textContent =
+            `${events.length} ${events.length === 1 ? "record" : "records"}`;
+
+          for (const event of events) {
+            const card = document.createElement("article");
+            card.className = "timeline-event";
+            const kind = document.createElement("span");
+            kind.className = "timeline-event-type";
+            kind.textContent = event.kind;
+            const title = document.createElement("h3");
+            title.textContent = event.title;
+            const meta = document.createElement("p");
+            meta.className = "timeline-event-meta";
+            const uploaded = event.uploadedAt
+              ? `Uploaded ${formatLibraryDate(event.uploadedAt)}`
+              : "Upload date not recorded";
+            meta.textContent = `${uploaded}${event.sourceDate ? ` · ${event.sourceDateLabel}: ${formatLibraryDate(event.sourceDate)}` : ""}`;
+            const action = document.createElement("button");
+            action.type = "button";
+            action.className = "secondary-button";
+            if (event.kind === "Medical report" && event.url) {
+              action.textContent = "Download report";
+              action.addEventListener("click", () =>
+                downloadOriginalFile(event.url, event.filename, (text, type) =>
+                  showWorkspaceMessage("timelineMessage", text, type),
+                ),
+              );
+            } else if (event.kind === "Medical scan" && event.url) {
+              action.textContent = "View scan";
+              action.addEventListener("click", () =>
+                openOriginalFile(event.url, (text, type) =>
+                  showWorkspaceMessage("timelineMessage", text, type),
+                ),
+              );
+            } else {
+              action.textContent = "Original file unavailable";
+              action.disabled = true;
+            }
+            card.append(kind, title, meta, action);
+            timeline.append(card);
+          }
+        } catch (error) {
+          if (requestVersion !== timelineRequestVersion) return;
+          document.getElementById("timelineEmpty").hidden = false;
+          document.getElementById("timelineEmpty").textContent =
+            "Could not load this patient's timeline.";
+          showWorkspaceMessage(
+            "timelineMessage",
+            error.message || "Could not load this patient's timeline.",
+            "error",
+          );
+        }
+      }
+
+      function renderResearchPapers() {
+        const list = document.getElementById("researchPaperList");
+        const empty = document.getElementById("researchPaperEmpty");
+        const query = document
+          .getElementById("researchPaperSearch")
+          .value.trim()
+          .toLocaleLowerCase();
+        const matches = researchPapers.filter((paper) =>
+          [paper.title, paper.topic, paper.authors, paper.journal]
+            .filter(Boolean)
+            .join(" ")
+            .toLocaleLowerCase()
+            .includes(query),
+        );
+        list.replaceChildren();
+        empty.hidden = matches.length > 0;
+        empty.textContent = researchPapers.length
+          ? "No papers match that search."
+          : "Your research library is empty. Add a paper to get started.";
+
+        for (const paper of matches) {
+          const card = document.createElement("article");
+          card.className = "research-paper-card";
+          const title = document.createElement("h3");
+          title.textContent = paper.title;
+          const meta = document.createElement("p");
+          meta.className = "research-paper-meta";
+          meta.textContent = [
+            paper.topic,
+            paper.paper_date ? formatLibraryDate(paper.paper_date) : "Publication date not provided",
+            paper.authors,
+            paper.journal,
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          const filename = document.createElement("p");
+          filename.className = "research-paper-meta";
+          filename.textContent = paper.original_filename;
+          const actions = document.createElement("div");
+          actions.className = "research-paper-actions";
+          const download = document.createElement("button");
+          download.type = "button";
+          download.className = "secondary-button";
+          download.textContent = "Download paper";
+          download.addEventListener("click", () =>
+            downloadOriginalFile(
+              paper.original_url,
+              paper.original_filename,
+              (text, type) =>
+                showWorkspaceMessage("researchPaperMessage", text, type),
+            ),
+          );
+          actions.append(download);
+          card.append(title, meta, filename, actions);
+          list.append(card);
+        }
+      }
+
+      async function loadResearchPapers() {
+        document.getElementById("researchPaperEmpty").hidden = true;
+        try {
+          const data = await patientRequest("/api/research-papers");
+          researchPapers = data.papers;
+          renderResearchPapers();
+          showWorkspaceMessage(
+            "researchPaperMessage",
+            `${researchPapers.length} ${researchPapers.length === 1 ? "paper" : "papers"} in your library.`,
+          );
+        } catch (error) {
+          researchPapers = [];
+          renderResearchPapers();
+          showWorkspaceMessage(
+            "researchPaperMessage",
+            error.message || "Could not load research papers.",
+            "error",
+          );
+        }
+      }
+
+      async function refreshWorkspaceView(viewName) {
+        if (viewName === "reports") return loadReportsLibrary();
+        if (viewName === "scans") return loadScansLibrary();
+        if (viewName === "timeline") {
+          renderTimelinePatientList();
+          if (timelineSelectedPatientId !== null) {
+            return loadTimelineForPatient(timelineSelectedPatientId);
+          }
+          return;
+        }
+        if (viewName === "research-papers") return loadResearchPapers();
+      }
+
+      document
+        .getElementById("reportsLibrarySearch")
+        .addEventListener("input", renderReportsLibrary);
+      document
+        .getElementById("scansLibrarySearch")
+        .addEventListener("input", renderScansLibrary);
+      document
+        .getElementById("researchPaperSearch")
+        .addEventListener("input", renderResearchPapers);
+      setTodayMaxDateForInput("researchPaperDate");
+
+      document
+        .getElementById("researchPaperUploadForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          const button = document.getElementById("uploadResearchPaperButton");
+          button.disabled = true;
+          button.textContent = "Uploading…";
+          showWorkspaceMessage("researchPaperMessage", "");
+          try {
+            const data = await patientRequest("/api/research-papers/upload", {
+              method: "POST",
+              body: new FormData(form),
+            });
+            form.reset();
+            setTodayMaxDateForInput("researchPaperDate");
+            await loadResearchPapers();
+            showWorkspaceMessage(
+              "researchPaperMessage",
+              `“${data.paper.title}” was added to your research library.`,
+              "success",
+            );
+          } catch (error) {
+            showWorkspaceMessage(
+              "researchPaperMessage",
+              error.message || "Could not upload the research paper.",
+              "error",
+            );
+          } finally {
+            button.disabled = false;
+            button.textContent = "Upload paper";
+          }
+        });
+
       async function checkApi() {
         const status = document.getElementById("apiStatus");
         const statusText = document.getElementById("apiStatusText");
+        const dashboardStatus = document.getElementById("dashboardApiStatus");
+        const dashboardStatusText = dashboardStatus.querySelector("span:last-child");
         try {
           const response = await fetch(`${API_BASE}/api/health`);
           if (!response.ok) throw new Error("API unavailable");
           status.classList.add("online");
           status.classList.remove("offline");
           statusText.textContent = "API connected";
+          dashboardStatus.classList.add("online");
+          dashboardStatus.classList.remove("offline");
+          dashboardStatusText.textContent = "API connected";
         } catch (error) {
           status.classList.add("offline");
           status.classList.remove("online");
           statusText.textContent = "API unavailable";
+          dashboardStatus.classList.add("offline");
+          dashboardStatus.classList.remove("online");
+          dashboardStatusText.textContent = "API unavailable";
         }
       }
 

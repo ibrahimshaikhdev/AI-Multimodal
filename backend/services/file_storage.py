@@ -26,12 +26,25 @@ SUPPORTED_FILE_TYPES = {
         "mime_type": "image/png",
         "magic_bytes": (b"\x89PNG\r\n\x1a\n",),
     },
+    ".zip": {
+        "mime_type": ("application/zip", "application/x-zip-compressed"),
+        "magic_bytes": (b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"),
+    },
+    ".nii": {
+        "mime_type": ("application/octet-stream", "application/x-nifti"),
+        "magic_bytes": (b"\x5c\x01\x00\x00", b"\x00\x00\x01\x5c"),
+    },
+    ".gz": {
+        "mime_type": ("application/gzip", "application/x-gzip"),
+        "magic_bytes": (b"\x1f\x8b",),
+    },
 }
 
 DEFAULT_MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+DEFAULT_SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".jpg", ".jpeg", ".png"}
 
 
-def _safe_filename(filename):
+def _safe_filename(filename, allowed_extensions=None):
     if not filename or not str(filename).strip():
         raise ValueError("no file selected")
 
@@ -41,13 +54,18 @@ def _safe_filename(filename):
         raise ValueError("unsafe file name")
 
     suffix = Path(safe_name).suffix.lower()
-    if suffix not in SUPPORTED_FILE_TYPES:
+    allowed_extensions = allowed_extensions or DEFAULT_SUPPORTED_EXTENSIONS
+    if suffix not in allowed_extensions or suffix not in SUPPORTED_FILE_TYPES:
         raise ValueError("unsupported file type. Allowed: PDF, DOCX, JPG, PNG")
 
     return safe_name, suffix
 
 
-def validate_uploaded_file(file_storage, max_size_bytes=DEFAULT_MAX_UPLOAD_SIZE):
+def validate_uploaded_file(
+    file_storage,
+    max_size_bytes=DEFAULT_MAX_UPLOAD_SIZE,
+    allowed_extensions=None,
+):
     if file_storage is None:
         raise ValueError("No file selected")
 
@@ -55,7 +73,7 @@ def validate_uploaded_file(file_storage, max_size_bytes=DEFAULT_MAX_UPLOAD_SIZE)
     if not file_name:
         raise ValueError("No file selected")
 
-    safe_name, extension = _safe_filename(file_name)
+    safe_name, extension = _safe_filename(file_name, allowed_extensions)
     file_storage.stream.seek(0, os.SEEK_END)
     file_size = file_storage.stream.tell()
     file_storage.stream.seek(0)
@@ -73,19 +91,32 @@ def validate_uploaded_file(file_storage, max_size_bytes=DEFAULT_MAX_UPLOAD_SIZE)
 
     mime_type = (file_storage.content_type or "").lower()
     expected_mime = SUPPORTED_FILE_TYPES[extension]["mime_type"]
-    if mime_type and mime_type != expected_mime:
+    permitted_mimes = (
+        expected_mime if isinstance(expected_mime, tuple) else (expected_mime,)
+    )
+    if mime_type and mime_type not in permitted_mimes:
         raise ValueError("File MIME type does not match the file extension")
 
     return {
         "safe_name": safe_name,
         "extension": extension,
-        "mime_type": expected_mime,
+        "mime_type": permitted_mimes[0],
         "size": file_size,
     }
 
 
-def save_uploaded_file(file_storage, patient_id, upload_root=None):
-    validated = validate_uploaded_file(file_storage)
+def save_uploaded_file(
+    file_storage,
+    patient_id,
+    upload_root=None,
+    max_size_bytes=DEFAULT_MAX_UPLOAD_SIZE,
+    allowed_extensions=None,
+):
+    validated = validate_uploaded_file(
+        file_storage,
+        max_size_bytes=max_size_bytes,
+        allowed_extensions=allowed_extensions,
+    )
     patient_id = str(patient_id)
 
     if upload_root is None:
@@ -105,6 +136,29 @@ def save_uploaded_file(file_storage, patient_id, upload_root=None):
 
     relative_path = Path("uploads") / "patients" / patient_id / stored_name
     return str(relative_path).replace("\\", "/")
+
+
+def save_research_paper_file(file_storage, user_id, upload_root=None):
+    validated = validate_uploaded_file(
+        file_storage,
+        allowed_extensions={".pdf", ".docx"},
+    )
+    base_dir = (
+        Path(upload_root)
+        if upload_root is not None
+        else Path(__file__).resolve().parents[2] / "instance" / "uploads"
+    )
+    target_dir = base_dir / "research_papers" / str(user_id)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    stored_name = f"{uuid4().hex}{validated['extension']}"
+    destination = target_dir / stored_name
+
+    file_storage.stream.seek(0)
+    with destination.open("wb") as output_file:
+        shutil.copyfileobj(file_storage.stream, output_file)
+
+    return validated["safe_name"], stored_name
 
 
 def get_stored_file_location(file_reference, patient_id):

@@ -1,0 +1,30 @@
+EchoView47 smoke-test sample
+
+Image: echoview47_echo_4chambers.jpg
+Source page: https://commons.wikimedia.org/wiki/File:Echocardiogram_4chambers.jpg
+Download: https://upload.wikimedia.org/wikipedia/commons/b/bf/Echocardiogram_4chambers.jpg
+License: Public domain (Wikimedia Commons categorizes the file as PD-self).
+Creator: Not provided as machine-readable metadata on the Commons page.
+SHA-256: 847bbbab5b97db3a9097c192dfa97ecccf5a6d18c43c899cac1115a1fdfa481d
+
+Visual inspection: an apical four-chamber echocardiogram still image.
+Model: thrive-2025/EchoView47, converted Keras 3 checkpoint
+Runtime checkpoint: models/echoview47/EchoView47.keras
+Runtime checkpoint SHA-256: 5946e975664ace4de8b11385bb8d73bf4df9df2b9c1adfe51e243680cb673fe8
+Original HDF5 checkpoint SHA-256:
+e74c6581b7da9acf82d9c1545543a13777fee544dc8b3cebafd9f74587c132a2
+Input: RGB, bilinear resize to 224x224; checkpoint contains Rescaling(1/255).
+Runtime test: TensorFlow 2.20.0 / Keras 3 safely loaded the converted model.
+Its output differs from the original HDF5 model by at most 1.35e-7 on this sample.
+Output: 47 softmax values; highest class was a4ch-full (index 7), score 0.22817.
+Next highest classes: subcostal-heart (0.04641), a4ch-rv (0.04464),
+subcostal-ivc (0.03704), and a5ch-full (0.03431).
+
+This is a single-sample software smoke test only. The top class is broadly
+consistent with the visibly identifiable view, but its low, uncalibrated score
+does not establish reliable performance. It is not a medical diagnosis or
+clinical validation.
+
+Model licensing note: EchoForge's classification documentation states
+CC BY-NC-SA 4.0. Confirm the checkpoint's applicable terms before any
+commercial use or redistribution.

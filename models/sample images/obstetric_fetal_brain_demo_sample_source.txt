@@ -1,0 +1,18 @@
+Obstetric ultrasound demo sample attribution and inference record
+
+Image: obstetric_fetal_brain_demo_sample.png
+Visible content: fetal head ultrasound with head measurement calipers.
+Creator: Nevit Dilmen
+Source: https://commons.wikimedia.org/wiki/File:Ultrasound_Scan_ND_0105152027_1521080.png
+License: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+License URL: https://creativecommons.org/licenses/by-sa/3.0/
+
+Inference:
+- Input: PNG, 500-pixel Commons preview
+- Model: Beijuka/ultrasound_plane_classification-swin-all-planes-class-weight-v1
+- Inference: completed locally on CPU
+- Output: Fetal brain; top model score 1.0 (uncalibrated model output)
+- This is a view-classification demo only; it does not assess fetal health.
+
+This is one public teaching image, not clinical validation. Attribution and
+ShareAlike terms apply to the retained image.

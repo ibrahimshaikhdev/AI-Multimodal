@@ -50,6 +50,48 @@ class ScanAsset(db.Model):
         cascade="all, delete-orphan",
         uselist=False,
     )
+    chest_xray_analysis = db.relationship(
+        "ChestXrayAnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    bone_xray_analysis = db.relationship(
+        "BoneXrayAnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    dental_xray_analysis = db.relationship(
+        "DentalXrayAnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    ct_head_analysis = db.relationship(
+        "CTHeadAnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    obstetric_ultrasound_analysis = db.relationship(
+        "ObstetricUltrasoundAnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    abdominal_aorta_ultrasound_analysis = db.relationship(
+        "AbdominalAortaUltrasoundAnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    echoview47_analysis = db.relationship(
+        "EchoView47AnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
 
     def __repr__(self):
         return f"<ScanAsset {self.id}: {self.modality} {self.body_region or ''}>"

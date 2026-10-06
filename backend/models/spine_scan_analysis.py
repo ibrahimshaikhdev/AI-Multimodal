@@ -16,6 +16,7 @@ class SpineScanAnalysis(db.Model):
     )
     model_name = db.Column(db.String(255), nullable=False)
     model_score = db.Column(db.Float, nullable=False)
+    severity_scores = db.Column(db.JSON, nullable=True)
     frame_count = db.Column(db.Integer, nullable=False)
     frame_source = db.Column(db.String(80), nullable=False)
     created_at = db.Column(

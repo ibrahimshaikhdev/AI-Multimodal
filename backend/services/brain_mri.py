@@ -20,7 +20,12 @@ BRAIN_MODEL_PATH = Path(
     )
 )
 BRAIN_IMAGE_SIZE = (224, 224)
-BRAIN_OUTPUT_NAMES = tuple(f"Class {index}" for index in range(4))
+BRAIN_OUTPUT_NAMES = (
+    "Glioma",
+    "Meningioma",
+    "No tumor",
+    "Pituitary tumor",
+)
 
 
 class BrainMRIError(RuntimeError):

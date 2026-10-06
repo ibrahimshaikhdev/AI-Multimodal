@@ -1,0 +1,27 @@
+Aorta demo sample attribution and inference record
+
+Selected image: aorta_transverse_demo_sample.jpg
+Description: Abdominal ultrasound exam; aorta is shown in transverse view with
+diameter calipers and an "AORTE" label in the image.
+Creator: Ptrump16
+Source: https://commons.wikimedia.org/wiki/File:Abdominal_Ultrasound_Full_Exam_43.jpg
+License: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+License URL: https://creativecommons.org/licenses/by-sa/4.0/
+
+Inference:
+- Input: 716 x 537 JPG
+- Model: sumit-ai-ml/POCUS_Aorta_segmentation; expected checkpoint hash verified
+- Inference: completed on CPU using the application's default prediction settings
+- Result: mask returned; area 1,679 pixels; detection score 0.7379
+- Visual check: the green overlay aligns with the round, caliper-measured aortic
+  structure in the left image panel. This is a qualitative demo check, not a
+  ground-truth accuracy measurement.
+- Overlay: aorta_transverse_demo_overlay.png
+
+An earlier exploratory image, abdominal_aorta_ultrasound_wikimedia.jpg, was a
+long-axis/color-Doppler view and returned no mask. It is not the selected demo.
+That failure does not indicate that the aorta is absent or abnormal.
+
+This sample is public teaching material, not a patient-specific result or
+clinical validation. Attribution and ShareAlike terms apply to this retained
+image and its adapted overlay.

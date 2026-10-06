@@ -22,6 +22,23 @@ def test_validate_uploaded_file_accepts_supported_report_types():
     assert result["size"] == len(b"%PDF-1.4\n% test pdf")
 
 
+def test_validate_uploaded_file_accepts_gzip_ct_volume():
+    upload = make_upload(
+        "head.nii.gz",
+        "application/gzip",
+        b"\x1f\x8b\x08\x00compressed nifti",
+    )
+
+    result = validate_uploaded_file(
+        upload,
+        allowed_extensions={".gz"},
+    )
+
+    assert result["extension"] == ".gz"
+    assert result["mime_type"] == "application/gzip"
+    assert result["safe_name"] == "head.nii.gz"
+
+
 def test_validate_uploaded_file_rejects_unsupported_or_dangerous_files():
     upload = make_upload("../evil.exe", "application/octet-stream", b"not a real report")
 

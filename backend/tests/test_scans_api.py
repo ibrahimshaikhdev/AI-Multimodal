@@ -2,6 +2,7 @@ from datetime import date
 from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
+from zipfile import ZipFile
 
 import pytest
 from PIL import Image
@@ -63,6 +64,99 @@ def valid_png_bytes(size=(64, 48), color=(120, 90, 160)):
     return output.getvalue()
 
 
+class FakeChestXrayService:
+    def analyze_bytes(self, image_bytes):
+        from backend.services.chest_xray import (
+            ChestXrayAnalysis,
+            ChestXrayFindingScore,
+        )
+
+        return ChestXrayAnalysis(
+            model_name="densenet121-res224-all",
+            findings=[
+                ChestXrayFindingScore("Cardiomegaly", 0.91),
+                ChestXrayFindingScore("Effusion", 0.78),
+                ChestXrayFindingScore("Pneumothorax", 0.08),
+            ],
+            input_shape=(1, 1, 224, 224),
+        )
+
+
+class FakeBoneXrayService:
+    def analyze_bytes(self, image_bytes):
+        from backend.services.bone_xray import BoneXrayResult
+
+        return BoneXrayResult(
+            label="Fractured",
+            confidence=87.0,
+        )
+
+
+class FakeSpineService:
+    def preprocess_image(self, image_bytes):
+        return image_bytes
+
+    def predict_preprocessed(self, model_input):
+        assert model_input
+        return SimpleNamespace(
+            condition_scores={
+                "Spinal canal stenosis": {
+                    "Normal/Mild": 0.7,
+                    "Moderate": 0.2,
+                    "Severe": 0.1,
+                },
+                "Neural foraminal narrowing": {
+                    "Normal/Mild": 0.6,
+                    "Moderate": 0.3,
+                    "Severe": 0.1,
+                },
+                "Subarticular stenosis": {
+                    "Normal/Mild": 0.5,
+                    "Moderate": 0.3,
+                    "Severe": 0.2,
+                },
+            },
+            highest_score=0.7,
+        )
+
+
+class FakeDentalXrayService:
+    def analyze_bytes(self, image_bytes):
+        from backend.services.dental_xray import (
+            DentalXrayAnalysis,
+            DentalXrayFinding,
+            MODEL_ID,
+        )
+
+        return DentalXrayAnalysis(
+            model_name=MODEL_ID,
+            findings=[
+                DentalXrayFinding(
+                    name="Impacted tooth",
+                    score=0.901,
+                    box=(264.0, 316.0, 380.0, 418.0),
+                )
+            ],
+            image_shape=(640, 1280),
+        )
+
+
+class FakeCTHeadService:
+    def analyze_bytes(self, file_bytes, filename):
+        from backend.services.ct_head_hemorrhage import CLASS_NAMES, MODEL_ID
+
+        scores = {name: 0.25 for name in CLASS_NAMES}
+        return SimpleNamespace(
+            model_name=MODEL_ID,
+            series_classification=scores,
+            slice_classification=[scores],
+            slice_count=1,
+            highest_any_slice_index=0,
+            input_format="DICOM series",
+            localization_png=None,
+        )
+
+
 class FakeBrainService:
     def preprocess_image(self, image_bytes):
         return image_bytes
@@ -74,11 +168,70 @@ class FakeBrainService:
             class_index=2,
             class_score=0.7,
             class_scores={
-                "Class 0": 0.1,
-                "Class 1": 0.1,
-                "Class 2": 0.7,
-                "Class 3": 0.1,
+                "Glioma": 0.1,
+                "Meningioma": 0.1,
+                "No tumor": 0.7,
+                "Pituitary tumor": 0.1,
             },
+        )
+
+
+class FakeObstetricUltrasoundService:
+    def prepare_image(self, image_bytes):
+        assert image_bytes
+        return image_bytes
+
+    def analyze_prepared_image(self, _):
+        return SimpleNamespace(
+            predicted_class="Fetal brain",
+            model_score=0.82,
+            class_scores={
+                "Placenta": 0.01,
+                "Fetal brain": 0.82,
+                "Fetal femur": 0.01,
+                "Maternal Cervix": 0.01,
+                "Fetal thorax": 0.02,
+                "Fetal abdomen": 0.08,
+                "Other": 0.02,
+                "Fetal spine": 0.02,
+                "Fetal heart rate": 0.01,
+            },
+        )
+
+
+class FakeAbdominalAortaUltrasoundService:
+    def __init__(self, *, include_mask=True):
+        self.include_mask = include_mask
+
+    def prepare_image(self, image_bytes):
+        assert image_bytes
+        return image_bytes
+
+    def analyze_prepared_image(self, _):
+        return SimpleNamespace(
+            overlay_png=valid_png_bytes(size=(64, 48)) if self.include_mask else None,
+            confidence_score=0.84 if self.include_mask else None,
+            mask_area_pixels=240 if self.include_mask else 0,
+            image_shape=(48, 64),
+        )
+
+
+class FakeEchoView47Service:
+    def prepare_image(self, image_bytes):
+        assert image_bytes
+        return image_bytes
+
+    def analyze_prepared_image(self, _):
+        from backend.services.echoview47 import CLASS_NAMES
+
+        scores = {class_name: 0.0 for class_name in CLASS_NAMES}
+        scores["a4ch-full"] = 0.6
+        scores["a4ch-rv"] = 0.3
+        scores["subcostal-heart"] = 0.1
+        return SimpleNamespace(
+            predicted_class="a4ch-full",
+            model_score=0.6,
+            class_scores=scores,
         )
 
 
@@ -90,6 +243,16 @@ def test_scan_upload_list_and_original_download_are_owner_scoped(scan_client, mo
         client.application.extensions,
         "brain_mri_service",
         FakeBrainService(),
+    )
+    monkeypatch.setitem(
+        client.application.extensions,
+        "chest_xray_service",
+        FakeChestXrayService(),
+    )
+    monkeypatch.setitem(
+        client.application.extensions,
+        "bone_xray_service",
+        FakeBoneXrayService(),
     )
     uploaded_image = valid_png_bytes()
 
@@ -112,7 +275,9 @@ def test_scan_upload_list_and_original_download_are_owner_scoped(scan_client, mo
     assert scan["body_region"] == "Brain"
     assert scan["study_date"] == "2025-06-18"
     assert scan["processing_status"] == "analysis_complete"
+    assert scan["brain_analysis"]["class_mapping_available"] is True
     assert scan["brain_analysis"]["predicted_class_index"] == 2
+    assert scan["brain_analysis"]["predicted_class"] == "No tumor"
 
     listing = client.get(
         f"/api/scans?patient_id={owner_patient_id}",
@@ -210,6 +375,19 @@ def test_scan_subtype_options_are_validated_and_other_is_never_prediction_eligib
     assert payload["processing_status"] == "unsupported_region"
     assert "not eligible for prediction" in payload["processing_message"].lower()
 
+    removed_thyroid_region = client.post(
+        "/api/scans/upload",
+        headers=headers,
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Thyroid",
+            "file": (BytesIO(png_bytes()), "thyroid-ultrasound.png"),
+        },
+        content_type="multipart/form-data",
+    )
+    assert removed_thyroid_region.status_code == 400
+
 
 def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
     client, owner_patient_id, _ = scan_client
@@ -220,6 +398,11 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
         "brain_mri_service",
         FakeBrainService(),
     )
+    monkeypatch.setitem(
+        client.application.extensions,
+        "ct_head_hemorrhage_service",
+        FakeCTHeadService(),
+    )
     supported_pairs = [
         ("MRI", "Brain"),
         ("MRI", "Knee"),
@@ -229,25 +412,51 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
         ("CT", "Chest"),
         ("CT", "Abdomen/pelvis"),
         ("CT", "Spine"),
-        ("CT", "Cardiac"),
         ("X_RAY", "Chest"),
         ("X_RAY", "Bone/joint"),
-        ("X_RAY", "Spine"),
         ("X_RAY", "Dental"),
         ("ULTRASOUND", "Abdomen"),
         ("ULTRASOUND", "Obstetric"),
         ("ULTRASOUND", "Cardiac/echocardiogram"),
         ("ULTRASOUND", "Vascular"),
-        ("ULTRASOUND", "Thyroid"),
         ("OTHER", "Other"),
     ]
+    monkeypatch.setitem(
+        client.application.extensions,
+        "obstetric_ultrasound_service",
+        FakeObstetricUltrasoundService(),
+    )
+    monkeypatch.setitem(
+        client.application.extensions,
+        "abdominal_aorta_ultrasound_service",
+        FakeAbdominalAortaUltrasoundService(),
+    )
+    monkeypatch.setitem(
+        client.application.extensions,
+        "echoview47_service",
+        FakeEchoView47Service(),
+    )
 
     for modality, body_region in supported_pairs:
-        image = (
-            valid_png_bytes()
-            if modality == "MRI" and body_region in {"Brain", "Knee", "Spine"}
-            else png_bytes()
-        )
+        if modality == "CT" and body_region == "Brain/head":
+            archive = BytesIO()
+            with ZipFile(archive, "w") as zip_file:
+                zip_file.writestr("slice.dcm", b"test DICOM payload")
+            image = archive.getvalue()
+            filename = "head-ct-series.zip"
+        else:
+            image = (
+                valid_png_bytes()
+                if (modality == "MRI" and body_region in {"Brain", "Knee", "Spine"})
+                or (modality == "X_RAY" and body_region in {"Chest", "Bone/joint", "Dental"})
+                or (
+                    modality == "ULTRASOUND"
+                    and body_region
+                    in {"Abdomen", "Obstetric", "Cardiac/echocardiogram"}
+                )
+                else png_bytes()
+            )
+            filename = f"{modality.lower()}-scan.png"
         response = client.post(
             "/api/scans/upload",
             headers=headers,
@@ -255,11 +464,245 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
                 "patient_id": owner_patient_id,
                 "modality": modality,
                 "body_region": body_region,
-                "file": (BytesIO(image), f"{modality.lower()}-scan.png"),
+                "file": (BytesIO(image), filename),
             },
             content_type="multipart/form-data",
         )
         assert response.status_code == 201, response.get_json()
+        if modality == "MRI" and body_region == "Spine":
+            spine_scan = response.get_json()["scan"]
+            assert spine_scan["processing_status"] == "analysis_complete"
+            assert spine_scan["spine_analysis"]["model_name"] == (
+                "mrimperium/Lumbar-Spine-Degenerative-Classification"
+            )
+            assert len(spine_scan["spine_analysis"]["condition_scores"]) == 3
+        if modality == "ULTRASOUND" and body_region == "Obstetric":
+            obstetric_scan = response.get_json()["scan"]
+            assert obstetric_scan["processing_status"] == "analysis_complete"
+            assert (
+                obstetric_scan["obstetric_ultrasound_analysis"]["predicted_class"]
+                == "Fetal brain"
+            )
+            assert len(
+                obstetric_scan["obstetric_ultrasound_analysis"]["class_scores"]
+            ) == 9
+            assert "does not assess fetal health" in (
+                obstetric_scan["obstetric_ultrasound_analysis"]["disclaimer"].lower()
+            )
+        if (
+            modality == "ULTRASOUND"
+            and body_region == "Cardiac/echocardiogram"
+        ):
+            echo_scan = response.get_json()["scan"]
+            analysis = echo_scan["echoview47_analysis"]
+            assert echo_scan["processing_status"] == "analysis_complete"
+            assert analysis["display_label"].startswith("Apical 4-chamber")
+            assert "all four heart chambers" in analysis["meaning"]
+            assert "uncalibrated" in analysis["disclaimer"].lower()
+            assert len(analysis["top_views"]) == 3
+            assert "not a diagnosis" in echo_scan["processing_message"].lower()
+
+
+def test_echoview47_ultrasound_requires_jpg_or_png(scan_client):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Cardiac/echocardiogram",
+            "file": (BytesIO(b"%PDF-1.4\nscan"), "echo.pdf"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert "JPG and PNG" in response.get_json()["error"]
+
+
+def test_obstetric_ultrasound_requires_jpg_or_png(scan_client):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Obstetric",
+            "file": (BytesIO(b"%PDF-1.4\nscan"), "obstetric-scan.pdf"),
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+    assert "JPG and PNG" in response.get_json()["error"]
+
+
+def test_abdominal_aorta_ultrasound_upload_persists_mask_and_protected_overlay(
+    scan_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    monkeypatch.setitem(
+        client.application.extensions,
+        "abdominal_aorta_ultrasound_service",
+        FakeAbdominalAortaUltrasoundService(),
+    )
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Abdomen",
+            "file": (BytesIO(valid_png_bytes()), "aorta-view.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    scan = response.get_json()["scan"]
+    analysis = scan["abdominal_aorta_ultrasound_analysis"]
+    assert scan["processing_status"] == "analysis_complete"
+    assert analysis["class_name"] == "Aorta"
+    assert analysis["has_mask"] is True
+    assert analysis["mask_area_pixels"] == 240
+    assert "not aneurysm detection" in analysis["disclaimer"].lower()
+
+    overlay = client.get(
+        analysis["overlay_url"],
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert overlay.status_code == 200
+    assert overlay.mimetype == "image/png"
+
+
+def test_abdominal_aorta_no_mask_is_not_reported_as_absent(
+    scan_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    monkeypatch.setitem(
+        client.application.extensions,
+        "abdominal_aorta_ultrasound_service",
+        FakeAbdominalAortaUltrasoundService(include_mask=False),
+    )
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Abdomen",
+            "file": (BytesIO(valid_png_bytes()), "aorta-view.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    scan = response.get_json()["scan"]
+    assert scan["processing_status"] == "analysis_complete"
+    assert scan["abdominal_aorta_ultrasound_analysis"]["has_mask"] is False
+    assert "does not establish" in scan["processing_message"]
+
+
+def test_abdominal_aorta_ultrasound_requires_jpg_or_png(scan_client):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Abdomen",
+            "file": (BytesIO(b"%PDF-1.4\nscan"), "abdominal-ultrasound.pdf"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert "JPG and PNG" in response.get_json()["error"]
+
+
+def test_dental_xray_upload_persists_documented_candidate_and_pixel_box(
+    scan_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    auth_headers = {"Authorization": "Bearer " + token}
+    monkeypatch.setitem(
+        client.application.extensions,
+        "dental_xray_service",
+        FakeDentalXrayService(),
+    )
+
+    response = client.post(
+        "/api/scans/upload",
+        headers=auth_headers,
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "X_RAY",
+            "body_region": "Dental",
+            "file": (BytesIO(valid_png_bytes()), "panoramic.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    scan = response.get_json()["scan"]
+    assert scan["processing_status"] == "analysis_complete"
+    assert scan["dental_xray_analysis"]["findings"] == [
+        {
+            "name": "Impacted tooth",
+            "score": 0.901,
+            "box": [264.0, 316.0, 380.0, 418.0],
+        }
+    ]
+    assert "not confirmed diagnoses" in scan["dental_xray_analysis"]["disclaimer"].lower()
+
+
+def test_head_ct_route_serializes_six_model_outputs(scan_client, monkeypatch):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    auth_headers = {"Authorization": "Bearer " + token}
+    monkeypatch.setitem(
+        client.application.extensions,
+        "ct_head_hemorrhage_service",
+        FakeCTHeadService(),
+    )
+    archive = BytesIO()
+    with ZipFile(archive, "w") as zip_file:
+        zip_file.writestr("slice.dcm", b"test DICOM payload")
+
+    response = client.post(
+        "/api/scans/upload",
+        headers=auth_headers,
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "CT",
+            "body_region": "Brain/head",
+            "file": (BytesIO(archive.getvalue()), "head-ct-series.zip"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    analysis = response.get_json()["scan"]["ct_head_analysis"]
+    assert set(analysis["series_classification"]) == {
+        "epidural",
+        "intraparenchymal",
+        "intraventricular",
+        "subarachnoid",
+        "subdural",
+        "any",
+    }
+    assert "NOT a confirmed medical diagnosis" in analysis["disclaimer"]
 
 
 def test_knee_upload_runs_real_localizer_and_fails_closed_on_invalid_mask(scan_client):
@@ -418,7 +861,7 @@ def test_non_knee_mri_does_not_invoke_knee_service(scan_client, monkeypatch):
     assert response.get_json()["scan"]["processing_status"] == "analysis_complete"
 
 
-def test_brain_mri_upload_runs_real_model_and_returns_unlabeled_scores(scan_client):
+def test_brain_mri_upload_returns_named_class_scores(scan_client):
     client, owner_patient_id, _ = scan_client
     token = login(client)
     image_bytes = valid_png_bytes(size=(180, 140), color=(90, 120, 160))
@@ -442,16 +885,21 @@ def test_brain_mri_upload_runs_real_model_and_returns_unlabeled_scores(scan_clie
     assert analysis["model_name"] == "mri_brain_tumor_efficientnetb0_final.keras"
     assert analysis["predicted_class_index"] in range(4)
     assert set(analysis["class_scores"]) == {
-        "Class 0",
-        "Class 1",
-        "Class 2",
-        "Class 3",
+        "Glioma",
+        "Meningioma",
+        "No tumor",
+        "Pituitary tumor",
     }
+    assert analysis["class_mapping_available"] is True
+    expected_classes = ("Glioma", "Meningioma", "No tumor", "Pituitary tumor")
+    assert analysis["predicted_class"] == expected_classes[
+        analysis["predicted_class_index"]
+    ]
     assert sum(analysis["class_scores"].values()) == pytest.approx(1.0, abs=1e-3)
     assert analysis["model_score"] == pytest.approx(
-        analysis["class_scores"][f"Class {analysis['predicted_class_index']}"]
+        analysis["class_scores"][analysis["predicted_class"]]
     )
-    assert "label meanings are unspecified" in scan["processing_message"].lower()
+    assert "glioma" in scan["processing_message"].lower()
     assert "not a medical diagnosis" in analysis["disclaimer"].lower()
 
 
@@ -481,9 +929,52 @@ def test_brain_mri_upload_endpoint_runs_actual_model(scan_client):
     assert sum(analysis["class_scores"].values()) == pytest.approx(1.0, abs=1e-3)
 
 
-def test_spine_mri_upload_runs_real_model_and_returns_raw_score(scan_client):
+def test_chest_xray_upload_runs_real_pretrained_model(scan_client):
+    import tempfile
+
     client, owner_patient_id, _ = scan_client
     token = login(client)
+    auth_headers = {"Authorization": "Bearer " + token}
+    sample = Path(tempfile.gettempdir()) / "torchxrayvision_00000001_000.png"
+    if not sample.is_file():
+        pytest.skip("Real CXR smoke sample not present in temp folder.")
+    image_bytes = sample.read_bytes()
+
+    response = client.post(
+        "/api/scans/upload",
+        headers=auth_headers,
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "X_RAY",
+            "body_region": "Chest",
+            "file": (BytesIO(image_bytes), "chest-xray-smoke.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201
+    scan = response.get_json()["scan"]
+    analysis = scan["chest_xray_analysis"]
+    assert scan["processing_status"] == "analysis_complete"
+    assert analysis["model_name"] == "densenet121-res224-all"
+    assert len(analysis["findings"]) == 18
+    assert all(0.0 <= f["score"] <= 1.0 for f in analysis["findings"])
+    assert any(f["name"] == "Cardiomegaly" for f in analysis["findings"])
+    assert "not confirmed diagnoses" in scan["processing_message"].lower()
+    assert "not confirmed diagnoses" in analysis["disclaimer"].lower()
+
+
+def test_spine_mri_upload_runs_model_and_persists_severity_scores(
+    scan_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    monkeypatch.setitem(
+        client.application.extensions,
+        "spine_mri_service",
+        FakeSpineService(),
+    )
     image_path = (
         Path(__file__).resolve().parents[2]
         / "models"
@@ -507,12 +998,22 @@ def test_spine_mri_upload_runs_real_model_and_returns_raw_score(scan_client):
     assert response.status_code == 201
     scan = response.get_json()["scan"]
     assert scan["processing_status"] == "analysis_complete"
-    assert scan["spine_analysis"]["model_name"] == "best_mrnet_fast.keras"
-    assert 0.0 <= scan["spine_analysis"]["model_score"] <= 1.0
-    assert scan["spine_analysis"]["frame_count"] == 12
-    assert scan["spine_analysis"]["frame_source"] == "single_uploaded_image_repeated"
-    assert "meaning is not specified" in scan["processing_message"].lower()
-    assert "diagnosis" in scan["spine_analysis"]["disclaimer"].lower()
+    assert scan["spine_analysis"]["model_name"] == (
+        "mrimperium/Lumbar-Spine-Degenerative-Classification"
+    )
+    scores = scan["spine_analysis"]["condition_scores"]
+    assert set(scores) == {
+        "Spinal canal stenosis",
+        "Neural foraminal narrowing",
+        "Subarticular stenosis",
+    }
+    assert set(scores["Spinal canal stenosis"]) == {
+        "Normal/Mild",
+        "Moderate",
+        "Severe",
+    }
+    assert "not a confirmed medical diagnosis" in scan["spine_analysis"]["disclaimer"].lower()
+    assert "single uploaded 2d image" in scan["processing_message"].lower()
 
     original = client.get(
         scan["original_url"],

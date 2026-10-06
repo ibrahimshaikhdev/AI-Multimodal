@@ -17,3 +17,11 @@ def test_health_route(client):
     assert response.status_code == 200
     assert response.get_json()["status"] == "ok"
     assert response.get_json()["service"] == "multimodal-ai-medical-platform"
+
+
+def test_root_route_serves_frontend(client):
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert response.mimetype == "text/html"
+    assert b"<!doctype html>" in response.data.lower()

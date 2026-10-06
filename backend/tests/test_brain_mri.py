@@ -56,7 +56,7 @@ def test_preprocess_uses_opencv_inter_linear():
     assert np.array_equal(batch[0], expected.astype(np.float32))
 
 
-def test_prediction_returns_four_raw_class_index_scores():
+def test_prediction_returns_four_named_class_scores_in_training_order():
     model = FakeBrainModel()
     loads = []
     service = BrainMRIPredictionService(model_loader=lambda path: loads.append(path) or model)
@@ -66,10 +66,10 @@ def test_prediction_returns_four_raw_class_index_scores():
     assert result.class_index == 2
     assert result.class_score == pytest.approx(0.6)
     assert result.class_scores == {
-        "Class 0": pytest.approx(0.1),
-        "Class 1": pytest.approx(0.2),
-        "Class 2": pytest.approx(0.6),
-        "Class 3": pytest.approx(0.1),
+        "Glioma": pytest.approx(0.1),
+        "Meningioma": pytest.approx(0.2),
+        "No tumor": pytest.approx(0.6),
+        "Pituitary tumor": pytest.approx(0.1),
     }
     assert model.received.shape == (1, 224, 224, 3)
     assert len(loads) == 1
@@ -98,7 +98,12 @@ def test_actual_brain_model_loads_with_expected_shapes():
 
     assert tuple(model.input_shape) == (None, 224, 224, 3)
     assert tuple(model.output_shape) == (None, 4)
-    assert BRAIN_OUTPUT_NAMES == ("Class 0", "Class 1", "Class 2", "Class 3")
+    assert BRAIN_OUTPUT_NAMES == (
+        "Glioma",
+        "Meningioma",
+        "No tumor",
+        "Pituitary tumor",
+    )
 
 
 def test_flask_startup_loads_and_caches_brain_model():

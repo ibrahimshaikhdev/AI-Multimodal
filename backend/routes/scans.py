@@ -7,9 +7,16 @@ from werkzeug.datastructures import FileStorage
 from backend.auth import require_auth
 from backend.extensions import db
 from backend.models import (
+    AbdominalAortaUltrasoundAnalysisRecord,
     BrainScanAnalysis,
+    BoneXrayAnalysisRecord,
     CardiacScanAnalysis,
+    ChestXrayAnalysisRecord,
+    CTHeadAnalysisRecord,
+    DentalXrayAnalysisRecord,
+    EchoView47AnalysisRecord,
     KneeScanAnalysis,
+    ObstetricUltrasoundAnalysisRecord,
     Patient,
     ScanAsset,
     SpineScanAnalysis,
@@ -22,10 +29,35 @@ from backend.services.cardiac_segmentation import (
     CardiacSegmentationService,
 )
 from backend.services.brain_mri import (
+    BRAIN_OUTPUT_NAMES,
     BrainImageValidationError,
     BrainModelContractError,
     BrainModelUnavailableError,
     BrainMRIPredictionService,
+)
+from backend.services.chest_xray import (
+    ChestXrayAnalysisService,
+    ChestXrayImageError,
+    ChestXrayModelContractError,
+    ChestXrayModelUnavailableError,
+)
+from backend.services.bone_xray import (
+    BoneXrayAnalysisService,
+    BoneXrayImageError,
+    BoneXrayModelContractError,
+    BoneXrayModelUnavailableError,
+)
+from backend.services.dental_xray import (
+    DentalXrayAnalysisService,
+    DentalXrayImageError,
+    DentalXrayModelContractError,
+    DentalXrayModelUnavailableError,
+)
+from backend.services.ct_head_hemorrhage import (
+    CTHeadHemorrhageService,
+    CTHeadInputError,
+    CTHeadModelContractError,
+    CTHeadModelUnavailableError,
 )
 from backend.services.knee_mri import (
     ACLROILocalizerUnavailableError,
@@ -35,16 +67,42 @@ from backend.services.knee_mri import (
     KneeModelUnavailableError,
     KneeMRIPredictionService,
 )
-from backend.services.file_storage import (
-    get_stored_file_location,
-    save_uploaded_file,
-    validate_uploaded_file,
-)
 from backend.services.spine_mri import (
+    SPINE_CONDITIONS,
+    SPINE_MODEL_ID,
+    SPINE_SEVERITIES,
     SpineImageValidationError,
     SpineModelContractError,
     SpineModelUnavailableError,
     SpineMRIPredictionService,
+)
+from backend.services.obstetric_ultrasound import (
+    MODEL_ID as OBSTETRIC_ULTRASOUND_MODEL_ID,
+    ObstetricUltrasoundAnalysisService,
+    ObstetricUltrasoundImageError,
+    ObstetricUltrasoundModelContractError,
+    ObstetricUltrasoundModelUnavailableError,
+)
+from backend.services.abdominal_aorta_ultrasound import (
+    CLASS_NAME as AORTA_CLASS_NAME,
+    MODEL_ID as ABDOMINAL_AORTA_ULTRASOUND_MODEL_ID,
+    AbdominalAortaUltrasoundAnalysisService,
+    AbdominalAortaUltrasoundImageError,
+    AbdominalAortaUltrasoundModelContractError,
+    AbdominalAortaUltrasoundModelUnavailableError,
+)
+from backend.services.echoview47 import (
+    MODEL_ID as ECHOVIEW47_MODEL_ID,
+    EchoView47AnalysisService,
+    EchoView47ImageError,
+    EchoView47ModelContractError,
+    EchoView47ModelUnavailableError,
+    describe_view_class,
+)
+from backend.services.file_storage import (
+    get_stored_file_location,
+    save_uploaded_file,
+    validate_uploaded_file,
 )
 
 scans_bp = Blueprint("scans", __name__)
@@ -53,14 +111,13 @@ SUPPORTED_SCAN_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 SUPPORTED_MODALITIES = {"MRI", "CT", "X_RAY", "ULTRASOUND", "OTHER"}
 SCAN_SUBTYPES = {
     "MRI": {"Brain", "Knee", "Spine", "Cardiac", "Other"},
-    "CT": {"Brain/head", "Chest", "Abdomen/pelvis", "Spine", "Cardiac", "Other"},
-    "X_RAY": {"Chest", "Bone/joint", "Spine", "Dental", "Other"},
+    "CT": {"Brain/head", "Chest", "Abdomen/pelvis", "Spine", "Other"},
+    "X_RAY": {"Chest", "Bone/joint", "Dental", "Other"},
     "ULTRASOUND": {
         "Abdomen",
         "Obstetric",
         "Cardiac/echocardiogram",
         "Vascular",
-        "Thyroid",
         "Other",
     },
     "OTHER": {"Other"},
@@ -73,9 +130,22 @@ def _serialize_scan(scan):
     knee_analysis = scan.knee_analysis
     spine_analysis = scan.spine_analysis
     brain_analysis = scan.brain_analysis
+    chest_xray_analysis = scan.chest_xray_analysis
+    bone_xray_analysis = scan.bone_xray_analysis
+    dental_xray_analysis = scan.dental_xray_analysis
+    ct_head_analysis = scan.ct_head_analysis
+    obstetric_ultrasound_analysis = scan.obstetric_ultrasound_analysis
+    abdominal_aorta_ultrasound_analysis = (
+        scan.abdominal_aorta_ultrasound_analysis
+    )
+    echoview47_analysis = scan.echoview47_analysis
     is_knee_mri = scan.modality == "MRI" and scan.body_region == "Knee"
     is_spine_mri = scan.modality == "MRI" and scan.body_region == "Spine"
     is_brain_mri = scan.modality == "MRI" and scan.body_region == "Brain"
+    is_echoview47_ultrasound = (
+        scan.modality == "ULTRASOUND"
+        and scan.body_region == "Cardiac/echocardiogram"
+    )
     if knee_analysis:
         preprocessing_status = "complete"
         localization_status = knee_analysis.localization_status
@@ -104,7 +174,92 @@ def _serialize_scan(scan):
         preprocessing_status = None
         localization_status = None
 
-    if analysis:
+    if is_spine_mri and spine_analysis and spine_analysis.severity_scores:
+        processing_message = (
+            "Experimental Spine MRI model scores for a single uploaded 2D image. The model "
+            "does not analyze a complete MRI series; output is not a confirmed diagnosis."
+        )
+    elif is_spine_mri:
+        processing_message = (
+            "Spine MRI scan is stored, but no model output is available for this scan."
+        )
+    elif (
+        scan.modality == "ULTRASOUND"
+        and scan.body_region == "Abdomen"
+        and abdominal_aorta_ultrasound_analysis
+    ):
+        if abdominal_aorta_ultrasound_analysis.mask_area_pixels:
+            processing_message = (
+                "Experimental aortic POCUS segmentation from one 2D image. This is not "
+                "general abdominal analysis, aneurysm detection, or a diagnosis."
+            )
+        else:
+            processing_message = (
+                "The model did not return a segmentation mask. This does not establish "
+                "that the aorta is absent or abnormal."
+            )
+    elif scan.modality == "ULTRASOUND" and scan.body_region == "Abdomen":
+        if scan.processing_status == "model_unavailable":
+            processing_message = (
+                "Abdominal ultrasound image is stored, but the aorta segmentation model "
+                "is unavailable."
+            )
+        elif scan.processing_status == "analysis_failed":
+            processing_message = (
+                "Abdominal ultrasound image is stored, but aorta segmentation failed; "
+                "no result is available."
+            )
+        else:
+            processing_message = (
+                "Experimental aortic POCUS segmentation is available for suitable "
+                "aorta-view images only; it is not general abdominal analysis."
+            )
+    elif scan.modality == "ULTRASOUND" and scan.body_region == "Obstetric":
+        if obstetric_ultrasound_analysis:
+            processing_message = (
+                "Experimental fetal ultrasound view classification from one 2D image. "
+                "It does not assess fetal health or diagnose a condition."
+            )
+        elif scan.processing_status == "model_unavailable":
+            processing_message = (
+                "Obstetric ultrasound image is stored, but the local view-classification "
+                "model is unavailable."
+            )
+        elif scan.processing_status == "analysis_failed":
+            processing_message = (
+                "Obstetric ultrasound image is stored, but model analysis failed; "
+                "no result is available."
+            )
+        else:
+            processing_message = (
+                "Obstetric ultrasound image is stored, but no model output is available."
+            )
+    elif is_echoview47_ultrasound and echoview47_analysis:
+        display_label, meaning = describe_view_class(
+            echoview47_analysis.predicted_class
+        )
+        processing_message = (
+            f"Experimental still-image view classification. Leading view label: "
+            f"{display_label}. {meaning} The result is not a diagnosis or an "
+            "assessment of heart function."
+        )
+    elif is_echoview47_ultrasound:
+        if scan.processing_status == "model_unavailable":
+            processing_message = (
+                "Echocardiogram image is stored, but the local EchoView47 model "
+                "is unavailable."
+            )
+        elif scan.processing_status == "analysis_failed":
+            processing_message = (
+                "Echocardiogram image is stored, but view classification failed; "
+                "no model output is available."
+            )
+        else:
+            processing_message = (
+                "Echocardiogram image is stored, but no view-classification "
+                "output is available."
+            )
+    elif analysis:
         processing_message = (
             "Experimental AI cardiac MRI segmentation; not a confirmed diagnosis."
         )
@@ -112,13 +267,23 @@ def _serialize_scan(scan):
         processing_message = (
             "Experimental AI knee MRI prediction; not a medical diagnosis."
         )
-    elif spine_analysis:
-        processing_message = (
-            "Experimental Spine MRI model score only; positive-class meaning is not specified."
-        )
     elif brain_analysis:
         processing_message = (
-            "Experimental Brain MRI model scores only; class label meanings are unspecified."
+            "Experimental Brain MRI model output with classes mapped to Glioma, Meningioma, "
+            "No tumor, and Pituitary tumor in the confirmed training order. Scores are model "
+            "outputs, not necessarily calibrated probabilities or confirmed diagnoses."
+        )
+    elif chest_xray_analysis:
+        processing_message = (
+            "Experimental Chest X-ray AI/model scores; not confirmed diagnoses."
+        )
+    elif dental_xray_analysis:
+        processing_message = (
+            "Experimental Dental X-ray AI detections; not confirmed diagnoses."
+        )
+    elif ct_head_analysis:
+        processing_message = (
+            "Experimental Head CT AI/model scores; not confirmed diagnoses."
         )
     elif is_other:
         processing_message = "Stored as Other; it is not eligible for prediction."
@@ -137,10 +302,16 @@ def _serialize_scan(scan):
     elif scan.processing_status == "model_unavailable":
         if scan.modality == "MRI" and scan.body_region == "Knee":
             processing_message = "Scan stored, but the ACL ResNet-14 classifier is unavailable."
-        elif is_spine_mri:
-            processing_message = "Scan stored, but the Spine MRI model is unavailable."
         elif is_brain_mri:
             processing_message = "Scan stored, but the Brain MRI model is unavailable."
+        elif scan.modality == "X_RAY" and scan.body_region == "Chest":
+            processing_message = "Chest X-ray stored, but the local pretrained model is unavailable."
+        elif scan.modality == "X_RAY" and scan.body_region == "Bone/joint":
+            processing_message = "Bone/Joint X-ray stored, but the local pretrained model is unavailable."
+        elif scan.modality == "X_RAY" and scan.body_region == "Dental":
+            processing_message = "Dental X-ray stored, but the OralGuard detector is unavailable."
+        elif scan.modality == "CT" and scan.body_region == "Brain/head":
+            processing_message = "Head CT stored, but the local pretrained model is unavailable."
         else:
             processing_message = (
                 "Scan stored, but the cardiac model or TensorFlow runtime is unavailable."
@@ -148,10 +319,14 @@ def _serialize_scan(scan):
     elif scan.processing_status == "analysis_failed":
         if is_knee_mri:
             processing_message = "Scan stored, but ACL preprocessing or inference failed; no result is available."
-        elif is_spine_mri:
-            processing_message = "Scan stored, but Spine MRI preprocessing or inference failed; no score is available."
         elif is_brain_mri:
             processing_message = "Scan stored, but Brain MRI preprocessing or inference failed; no scores are available."
+        elif scan.modality == "X_RAY" and scan.body_region == "Chest":
+            processing_message = "Chest X-ray stored, but model inference failed; no scores are available."
+        elif scan.modality == "X_RAY" and scan.body_region == "Dental":
+            processing_message = "Dental X-ray stored, but OralGuard inference failed; no findings are available."
+        elif scan.modality == "CT" and scan.body_region == "Brain/head":
+            processing_message = "Head CT stored, but model inference failed; no analysis is available."
         else:
             processing_message = "Scan stored, but segmentation failed; no result is available."
     else:
@@ -202,29 +377,184 @@ def _serialize_scan(scan):
         "spine_analysis": (
             {
                 "model_name": spine_analysis.model_name,
-                "model_score": spine_analysis.model_score,
-                "frame_count": spine_analysis.frame_count,
-                "frame_source": spine_analysis.frame_source,
+                "condition_scores": spine_analysis.severity_scores,
+                "conditions": list(SPINE_CONDITIONS),
+                "severities": list(SPINE_SEVERITIES),
+                "input_format": "single 2D image",
                 "disclaimer": (
-                    "Experimental model score only; its positive-class meaning is unknown. "
-                    "This is not a medical diagnosis."
+                    "Experimental AI/model output from a single uploaded 2D image, not a "
+                    "complete MRI series. Scores may not be calibrated probabilities and "
+                    "are independent model scores, not normalized category probabilities. "
+                    "This is not a confirmed medical diagnosis. Professional radiology review "
+                    "is required."
                 ),
             }
-            if spine_analysis
+            if spine_analysis and spine_analysis.severity_scores
             else None
         ),
         "brain_analysis": (
             {
                 "model_name": brain_analysis.model_name,
                 "predicted_class_index": brain_analysis.predicted_class_index,
+                "predicted_class": BRAIN_OUTPUT_NAMES[
+                    brain_analysis.predicted_class_index
+                ],
                 "model_score": brain_analysis.model_score,
-                "class_scores": brain_analysis.class_scores,
+                "class_scores": {
+                    name: brain_analysis.class_scores.get(
+                        name,
+                        brain_analysis.class_scores.get(f"Class {index}"),
+                    )
+                    for index, name in enumerate(BRAIN_OUTPUT_NAMES)
+                    if name in brain_analysis.class_scores
+                    or f"Class {index}" in brain_analysis.class_scores
+                },
+                "class_mapping_available": True,
                 "disclaimer": (
-                    "Experimental model scores only; output class labels are unspecified. "
-                    "This is not a medical diagnosis."
+                    "Experimental AI/model output. Class names follow the confirmed training "
+                    "order: Glioma, Meningioma, No tumor, and Pituitary tumor. Scores are "
+                    "not necessarily calibrated probabilities. This is not a medical diagnosis."
                 ),
             }
             if brain_analysis
+            else None
+        ),
+        "chest_xray_analysis": (
+            {
+                "model_name": chest_xray_analysis.model_name,
+                "findings": chest_xray_analysis.findings,
+                "disclaimer": (
+                    "AI/model scores from a research model, not confirmed diagnoses. "
+                    "Professional medical review is required."
+                ),
+            }
+            if chest_xray_analysis
+            else None
+        ),
+        "bone_xray_analysis": (
+            {
+                "model_name": bone_xray_analysis.model_name,
+                "predicted_label": bone_xray_analysis.predicted_label,
+                "confidence_score": bone_xray_analysis.confidence_score,
+                "disclaimer": (
+                    "AI prediction from a research model, not a confirmed diagnosis. "
+                    "Professional medical review is required."
+                ),
+            }
+            if bone_xray_analysis
+            else None
+        ),
+        "dental_xray_analysis": (
+            {
+                "model_name": dental_xray_analysis.model_name,
+                "findings": dental_xray_analysis.findings,
+                "image_shape": dental_xray_analysis.image_shape,
+                "disclaimer": (
+                    "AI detections from a research model (OralGuard), not confirmed diagnoses. "
+                    "Professional dental review is required."
+                ),
+            }
+            if dental_xray_analysis
+            else None
+        ),
+        "ct_head_analysis": (
+            {
+                "model_name": ct_head_analysis.model_name,
+                "series_classification": ct_head_analysis.series_classification,
+                "slice_classification": ct_head_analysis.slice_classification,
+                "slice_count": ct_head_analysis.slice_count,
+                "highest_any_slice_index": ct_head_analysis.highest_any_slice_index,
+                "input_format": ct_head_analysis.input_format,
+                "localization_url": (
+                    f"/api/scans/{scan.id}/analysis/ct-localization"
+                    if ct_head_analysis.localization_file_reference
+                    else None
+                ),
+                "disclaimer": (
+                    "AI/model output from an experimental research model, NOT a confirmed "
+                    "medical diagnosis. The localization map is qualitative only."
+                ),
+            }
+            if ct_head_analysis
+            else None
+        ),
+        "obstetric_ultrasound_analysis": (
+            {
+                "model_name": obstetric_ultrasound_analysis.model_name,
+                "predicted_class": obstetric_ultrasound_analysis.predicted_class,
+                "model_score": obstetric_ultrasound_analysis.model_score,
+                "class_scores": obstetric_ultrasound_analysis.class_scores,
+                "disclaimer": (
+                    "Experimental classification of the uploaded 2D ultrasound image's "
+                    "view only. Scores are not calibrated confidence estimates. This does "
+                    "not assess fetal health or diagnose a condition."
+                ),
+            }
+            if obstetric_ultrasound_analysis
+            else None
+        ),
+        "abdominal_aorta_ultrasound_analysis": (
+            {
+                "model_name": abdominal_aorta_ultrasound_analysis.model_name,
+                "class_name": AORTA_CLASS_NAME,
+                "confidence_score": (
+                    abdominal_aorta_ultrasound_analysis.confidence_score
+                ),
+                "mask_area_pixels": (
+                    abdominal_aorta_ultrasound_analysis.mask_area_pixels
+                ),
+                "image_shape": abdominal_aorta_ultrasound_analysis.image_shape,
+                "has_mask": bool(
+                    abdominal_aorta_ultrasound_analysis.mask_area_pixels
+                    and abdominal_aorta_ultrasound_analysis.overlay_file_reference
+                ),
+                "overlay_url": (
+                    f"/api/scans/{scan.id}/analysis/aorta-overlay"
+                    if abdominal_aorta_ultrasound_analysis.overlay_file_reference
+                    else None
+                ),
+                "disclaimer": (
+                    "Experimental segmentation of aorta-like anatomy in suitable POCUS "
+                    "images only. This is not aneurysm detection, general abdominal "
+                    "analysis, or a confirmed diagnosis."
+                ),
+            }
+            if abdominal_aorta_ultrasound_analysis
+            else None
+        ),
+        "echoview47_analysis": (
+            {
+                "model_name": echoview47_analysis.model_name,
+                "predicted_class": echoview47_analysis.predicted_class,
+                "display_label": describe_view_class(
+                    echoview47_analysis.predicted_class
+                )[0],
+                "meaning": describe_view_class(
+                    echoview47_analysis.predicted_class
+                )[1],
+                "model_score": echoview47_analysis.model_score,
+                "top_views": [
+                    {
+                        "predicted_class": class_name,
+                        "display_label": describe_view_class(class_name)[0],
+                        "meaning": describe_view_class(class_name)[1],
+                        "model_score": score,
+                    }
+                    for class_name, score in sorted(
+                        echoview47_analysis.class_scores.items(),
+                        key=lambda item: item[1],
+                        reverse=True,
+                    )[:3]
+                ],
+                "disclaimer": (
+                    "Experimental classification of the echocardiogram view in "
+                    "one still image only. The leading label and scores are "
+                    "uncalibrated model outputs, not measures of correctness. "
+                    "This does not assess heart function, identify disease, or "
+                    "establish that the heart is normal."
+                ),
+            }
+            if echoview47_analysis
             else None
         ),
         "created_at": scan.created_at.isoformat() if scan.created_at else None,
@@ -347,7 +677,7 @@ def _upload_spine_mri(patient, study_date):
     db.session.flush()
 
     try:
-        score = service.predict_preprocessed(model_input)
+        prediction = service.predict_preprocessed(model_input)
     except SpineModelUnavailableError:
         scan.processing_status = "model_unavailable"
     except SpineModelContractError:
@@ -356,10 +686,200 @@ def _upload_spine_mri(patient, study_date):
         db.session.add(
             SpineScanAnalysis(
                 scan_id=scan.id,
-                model_name="best_mrnet_fast.keras",
-                model_score=score.score,
-                frame_count=score.frame_count,
-                frame_source=score.frame_source,
+                model_name=SPINE_MODEL_ID,
+                model_score=prediction.highest_score,
+                severity_scores=prediction.condition_scores,
+                frame_count=1,
+                frame_source="single_uploaded_2d_image",
+            )
+        )
+        scan.processing_status = "analysis_complete"
+
+    db.session.commit()
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_obstetric_ultrasound(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if validated["extension"] not in {".jpg", ".jpeg", ".png"}:
+        return jsonify(
+            {"error": "Obstetric ultrasound uploads support JPG and PNG images only."}
+        ), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("obstetric_ultrasound_service")
+    if service is None:
+        service = ObstetricUltrasoundAnalysisService()
+    try:
+        image = service.prepare_image(image_bytes)
+    except ObstetricUltrasoundImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="ULTRASOUND",
+        body_region="Obstetric",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status="awaiting_model",
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    try:
+        prediction = service.analyze_prepared_image(image)
+    except ObstetricUltrasoundModelUnavailableError as exc:
+        current_app.logger.warning("Obstetric ultrasound model unavailable: %s", exc)
+        scan.processing_status = "model_unavailable"
+    except ObstetricUltrasoundModelContractError as exc:
+        current_app.logger.exception("Obstetric ultrasound model contract failure: %s", exc)
+        scan.processing_status = "analysis_failed"
+    else:
+        db.session.add(
+            ObstetricUltrasoundAnalysisRecord(
+                scan_id=scan.id,
+                model_name=OBSTETRIC_ULTRASOUND_MODEL_ID,
+                predicted_class=prediction.predicted_class,
+                model_score=prediction.model_score,
+                class_scores=prediction.class_scores,
+            )
+        )
+        scan.processing_status = "analysis_complete"
+
+    db.session.commit()
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_abdominal_aorta_ultrasound(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if validated["extension"] not in {".jpg", ".jpeg", ".png"}:
+        return jsonify(
+            {"error": "Abdominal aorta ultrasound uploads support JPG and PNG images only."}
+        ), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("abdominal_aorta_ultrasound_service")
+    if service is None:
+        service = AbdominalAortaUltrasoundAnalysisService()
+    try:
+        image = service.prepare_image(image_bytes)
+    except AbdominalAortaUltrasoundImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="ULTRASOUND",
+        body_region="Abdomen",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status="awaiting_model",
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    try:
+        prediction = service.analyze_prepared_image(image)
+    except AbdominalAortaUltrasoundModelUnavailableError as exc:
+        current_app.logger.warning("Abdominal aorta model unavailable: %s", exc)
+        scan.processing_status = "model_unavailable"
+    except AbdominalAortaUltrasoundModelContractError as exc:
+        current_app.logger.exception("Abdominal aorta model contract failure: %s", exc)
+        scan.processing_status = "analysis_failed"
+    else:
+        overlay_reference = None
+        if prediction.overlay_png is not None:
+            overlay_upload = FileStorage(
+                stream=BytesIO(prediction.overlay_png),
+                filename="abdominal-aorta-segmentation-overlay.png",
+                content_type="image/png",
+            )
+            overlay_reference = save_uploaded_file(
+                overlay_upload,
+                patient_id=patient.id,
+            )
+        db.session.add(
+            AbdominalAortaUltrasoundAnalysisRecord(
+                scan_id=scan.id,
+                model_name=ABDOMINAL_AORTA_ULTRASOUND_MODEL_ID,
+                confidence_score=prediction.confidence_score,
+                mask_area_pixels=prediction.mask_area_pixels,
+                image_shape=list(prediction.image_shape),
+                overlay_file_reference=overlay_reference,
+            )
+        )
+        scan.processing_status = "analysis_complete"
+
+    db.session.commit()
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_echoview47_ultrasound(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if validated["extension"] not in {".jpg", ".jpeg", ".png"}:
+        return jsonify(
+            {"error": "Echocardiogram view classification supports JPG and PNG images only."}
+        ), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("echoview47_service")
+    if service is None:
+        service = EchoView47AnalysisService()
+    try:
+        image = service.prepare_image(image_bytes)
+    except EchoView47ImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="ULTRASOUND",
+        body_region="Cardiac/echocardiogram",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status="awaiting_model",
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    try:
+        prediction = service.analyze_prepared_image(image)
+    except EchoView47ModelUnavailableError as exc:
+        current_app.logger.warning("EchoView47 model unavailable: %s", exc)
+        scan.processing_status = "model_unavailable"
+    except EchoView47ModelContractError as exc:
+        current_app.logger.exception("EchoView47 model contract failure: %s", exc)
+        scan.processing_status = "analysis_failed"
+    else:
+        db.session.add(
+            EchoView47AnalysisRecord(
+                scan_id=scan.id,
+                model_name=ECHOVIEW47_MODEL_ID,
+                predicted_class=prediction.predicted_class,
+                model_score=prediction.model_score,
+                class_scores=prediction.class_scores,
             )
         )
         scan.processing_status = "analysis_complete"
@@ -418,6 +938,274 @@ def _upload_brain_mri(patient, study_date):
             )
         )
         scan.processing_status = "analysis_complete"
+
+    db.session.commit()
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_chest_xray(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if validated["extension"] not in {".jpg", ".jpeg", ".png"}:
+        return jsonify({"error": "Chest X-ray uploads support JPG and PNG images only."}), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("chest_xray_service")
+    if service is None:
+        service = ChestXrayAnalysisService()
+    try:
+        result = service.analyze_bytes(image_bytes)
+    except ChestXrayImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except ChestXrayModelUnavailableError:
+        result = None
+        processing_status = "model_unavailable"
+    except ChestXrayModelContractError:
+        result = None
+        processing_status = "analysis_failed"
+    else:
+        processing_status = "analysis_complete"
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="X_RAY",
+        body_region="Chest",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status=processing_status,
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    if result is not None:
+        db.session.add(
+            ChestXrayAnalysisRecord(
+                scan_id=scan.id,
+                model_name=result.model_name,
+                findings=[
+                    {"name": finding.name, "score": finding.score}
+                    for finding in result.findings
+                ],
+                input_shape=list(result.input_shape),
+            )
+        )
+    db.session.commit()
+
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_bone_xray(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if validated["extension"] not in {".jpg", ".jpeg", ".png"}:
+        return jsonify({"error": "Bone/Joint X-ray uploads support JPG and PNG images only."}), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("bone_xray_service")
+    if service is None:
+        service = BoneXrayAnalysisService()
+    try:
+        result = service.analyze_bytes(image_bytes)
+    except BoneXrayImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except BoneXrayModelUnavailableError:
+        result = None
+        processing_status = "model_unavailable"
+    except BoneXrayModelContractError:
+        result = None
+        processing_status = "analysis_failed"
+    else:
+        processing_status = "analysis_complete"
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="X_RAY",
+        body_region="Bone/joint",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status=processing_status,
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    if result is not None:
+        db.session.add(
+            BoneXrayAnalysisRecord(
+                scan_id=scan.id,
+                model_name="yakshpanchal/bone-fracture-resnet50",
+                predicted_label=result.label,
+                confidence_score=result.confidence,
+            )
+        )
+    db.session.commit()
+
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_dental_xray(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if validated["extension"] not in {".jpg", ".jpeg", ".png"}:
+        return jsonify({"error": "Dental X-ray uploads support JPG and PNG images only."}), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("dental_xray_service")
+    if service is None:
+        service = DentalXrayAnalysisService()
+    try:
+        result = service.analyze_bytes(image_bytes)
+    except DentalXrayImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except DentalXrayModelUnavailableError:
+        result = None
+        processing_status = "model_unavailable"
+    except DentalXrayModelContractError:
+        result = None
+        processing_status = "analysis_failed"
+    else:
+        processing_status = "analysis_complete"
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="X_RAY",
+        body_region="Dental",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status=processing_status,
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    if result is not None:
+        db.session.add(
+            DentalXrayAnalysisRecord(
+                scan_id=scan.id,
+                model_name=result.model_name,
+                findings=[
+                    {
+                        "name": finding.name,
+                        "score": finding.score,
+                        "box": list(finding.box),
+                    }
+                    for finding in result.findings
+                ],
+                image_shape=list(result.image_shape),
+            )
+        )
+    db.session.commit()
+
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_ct_head(patient, study_date):
+    uploaded_file = request.files.get("file")
+    max_ct_upload_size = current_app.config["MAX_CT_UPLOAD_SIZE"]
+    try:
+        validated = validate_uploaded_file(
+            uploaded_file,
+            max_size_bytes=max_ct_upload_size,
+            allowed_extensions={".zip", ".nii", ".gz"},
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    filename = validated["safe_name"]
+    if validated["extension"] not in {".zip", ".nii", ".gz"}:
+        return jsonify(
+            {
+                "error": (
+                    "Head CT uploads require a zipped DICOM series or a 3D .nii/.nii.gz volume."
+                )
+            }
+        ), 400
+    if validated["extension"] == ".gz" and not filename.lower().endswith(".nii.gz"):
+        return jsonify({"error": "Gzip CT uploads must use the .nii.gz extension."}), 400
+
+    uploaded_file.stream.seek(0)
+    source_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("ct_head_hemorrhage_service")
+    if service is None:
+        service = CTHeadHemorrhageService()
+
+    try:
+        result = service.analyze_bytes(source_bytes, filename)
+    except CTHeadInputError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except CTHeadModelUnavailableError as exc:
+        current_app.logger.warning("Head CT model unavailable: %s", exc)
+        result = None
+        processing_status = "model_unavailable"
+    except CTHeadModelContractError as exc:
+        current_app.logger.error("Head CT model contract failure: %s", exc)
+        result = None
+        processing_status = "analysis_failed"
+    else:
+        processing_status = "analysis_complete"
+
+    file_reference = save_uploaded_file(
+        uploaded_file,
+        patient_id=patient.id,
+        max_size_bytes=max_ct_upload_size,
+        allowed_extensions={".zip", ".nii", ".gz"},
+    )
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="CT",
+        body_region="Brain/head",
+        study_date=study_date,
+        original_filename=filename,
+        file_reference=file_reference,
+        processing_status=processing_status,
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    if result is not None:
+        localization_reference = None
+        if result.localization_png is not None:
+            localization_upload = FileStorage(
+                stream=BytesIO(result.localization_png),
+                filename="ct-head-localization.png",
+                content_type="image/png",
+            )
+            localization_reference = save_uploaded_file(
+                localization_upload,
+                patient_id=patient.id,
+            )
+        db.session.add(
+            CTHeadAnalysisRecord(
+                scan_id=scan.id,
+                model_name=result.model_name,
+                series_classification=result.series_classification,
+                slice_classification=result.slice_classification,
+                slice_count=result.slice_count,
+                highest_any_slice_index=result.highest_any_slice_index,
+                input_format=result.input_format,
+                localization_file_reference=localization_reference,
+            )
+        )
 
     db.session.commit()
     return jsonify({"scan": _serialize_scan(scan)}), 201
@@ -495,6 +1283,20 @@ def upload_scan():
     is_knee_mri = modality == "MRI" and body_region == "Knee"
     is_spine_mri = modality == "MRI" and body_region == "Spine"
     is_brain_mri = modality == "MRI" and body_region == "Brain"
+    is_chest_xray = modality == "X_RAY" and body_region == "Chest"
+    is_bone_xray = modality == "X_RAY" and body_region == "Bone/joint"
+    is_dental_xray = modality == "X_RAY" and body_region == "Dental"
+    is_ct_head = modality == "CT" and body_region == "Brain/head"
+    is_obstetric_ultrasound = (
+        modality == "ULTRASOUND" and body_region == "Obstetric"
+    )
+    is_abdominal_aorta_ultrasound = (
+        modality == "ULTRASOUND" and body_region == "Abdomen"
+    )
+    is_echoview47_ultrasound = (
+        modality == "ULTRASOUND"
+        and body_region == "Cardiac/echocardiogram"
+    )
 
     study_date_value = data.get("study_date")
     if study_date_value in (None, "", "null"):
@@ -517,6 +1319,20 @@ def upload_scan():
         return _upload_spine_mri(patient, study_date)
     if is_brain_mri:
         return _upload_brain_mri(patient, study_date)
+    if is_chest_xray:
+        return _upload_chest_xray(patient, study_date)
+    if is_bone_xray:
+        return _upload_bone_xray(patient, study_date)
+    if is_dental_xray:
+        return _upload_dental_xray(patient, study_date)
+    if is_ct_head:
+        return _upload_ct_head(patient, study_date)
+    if is_obstetric_ultrasound:
+        return _upload_obstetric_ultrasound(patient, study_date)
+    if is_abdominal_aorta_ultrasound:
+        return _upload_abdominal_aorta_ultrasound(patient, study_date)
+    if is_echoview47_ultrasound:
+        return _upload_echoview47_ultrasound(patient, study_date)
 
     uploaded_file = request.files.get("file")
     try:
@@ -599,6 +1415,58 @@ def get_cardiac_overlay(scan_id):
         relative_path,
         as_attachment=False,
         download_name=f"cardiac-scan-{scan.id}-overlay.png",
+    )
+
+
+@scans_bp.get("/scans/<int:scan_id>/analysis/aorta-overlay")
+@require_auth
+def get_abdominal_aorta_overlay(scan_id):
+    scan = _owned_scan(scan_id)
+    analysis = (
+        scan.abdominal_aorta_ultrasound_analysis
+        if scan is not None
+        else None
+    )
+    if analysis is None or not analysis.overlay_file_reference:
+        return jsonify({"error": "Abdominal aorta segmentation overlay not found"}), 404
+
+    location = get_stored_file_location(
+        analysis.overlay_file_reference,
+        scan.patient_id,
+    )
+    if location is None:
+        abort(404)
+
+    upload_root, relative_path = location
+    return send_from_directory(
+        upload_root,
+        relative_path,
+        as_attachment=False,
+        download_name=f"abdominal-aorta-scan-{scan.id}-overlay.png",
+    )
+
+
+@scans_bp.get("/scans/<int:scan_id>/analysis/ct-localization")
+@require_auth
+def get_ct_localization(scan_id):
+    scan = _owned_scan(scan_id)
+    analysis = scan.ct_head_analysis if scan is not None else None
+    if analysis is None or not analysis.localization_file_reference:
+        return jsonify({"error": "Head CT localization map not found"}), 404
+
+    location = get_stored_file_location(
+        analysis.localization_file_reference,
+        scan.patient_id,
+    )
+    if location is None:
+        abort(404)
+
+    upload_root, relative_path = location
+    return send_from_directory(
+        upload_root,
+        relative_path,
+        as_attachment=False,
+        download_name=f"ct-head-{scan.id}-localization.png",
     )
 
 
