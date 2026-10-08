@@ -63,6 +63,29 @@ slice with the highest model `any` score. All results are AI/model output from
 experimental research software, **not confirmed medical diagnoses**; they
 must not be used to diagnose, exclude, triage, or manage hemorrhage.
 
+## Chest CT slice segmentation (experimental)
+
+The Chest CT subtype uses the supplied Keras model at
+`models/chest ct scan model/best_chest_ct_model.keras`. It accepts one
+model-ready JPG/PNG slice, not a complete 3D CT series. The slice must first
+be converted from CT Hounsfield units by clipping to `[-1000, 400]`, scaling
+with `(HU + 1000) / 1400`, and exporting the resulting grayscale values as an
+image. The web service converts that image to grayscale, scales encoded pixel
+values to `[0, 1]`, and resizes it to `256 × 256`.
+
+The two output channels are Ground-glass opacity and Consolidation. The UI
+shows a qualitative mask overlay and the number of pixels passing the
+notebook's `0.5` threshold; these are not confidence estimates, physical
+measurements, severity scores, or diagnoses. These terms describe image
+patterns, not their cause, and the output does not determine COVID-19 status.
+
+The supplied notebook reports test Dice of `0.1711`, which is low; its split
+is a random image-level split rather than a documented patient-level
+evaluation. This result has not been independently reproduced. Dataset
+provenance and applicable licenses were not supplied with the model bundle.
+Treat this integration as a research prototype only; masks may be inaccurate
+and must not be used for clinical decisions.
+
 ## Interpreting MRI and dental model outputs
 
 The Brain MRI model has four classes in the confirmed training order: Glioma,
@@ -188,6 +211,29 @@ or redistribution.
 Add the converted checkpoint at the documented path to enable inference. The
 classifier analyzes still images only, not echocardiogram video or DICOM.
 
+## Carotid ultrasound segmentation
+
+The Ultrasound / Vascular option accepts one JPG or PNG still image and runs
+the local Keras U-Net checkpoint at
+`models/vascular carotid/best_carotid_ultrasound_model.keras`. It converts
+the image to grayscale, resizes it to 256×256 using area interpolation,
+normalizes pixels to 0–1, and thresholds the single-channel mask at 0.5. The
+checkpoint is excluded from Git. The UI shows the predicted carotid-like
+region overlay without displaying a model score.
+
+The supplied model notes report test Dice 0.3921 and IoU 0.4073; these are
+unverified model-development metrics, not clinical validation or patient
+specific accuracy. In a local smoke test, the supplied sample produced a mask
+of only two pixels at the configured threshold, so the overlay may be
+effectively invisible for some inputs. An empty or tiny mask does not mean
+that the artery is absent. The output does not assess stenosis, plaque,
+blockage, DVT, blood flow, or vascular disease. Treat every result as an
+experimental mask that may be inaccurate, not a confirmed medical diagnosis.
+
+The accompanying notes identify the Kaggle dataset as
+`orvile/carotid-ultrasound-images`; dataset licensing and provenance were not
+independently verified.
+
 ## Repository status
 
 This repo is being prepared as a team-friendly GitHub project. The local environment is isolated from secrets and personal machine-specific settings.
@@ -238,6 +284,35 @@ silently creating a new empty database next to the project.
 The project uses values from `.env`. Keep real database credentials and secrets out of version control.
 
 Example values are included in [.env.example](.env.example).
+
+## Cloud text generation
+
+The shared AI service uses Gemini first and OpenRouter as a fallback. Configure
+`GEMINI_API_KEY` and `OPENROUTER_API_KEY` in `.env` (never commit real keys).
+`AI_PROVIDER` and `AI_FALLBACK_PROVIDER` select the order; `GEMINI_MODEL`,
+`OPENROUTER_MODEL`, and `AI_TIMEOUT_SECONDS` configure models and request
+timeouts. The example OpenRouter model is a free-tier route when available;
+provider quotas, pricing, and availability are controlled by the providers and
+are not guaranteed to remain free or continuously available.
+
+Report summaries and research Q&A use the configured AI provider. Report
+comparison uses explicit extracted values plus local embedding similarity;
+research comparison aligns locally retrieved passages and their citations.
+Those comparison workflows do not call a generative AI API. The embedding
+model runs locally and may download its weights on first use. Similarity is a
+text-matching aid, not a probability or evidence of clinical or scientific
+equivalence.
+
+The `/api/ai/test` endpoint requires a signed-in user and accepts:
+
+```json
+{"prompt": "Say hello in one sentence."}
+```
+
+It returns a generated answer or a JSON error if both configured cloud
+providers fail or are unavailable. Summaries, research Q&A, and future
+generative AI workflows use the same provider configuration and fallback
+service.
 
 ## Testing
 

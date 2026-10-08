@@ -5,6 +5,7 @@ from flask import Blueprint, g, jsonify, request
 from backend.auth import require_auth
 from backend.extensions import db
 from backend.models.patient import Patient
+from backend.services.audit_logging import record_audit_event
 
 patients_bp = Blueprint("patients", __name__)
 
@@ -69,6 +70,12 @@ def list_patients():
         .order_by(Patient.created_at.desc(), Patient.id.desc())
         .all()
     )
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="patient.list",
+        resource_type="patient",
+        metadata={"count": len(patients)},
+    )
     return jsonify({"patients": [_serialize_patient(patient) for patient in patients]}), 200
 
 
@@ -82,6 +89,12 @@ def create_patient():
     patient = Patient(**data, created_by=g.current_user)
     db.session.add(patient)
     db.session.commit()
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="patient.create",
+        resource_type="patient",
+        resource_id=patient.id,
+    )
 
     return jsonify({"patient": _serialize_patient(patient)}), 201
 
@@ -93,6 +106,12 @@ def get_patient(patient_id):
     if patient is None:
         return jsonify({"error": "Patient not found"}), 404
 
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="patient.view",
+        resource_type="patient",
+        resource_id=patient.id,
+    )
     return jsonify({"patient": _serialize_patient(patient)}), 200
 
 
@@ -111,5 +130,11 @@ def update_patient(patient_id):
     patient.last_name = data["last_name"]
     patient.date_of_birth = data["date_of_birth"]
     db.session.commit()
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="patient.update",
+        resource_type="patient",
+        resource_id=patient.id,
+    )
 
     return jsonify({"patient": _serialize_patient(patient)}), 200

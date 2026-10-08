@@ -295,6 +295,8 @@ Display generated summary separately from source content.
 
 **Done when:** User can view the report summary.
 
+**Implemented:** Authenticated users can generate an on-demand, source-grounded summary from a report's saved extracted text using the configured local AI service.
+
 ---
 
 # FR-08 — MEDICAL IMAGE ANALYSIS
@@ -371,7 +373,9 @@ Unified Analysis
 # FR-10 — REPORT COMPARISON
 
 ## M33 — Report Comparison Engine
-Compare two reports across dates.
+Compare two reports using explicit extracted parameters, source wording, and
+local embedding similarity. Do not infer clinical equivalence or direction of
+change from similarity alone.
 
 Compare available:
 
@@ -529,7 +533,9 @@ Extract/prepare comparison fields:
 **Done when:** Each paper has a structured comparison representation.
 
 ## M51 — Research Comparison Engine
-Compare selected research papers using the configured fields.
+Compare retrieved source passages across the configured fields using local
+embedding similarity. Display the passages and citations; do not generate or
+invent a paper-level synthesis.
 
 If information is unavailable, mark it unavailable. Do not invent it.
 
@@ -625,6 +631,8 @@ Integrate logging into key flows:
 Create a protected endpoint or UI for authorized users to inspect audit records.
 
 **Done when:** Authorized users can view audit activity without exposing it to unauthorized users.
+
+**Implemented:** `GET /api/audit-logs` returns the signed-in user's events; administrators can inspect all events. The Activity page loads these records from the API.
 
 ---
 

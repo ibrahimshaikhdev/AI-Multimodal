@@ -157,6 +157,21 @@ class FakeCTHeadService:
         )
 
 
+class FakeChestCTService:
+    def analyze_bytes(self, image_bytes):
+        assert image_bytes
+        return SimpleNamespace(
+            model_name="best_chest_ct_model.keras",
+            pixel_counts={
+                "Ground-glass opacity": 125,
+                "Consolidation": 42,
+            },
+            image_shape=(256, 256),
+            threshold=0.5,
+            overlay_png=valid_png_bytes(),
+        )
+
+
 class FakeBrainService:
     def preprocess_image(self, image_bytes):
         return image_bytes
@@ -213,6 +228,23 @@ class FakeAbdominalAortaUltrasoundService:
             confidence_score=0.84 if self.include_mask else None,
             mask_area_pixels=240 if self.include_mask else 0,
             image_shape=(48, 64),
+        )
+
+
+class FakeVascularUltrasoundService:
+    def __init__(self, *, include_mask=True):
+        self.include_mask = include_mask
+
+    def prepare_image(self, image_bytes):
+        assert image_bytes
+        return image_bytes
+
+    def analyze_prepared_image(self, _):
+        return SimpleNamespace(
+            model_name="best_carotid_ultrasound_model.keras",
+            mask_pixel_count=24 if self.include_mask else 0,
+            image_shape=(48, 64),
+            overlay_png=valid_png_bytes(size=(64, 48)) if self.include_mask else None,
         )
 
 
@@ -309,6 +341,64 @@ def test_scan_upload_list_and_original_download_are_owner_scoped(scan_client, mo
     assert hidden_patient.status_code == 404
 
 
+def test_scan_delete_is_owner_scoped_and_removes_uploaded_file(scan_client):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "OTHER",
+            "body_region": "Other",
+            "file": (BytesIO(valid_png_bytes()), "sample-scan.png"),
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 201
+    scan = response.get_json()["scan"]
+    original = client.get(
+        scan["original_url"],
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert original.status_code == 200
+    assert original.data
+
+    other_token = login(
+        client,
+        email="other-scan-owner@example.com",
+        password="OtherPass123!",
+    )
+    forbidden = client.delete(
+        f"/api/scans/{scan['id']}",
+        headers={"Authorization": f"Bearer {other_token}"},
+    )
+    assert forbidden.status_code == 404
+    still_available = client.get(
+        scan["original_url"],
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert still_available.status_code == 200
+
+    deleted = client.delete(
+        f"/api/scans/{scan['id']}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert deleted.status_code == 200
+    assert deleted.get_json()["deleted"] is True
+    removed = client.get(
+        scan["original_url"],
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert removed.status_code == 404
+
+    listing = client.get(
+        f"/api/scans?patient_id={owner_patient_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert all(item["id"] != scan["id"] for item in listing.get_json()["scans"])
+
+
 def test_scan_upload_rejects_invalid_modality_and_future_date(scan_client):
     client, owner_patient_id, _ = scan_client
     token = login(client)
@@ -358,6 +448,20 @@ def test_scan_subtype_options_are_validated_and_other_is_never_prediction_eligib
     )
     assert mismatched_region.status_code == 400
 
+    for removed_region in ("Abdomen/pelvis", "Spine"):
+        removed_ct_region = client.post(
+            "/api/scans/upload",
+            headers=headers,
+            data={
+                "patient_id": owner_patient_id,
+                "modality": "CT",
+                "body_region": removed_region,
+                "file": (BytesIO(png_bytes()), "ct-scan.png"),
+            },
+            content_type="multipart/form-data",
+        )
+        assert removed_ct_region.status_code == 400
+
     other_scan = client.post(
         "/api/scans/upload",
         headers=headers,
@@ -403,6 +507,11 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
         "ct_head_hemorrhage_service",
         FakeCTHeadService(),
     )
+    monkeypatch.setitem(
+        client.application.extensions,
+        "chest_ct_segmentation_service",
+        FakeChestCTService(),
+    )
     supported_pairs = [
         ("MRI", "Brain"),
         ("MRI", "Knee"),
@@ -410,8 +519,6 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
         ("MRI", "Cardiac"),
         ("CT", "Brain/head"),
         ("CT", "Chest"),
-        ("CT", "Abdomen/pelvis"),
-        ("CT", "Spine"),
         ("X_RAY", "Chest"),
         ("X_RAY", "Bone/joint"),
         ("X_RAY", "Dental"),
@@ -436,6 +543,11 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
         "echoview47_service",
         FakeEchoView47Service(),
     )
+    monkeypatch.setitem(
+        client.application.extensions,
+        "vascular_ultrasound_service",
+        FakeVascularUltrasoundService(),
+    )
 
     for modality, body_region in supported_pairs:
         if modality == "CT" and body_region == "Brain/head":
@@ -449,6 +561,7 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
                 valid_png_bytes()
                 if (modality == "MRI" and body_region in {"Brain", "Knee", "Spine"})
                 or (modality == "X_RAY" and body_region in {"Chest", "Bone/joint", "Dental"})
+                or (modality == "CT" and body_region == "Chest")
                 or (
                     modality == "ULTRASOUND"
                     and body_region
@@ -475,6 +588,11 @@ def test_popular_scan_subtypes_are_accepted(scan_client, monkeypatch):
             assert spine_scan["spine_analysis"]["model_name"] == (
                 "mrimperium/Lumbar-Spine-Degenerative-Classification"
             )
+        elif modality == "CT" and body_region == "Chest":
+            assert response.get_json()["scan"]["chest_ct_analysis"]["pixel_counts"] == {
+                "Ground-glass opacity": 125,
+                "Consolidation": 42,
+            }
             assert len(spine_scan["spine_analysis"]["condition_scores"]) == 3
         if modality == "ULTRASOUND" and body_region == "Obstetric":
             obstetric_scan = response.get_json()["scan"]
@@ -629,6 +747,109 @@ def test_abdominal_aorta_ultrasound_requires_jpg_or_png(scan_client):
     assert "JPG and PNG" in response.get_json()["error"]
 
 
+def test_vascular_ultrasound_upload_persists_overlay_without_scores(
+    scan_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    monkeypatch.setitem(
+        client.application.extensions,
+        "vascular_ultrasound_service",
+        FakeVascularUltrasoundService(),
+    )
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Vascular",
+            "file": (BytesIO(valid_png_bytes()), "carotid-view.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    scan = response.get_json()["scan"]
+    analysis = scan["vascular_ultrasound_analysis"]
+    assert scan["processing_status"] == "analysis_complete"
+    assert analysis["label"] == "Predicted carotid artery region"
+    assert analysis["has_mask"] is True
+    assert "may be inaccurate" in analysis["disclaimer"]
+    assert "does not diagnose" in analysis["disclaimer"]
+    assert "score" not in str(analysis).lower()
+    assert "dice" not in str(analysis).lower()
+    assert "iou" not in str(analysis).lower()
+
+    overlay = client.get(
+        analysis["overlay_url"],
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert overlay.status_code == 200
+    assert overlay.mimetype == "image/png"
+
+    other_token = login(
+        client,
+        email="other-scan-owner@example.com",
+        password="OtherPass123!",
+    )
+    unauthorized_overlay = client.get(
+        analysis["overlay_url"],
+        headers={"Authorization": f"Bearer {other_token}"},
+    )
+    assert unauthorized_overlay.status_code == 404
+
+
+def test_vascular_ultrasound_no_mask_is_not_reported_as_absent(
+    scan_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    monkeypatch.setitem(
+        client.application.extensions,
+        "vascular_ultrasound_service",
+        FakeVascularUltrasoundService(include_mask=False),
+    )
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Vascular",
+            "file": (BytesIO(valid_png_bytes()), "carotid-view.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    scan = response.get_json()["scan"]
+    assert scan["processing_status"] == "analysis_complete"
+    assert scan["vascular_ultrasound_analysis"]["has_mask"] is False
+    assert "does not establish" in scan["processing_message"]
+
+
+def test_vascular_ultrasound_upload_requires_jpg_or_png(scan_client):
+    client, owner_patient_id, _ = scan_client
+    token = login(client)
+    response = client.post(
+        "/api/scans/upload",
+        headers={"Authorization": f"Bearer {token}"},
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "ULTRASOUND",
+            "body_region": "Vascular",
+            "file": (BytesIO(b"%PDF-1.4\nscan"), "vascular-ultrasound.pdf"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    assert "JPG and PNG" in response.get_json()["error"]
+
+
 def test_dental_xray_upload_persists_documented_candidate_and_pixel_box(
     scan_client,
     monkeypatch,
@@ -703,6 +924,71 @@ def test_head_ct_route_serializes_six_model_outputs(scan_client, monkeypatch):
         "any",
     }
     assert "NOT a confirmed medical diagnosis" in analysis["disclaimer"]
+
+
+def test_chest_ct_upload_persists_results_and_protects_overlay(
+    scan_client,
+    monkeypatch,
+    tmp_path,
+):
+    client, owner_patient_id, _ = scan_client
+    owner_headers = {"Authorization": "Bearer " + login(client)}
+    monkeypatch.setitem(
+        client.application.extensions,
+        "chest_ct_segmentation_service",
+        FakeChestCTService(),
+    )
+
+    def save_to_temp(file_storage, patient_id, **_):
+        name = Path(file_storage.filename).name
+        destination = tmp_path / name
+        file_storage.stream.seek(0)
+        destination.write_bytes(file_storage.stream.read())
+        return f"uploads/patients/{patient_id}/{name}"
+
+    monkeypatch.setattr("backend.routes.scans.save_uploaded_file", save_to_temp)
+    monkeypatch.setattr(
+        "backend.routes.scans.get_stored_file_location",
+        lambda reference, _patient_id: (tmp_path, Path(reference).name),
+    )
+
+    response = client.post(
+        "/api/scans/upload",
+        headers=owner_headers,
+        data={
+            "patient_id": owner_patient_id,
+            "modality": "CT",
+            "body_region": "Chest",
+            "file": (BytesIO(valid_png_bytes()), "chest-ct-slice.png"),
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201, response.get_json()
+    scan = response.get_json()["scan"]
+    assert scan["processing_status"] == "analysis_complete"
+    analysis = scan["chest_ct_analysis"]
+    assert analysis["pixel_counts"]["Ground-glass opacity"] == 125
+    assert analysis["pixel_counts"]["Consolidation"] == 42
+    assert "reported_test_dice" not in analysis
+    assert "experimental mask" in analysis["disclaimer"].lower()
+    assert "may be inaccurate" in analysis["disclaimer"].lower()
+    assert "COVID status" in analysis["disclaimer"]
+
+    overlay = client.get(analysis["overlay_url"], headers=owner_headers)
+    assert overlay.status_code == 200
+    assert overlay.mimetype == "image/png"
+
+    other_headers = {
+        "Authorization": "Bearer "
+        + login(
+            client,
+            email="other-scan-owner@example.com",
+            password="OtherPass123!",
+        )
+    }
+    unauthorized_overlay = client.get(analysis["overlay_url"], headers=other_headers)
+    assert unauthorized_overlay.status_code == 404
 
 
 def test_knee_upload_runs_real_localizer_and_fails_closed_on_invalid_mask(scan_client):

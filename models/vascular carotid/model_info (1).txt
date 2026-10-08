@@ -1,0 +1,57 @@
+MODEL: best_carotid_ultrasound_model.keras
+
+TASK:
+Common carotid artery segmentation from ultrasound images.
+
+DATASET:
+Carotid Ultrasound Images dataset.
+1100 ultrasound PNG images with 1100 expert mask PNG images.
+
+INPUT:
+- Single ultrasound PNG/JPG image
+- Grayscale
+- Model input size: 256x256x1
+- Resize image to 256x256
+- Normalize pixel values using pixel / 255.0
+
+OUTPUT:
+- Single sigmoid segmentation mask
+- Output shape: 256x256x1
+- Pixels with prediction > 0.5 are treated as the predicted carotid artery region.
+
+MODEL:
+Lightweight 2D U-Net.
+TensorFlow/Keras.
+
+TRAINING:
+- Train/Validation/Test split: 80/10/10
+- Batch size: 16
+- Maximum epochs: 30
+- Optimizer: Adam
+- Learning rate: 1e-4
+- Loss: Dice Loss
+- Early stopping based on validation Dice
+- Best model saved as best_carotid_ultrasound_model.keras
+
+TEST RESULTS:
+- Dice: 0.3921
+- IoU: 0.4073
+
+LIMITATIONS:
+- This model performs carotid artery segmentation only.
+- It does NOT diagnose carotid stenosis.
+- It does NOT diagnose plaque.
+- It does NOT diagnose blockage.
+- It does NOT diagnose DVT.
+- It does NOT diagnose vascular disease.
+- Do not display fabricated confidence percentages.
+- The segmentation is AI-assisted anatomical localization and is not a confirmed medical diagnosis.
+
+EXPECTED UI OUTPUT:
+- Display the original ultrasound image.
+- Display/highlight the predicted carotid artery region.
+- Label the result as:
+  "Carotid artery region detected"
+
+DISCLAIMER:
+"AI-assisted analysis only — not a confirmed medical diagnosis."

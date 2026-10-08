@@ -585,7 +585,9 @@
         flex-direction: column;
       }
       .report-item {
+        padding: 0 12px;
         border-bottom: 1px solid var(--line);
+        border-radius: 6px;
       }
       .report-item summary {
         padding: 12px 2px;
@@ -593,6 +595,39 @@
         font-size: 14px;
         font-weight: 650;
         cursor: pointer;
+      }
+      .report-item[open] {
+        margin: 6px 0;
+        background: #f8faf7;
+      }
+      .scan-history-item {
+        transition: background-color 140ms ease, border-color 140ms ease;
+      }
+      .scan-history-item:hover {
+        border-color: #aabca9 !important;
+      }
+      .scan-history-meta {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .scan-detail-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .scan-model-output {
+        padding-top: 2px;
+      }
+      .danger-button {
+        border-color: #e4b9b5;
+        color: #9b3028;
+      }
+      .danger-button:hover {
+        border-color: #c76c62;
+        background: #fff5f4;
       }
       .report-item summary:focus-visible {
         outline: 2px solid var(--forest);
@@ -876,6 +911,32 @@
           sans-serif;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
+      }
+      .report-ai-summary {
+        margin: 0 0 14px;
+        padding: 14px;
+        border: 1px solid #d8e6dc;
+        border-radius: 8px;
+        background: #f4f8f4;
+      }
+      .report-ai-summary h6 {
+        margin: 0 0 9px;
+        color: var(--ink);
+        font-size: 13px;
+      }
+      .report-ai-summary-text {
+        margin: 0;
+        color: #344a59;
+        font-size: 13px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .report-ai-summary-disclaimer {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
       }
       .report-list-empty {
         margin: 0;
@@ -1445,6 +1506,22 @@
         gap: 12px;
         margin: 23px 0 16px;
       }
+      .profile-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+      .profile-edit-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+      }
+      .profile-edit-form .patient-form-actions {
+        grid-column: 1 / -1;
+        margin-top: 0;
+      }
       .profile-field {
         min-width: 0;
         padding: 13px;
@@ -1558,6 +1635,276 @@
         background: rgba(255, 255, 255, .72);
         font-size: 13px;
         text-align: center;
+      }
+      .report-comparison-section {
+        display: grid;
+        gap: 18px;
+      }
+      .comparison-panel {
+        min-width: 0;
+        padding: 18px;
+        border: 1px solid #e3eaf0;
+        border-radius: 11px;
+        background: #fff;
+        box-shadow: 0 4px 15px rgba(34, 55, 72, .035);
+      }
+      .comparison-patient-results,
+      .comparison-report-list {
+        display: grid;
+        gap: 9px;
+        margin-top: 13px;
+      }
+      .comparison-patient-option,
+      .comparison-report-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 12px;
+        border: 1px solid #e3eaf0;
+        border-radius: 8px;
+        background: #fff;
+      }
+      .comparison-patient-option {
+        width: 100%;
+        color: inherit;
+        text-align: left;
+      }
+      .comparison-patient-option[aria-pressed="true"] {
+        border-color: #78aaa1;
+        background: #f1f8f6;
+      }
+      .comparison-patient-option span,
+      .comparison-report-option span {
+        display: block;
+        color: #788995;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .comparison-report-option input {
+        width: auto;
+        min-height: auto;
+        margin-top: 3px;
+      }
+      .comparison-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 14px;
+      }
+      .comparison-text-panels {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .comparison-text-panel {
+        min-width: 0;
+        padding: 15px;
+        border: 1px solid #e3eaf0;
+        border-radius: 9px;
+        background: #fff;
+      }
+      .comparison-text-panel h4 {
+        margin: 0 0 9px;
+        color: #233d4b;
+      }
+      .comparison-text-panel pre,
+      .comparison-result {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font: inherit;
+        line-height: 1.6;
+      }
+      .comparison-result {
+        padding: 16px;
+        border: 1px solid #e3eaf0;
+        border-radius: 9px;
+        background: #f8faf9;
+      }
+      .comparison-disclaimer {
+        margin: 12px 0 0;
+        color: #71828c;
+        font-size: 12px;
+      }
+      .comparison-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-bottom: 18px;
+      }
+      .comparison-summary span,
+      .comparison-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border: 1px solid #dce7e5;
+        border-radius: 999px;
+        color: #315e58;
+        background: #f1f8f6;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .comparison-status.is-different,
+      .comparison-status.is-unique {
+        border-color: #eadfcf;
+        color: #805e34;
+        background: #fff8ef;
+      }
+      .comparison-subsection {
+        margin-top: 20px;
+      }
+      .comparison-subsection h4 {
+        margin: 0 0 10px;
+        color: #233d4b;
+      }
+      .comparison-table-wrap {
+        overflow-x: auto;
+        border: 1px solid #e3eaf0;
+        border-radius: 9px;
+      }
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        font-size: 12px;
+      }
+      .comparison-table th,
+      .comparison-table td {
+        min-width: 145px;
+        padding: 11px;
+        border-bottom: 1px solid #e9eef2;
+        text-align: left;
+        vertical-align: top;
+      }
+      .comparison-table th {
+        color: #405b67;
+        background: #f5f8f9;
+      }
+      .comparison-table tr:last-child td {
+        border-bottom: 0;
+      }
+      .comparison-evidence-grid,
+      .comparison-unique-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 10px;
+      }
+      .comparison-evidence-card,
+      .comparison-unique-card {
+        min-width: 0;
+        padding: 13px;
+        border: 1px solid #e3eaf0;
+        border-radius: 9px;
+        background: #fff;
+      }
+      .comparison-evidence-card p,
+      .comparison-unique-card p {
+        margin: 7px 0 0;
+        color: #526975;
+        font-size: 12px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      .research-tools-grid,
+      .research-comparison-fields {
+        display: grid;
+        gap: 16px;
+        margin-top: 15px;
+      }
+      .research-tools-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .ai-query-form {
+        display: grid;
+        gap: 12px;
+      }
+      .ai-query-form .field-group {
+        margin: 0;
+      }
+      .ai-query-form textarea {
+        width: 100%;
+        min-height: 92px;
+        padding: 11px 12px;
+        border: 1px solid #dfe7ed;
+        border-radius: 8px;
+        color: #304753;
+        font: inherit;
+        resize: vertical;
+      }
+      .research-source-list,
+      .research-comparison-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 13px;
+      }
+      .research-source-card,
+      .research-comparison-option,
+      .research-comparison-field {
+        min-width: 0;
+        padding: 14px;
+        border: 1px solid #e3eaf0;
+        border-radius: 9px;
+        background: #fff;
+      }
+      .research-source-card strong,
+      .research-comparison-option strong {
+        color: #233d4b;
+      }
+      .research-source-card p,
+      .research-comparison-field p {
+        margin: 7px 0 0;
+        color: #667983;
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .research-comparison-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .research-comparison-option input {
+        width: auto;
+        min-height: auto;
+        margin-top: 3px;
+      }
+      .research-comparison-option span {
+        display: block;
+        margin-top: 4px;
+        color: #788995;
+        font-size: 11px;
+      }
+      .research-comparison-field h4 {
+        margin: 0;
+        color: #233d4b;
+      }
+      .research-comparison-evidence {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .research-comparison-evidence > div {
+        min-width: 0;
+        padding: 10px;
+        border-radius: 7px;
+        background: #f6f9fa;
+      }
+      .research-comparison-evidence strong {
+        color: #405b67;
+        font-size: 11px;
+      }
+      .research-comparison-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .research-comparison-fields .research-comparison-field:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+      }
+      .assistant-sources-empty {
+        color: #788995;
+        font-size: 12px;
       }
       .timeline-layout {
         display: grid;
@@ -1720,7 +2067,11 @@
       }
       @media (max-width: 700px) {
         .library-grid,
-        .research-paper-list {
+        .research-paper-list,
+        .comparison-text-panels,
+        .comparison-evidence-grid,
+        .comparison-unique-grid,
+        .research-comparison-evidence {
           grid-template-columns: 1fr;
         }
         .timeline-layout {
@@ -1874,6 +2225,13 @@
         }
         .profile-fields {
           grid-template-columns: 1fr;
+        }
+        .research-tools-grid,
+        .research-comparison-fields {
+          grid-template-columns: 1fr;
+        }
+        .research-comparison-fields .research-comparison-field:last-child:nth-child(odd) {
+          grid-column: auto;
         }
       }
     </style>
@@ -2465,11 +2823,46 @@
             </section>
 
             <section id="reportComparisonSection" class="content-view" hidden>
-              <div class="coming-soon-card">
-                <div class="coming-soon-mark" aria-hidden="true">⇄</div>
-                <p class="eyebrow">Patient records</p>
-                <h2>Report comparison</h2>
-                <p>Side-by-side report comparison is not implemented yet. Your existing report history and extracted source text remain available from each patient’s Reports workspace.</p>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Report comparison</h2>
+                  <p>Compare any two reports you are authorized to access, including reports from different patients.</p>
+                </div>
+              </div>
+              <p class="workspace-notice">Comparisons use local rules and embedding similarity, not a generative AI API. Similar wording is not proof of clinical equivalence; review the original reports.</p>
+              <p id="reportComparisonMessage" class="message" role="status" aria-live="polite" hidden></p>
+              <div class="report-comparison-section">
+                <section class="comparison-panel" aria-labelledby="comparisonPatientHeading">
+                  <h3 id="comparisonPatientHeading">1. Find a patient</h3>
+                  <label class="field-group" for="reportComparisonPatientSearch">
+                    <span>Search by patient name or ID</span>
+                    <input id="reportComparisonPatientSearch" type="search" autocomplete="off" placeholder="Enter a patient name or ID" />
+                  </label>
+                  <div id="reportComparisonPatientResults" class="comparison-patient-results"></div>
+                  <p id="reportComparisonPatientEmpty" class="library-empty" hidden></p>
+                </section>
+                <section id="reportComparisonReportsPanel" class="comparison-panel" aria-labelledby="comparisonReportsHeading" hidden>
+                  <h3 id="comparisonReportsHeading">2. Select exactly two reports across patients</h3>
+                  <p>Select a report here, then choose another patient. Your first selection will be kept.</p>
+                  <p id="reportComparisonSelectedPatient" class="library-card-meta"></p>
+                  <div id="reportComparisonReportList" class="comparison-report-list"></div>
+                  <p id="reportComparisonReportsEmpty" class="library-empty" hidden></p>
+                  <p id="reportComparisonSelectionCount" class="comparison-disclaimer" aria-live="polite">Select two reports to continue.</p>
+                  <div id="reportComparisonSelectedReports" class="comparison-text-panels"></div>
+                  <div class="comparison-actions">
+                    <button id="extractComparisonTextButton" class="secondary-button" type="button" disabled>Extract Text</button>
+                    <button id="compareReportsButton" class="small-primary" type="button" disabled>Compare reports</button>
+                  </div>
+                </section>
+                <section id="reportComparisonTextSection" class="comparison-panel" aria-labelledby="comparisonTextHeading" hidden>
+                  <h3 id="comparisonTextHeading">3. Review extracted text</h3>
+                  <div id="reportComparisonTextPanels" class="comparison-text-panels"></div>
+                </section>
+                <section id="reportComparisonResultSection" class="comparison-panel" aria-labelledby="comparisonResultHeading" hidden>
+                  <h3 id="comparisonResultHeading">Structured report comparison</h3>
+                  <div id="reportComparisonResult" class="comparison-result"></div>
+                  <p id="reportComparisonDisclaimer" class="comparison-disclaimer"></p>
+                </section>
               </div>
             </section>
             <section id="timelineSection" class="content-view" hidden>
@@ -2497,17 +2890,44 @@
               </div>
             </section>
             <section id="assistantSection" class="content-view" hidden>
-              <div class="coming-soon-card">
-                <div class="coming-soon-mark" aria-hidden="true">✳</div>
-                <p class="eyebrow">AI assistant</p>
-                <h2>Research and records assistant</h2>
-                <p>This is a visual preview only. No question is sent, no AI response is generated, and no patient data is shared from this screen.</p>
-                <textarea class="assistant-preview" aria-label="AI assistant preview input" placeholder="Chat will be available when the assistant is implemented." disabled></textarea>
-                <div class="coming-soon-actions">
-                  <button type="button" disabled>Coming soon</button>
-                  <span>Assistant responses are not enabled.</span>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Research and records assistant</h2>
+                  <p>Ask a question using one selected, authorized source context. Responses are AI-generated and require human review.</p>
                 </div>
               </div>
+              <form id="assistantForm" class="comparison-panel ai-query-form">
+                <div class="field-group">
+                  <label for="assistantContextType">Use context from</label>
+                  <select id="assistantContextType" required>
+                    <option value="research">My research papers</option>
+                    <option value="report">One medical report</option>
+                    <option value="patient_timeline">A patient's timeline</option>
+                  </select>
+                </div>
+                <div id="assistantPatientGroup" class="field-group" hidden>
+                  <label for="assistantPatientSelect">Patient</label>
+                  <select id="assistantPatientSelect"></select>
+                </div>
+                <div id="assistantReportGroup" class="field-group" hidden>
+                  <label for="assistantReportSelect">Medical report</label>
+                  <select id="assistantReportSelect"></select>
+                </div>
+                <div class="field-group">
+                  <label for="assistantQuestion">Your question</label>
+                  <textarea id="assistantQuestion" maxlength="2000" rows="4" required placeholder="Ask a question grounded in the selected source context"></textarea>
+                </div>
+                <button id="assistantSubmitButton" class="primary-button" type="submit">Ask assistant</button>
+                <p class="workspace-notice">For report and timeline context, only saved extracted text and record metadata are sent to the configured AI provider. Uploaded documents themselves are not sent.</p>
+              </form>
+              <p id="assistantMessage" class="message" role="status" aria-live="polite" hidden></p>
+              <section id="assistantAnswerSection" class="comparison-panel" hidden>
+                <h3>Answer</h3>
+                <div id="assistantAnswer" class="comparison-result"></div>
+                <h4>Sources used</h4>
+                <div id="assistantSources" class="research-source-list"></div>
+                <p id="assistantDisclaimer" class="comparison-disclaimer"></p>
+              </section>
             </section>
             <section id="researchPapersSection" class="content-view" hidden>
               <div class="section-toolbar">
@@ -2547,7 +2967,7 @@
                     </div>
                     <button id="uploadResearchPaperButton" class="primary-button" type="submit">Upload paper</button>
                   </form>
-                  <p class="research-upload-note">PDF or DOCX, up to 10 MB. Papers are private to your signed-in account. Search matches saved details; it does not search inside paper text.</p>
+                  <p class="research-upload-note">PDF or DOCX, up to 10 MB. Papers are private to your signed-in account. Text extraction and embedding run locally; only selected text excerpts are sent to the configured AI provider when generating an answer or comparison.</p>
                 </section>
                 <section class="research-view" aria-labelledby="researchLibraryHeading">
                   <div class="research-toolbar">
@@ -2562,32 +2982,96 @@
               </div>
             </section>
             <section id="researchRagSection" class="content-view" hidden>
-              <div class="coming-soon-card">
-                <div class="coming-soon-mark" aria-hidden="true">⌕</div>
-                <p class="eyebrow">Research tools</p>
-                <h2>Research RAG</h2>
-                <p>Grounded search and question answering over research papers are not implemented yet. This screen does not produce answers or citations.</p>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Research search and Q&amp;A</h2>
+                  <p>Search locally extracted paper text or ask a question grounded in retrieved passages.</p>
+                </div>
+              </div>
+              <p class="workspace-notice">The first search may download the configured sentence-transformer model. Uploaded PDFs and DOCX files stay on this server; only retrieved text excerpts are sent to the AI provider for answers.</p>
+              <div class="research-tools-grid">
+                <section class="comparison-panel">
+                  <h3>Semantic search</h3>
+                  <form id="researchSearchForm" class="ai-query-form">
+                    <div class="field-group">
+                      <label for="researchSearchQuery">Search your paper library</label>
+                      <input id="researchSearchQuery" type="search" maxlength="2000" required placeholder="e.g. limitations of echocardiography models" />
+                    </div>
+                    <button id="researchSearchButton" class="secondary-button" type="submit">Search papers</button>
+                  </form>
+                  <p id="researchSearchMessage" class="message" role="status" aria-live="polite" hidden></p>
+                  <div id="researchSearchResults" class="research-source-list"></div>
+                  <p id="researchSearchEmpty" class="library-empty" hidden></p>
+                </section>
+                <section class="comparison-panel">
+                  <h3>Ask about your papers</h3>
+                  <form id="researchAskForm" class="ai-query-form">
+                    <div class="field-group">
+                      <label for="researchAskQuestion">Question</label>
+                      <textarea id="researchAskQuestion" maxlength="2000" rows="4" required placeholder="Ask a question answered by your uploaded research"></textarea>
+                    </div>
+                    <button id="researchAskButton" class="primary-button" type="submit">Ask research library</button>
+                  </form>
+                  <p id="researchAskMessage" class="message" role="status" aria-live="polite" hidden></p>
+                  <section id="researchAskAnswerSection" hidden>
+                    <h4>Answer</h4>
+                    <div id="researchAskAnswer" class="comparison-result"></div>
+                    <h4>Sources</h4>
+                    <div id="researchAskSources" class="research-source-list"></div>
+                    <p id="researchAskDisclaimer" class="comparison-disclaimer"></p>
+                  </section>
+                </section>
               </div>
             </section>
             <section id="researchComparisonSection" class="content-view" hidden>
-              <div class="coming-soon-card">
-                <div class="coming-soon-mark" aria-hidden="true">⇆</div>
-                <p class="eyebrow">Research tools</p>
-                <h2>Research comparison</h2>
-                <p>Structured comparison of research papers is not implemented yet. No study findings or comparisons are generated here.</p>
+              <div class="section-toolbar">
+                <div>
+                  <h2>Research paper comparison</h2>
+                  <p>Select exactly two papers from your private library to compare extracted evidence.</p>
+                </div>
               </div>
+              <p id="researchComparisonMessage" class="message" role="status" aria-live="polite" hidden></p>
+              <section class="comparison-panel">
+                <div id="researchComparisonPaperList" class="research-comparison-list"></div>
+                <div class="comparison-actions">
+                  <button id="compareResearchPapersButton" class="primary-button" type="button" disabled>Compare selected papers</button>
+                </div>
+              </section>
+              <section id="researchComparisonResultSection" class="comparison-panel" hidden>
+                <h3>Structured comparison</h3>
+                <div id="researchComparisonPaperHeadings" class="comparison-text-panels"></div>
+                <div id="researchComparisonFields" class="research-comparison-fields"></div>
+                <div id="researchComparisonCitations" class="research-source-list"></div>
+                <p id="researchComparisonDisclaimer" class="comparison-disclaimer"></p>
+              </section>
             </section>
             <section id="profileSection" class="content-view" hidden>
               <div class="profile-card">
                 <p class="eyebrow">Account</p>
-                <h2>Profile</h2>
-                <p>These details come from the authenticated account information available to this session.</p>
+                <div class="profile-heading">
+                  <h2>Profile</h2>
+                  <button id="editProfileButton" class="secondary-button" type="button">Edit name</button>
+                </div>
+                <p>Update your name. Your email is shown for reference and cannot be changed here.</p>
                 <div class="profile-fields">
                   <div class="profile-field"><span>Name</span><strong id="profileName">—</strong></div>
                   <div class="profile-field"><span>Email</span><strong id="profileEmail">—</strong></div>
-                  <div class="profile-field"><span>Role</span><strong id="profileRole">—</strong></div>
                 </div>
-                <p class="profile-note">Profile editing is not available through the existing account API.</p>
+                <form id="profileEditForm" class="profile-edit-form" hidden>
+                  <div class="field-group">
+                    <label for="profileFirstName">First name</label>
+                    <input id="profileFirstName" name="first_name" type="text" maxlength="80" required />
+                  </div>
+                  <div class="field-group">
+                    <label for="profileLastName">Last name</label>
+                    <input id="profileLastName" name="last_name" type="text" maxlength="80" required />
+                  </div>
+                  <div class="patient-form-actions">
+                    <button id="saveProfileButton" class="primary-button" type="submit">Save name</button>
+                    <button id="cancelProfileEditButton" class="secondary-button" type="button">Cancel</button>
+                  </div>
+                </form>
+                <p id="profileMessage" class="message" role="status" aria-live="polite" hidden></p>
               </div>
             </section>
             <section id="settingsSection" class="content-view" hidden>
@@ -2599,12 +3083,17 @@
               </div>
             </section>
             <section id="activitySection" class="content-view" hidden>
-              <div class="coming-soon-card">
-                <div class="coming-soon-mark" aria-hidden="true">☷</div>
-                <p class="eyebrow">Workspace activity</p>
-                <h2>Activity and audit history</h2>
-                <p>An activity log is not available from the existing API, so no audit events are displayed here.</p>
+              <div class="section-toolbar">
+                <div>
+                  <p class="eyebrow">Workspace activity</p>
+                  <h2>Activity and audit history</h2>
+                  <p>Recent actions recorded for your account.</p>
+                </div>
+                <button id="refreshActivityButton" class="secondary-button" type="button">Refresh</button>
               </div>
+              <p id="activityMessage" class="message" role="status" aria-live="polite" hidden></p>
+              <div id="activityList" class="library-grid"></div>
+              <p id="activityEmpty" class="library-empty" hidden></p>
             </section>
           </div>
         </div>
@@ -2614,6 +3103,7 @@
     <script>
       const API_BASE = "";
       let accessToken = null;
+      let signedInUser = null;
 
       const authView = document.getElementById("authView");
       const signedInView = document.getElementById("signedInView");
@@ -2640,7 +3130,7 @@
       const scanUploadPanel = document.getElementById("scanUploadPanel");
       const SCAN_SUBTYPES = {
         MRI: ["Brain", "Knee", "Spine", "Cardiac", "Other"],
-        CT: ["Brain/head", "Chest", "Abdomen/pelvis", "Spine", "Other"],
+        CT: ["Brain/head", "Chest", "Other"],
         X_RAY: ["Chest", "Bone/joint", "Dental", "Other"],
         ULTRASOUND: [
           "Abdomen",
@@ -2660,6 +3150,13 @@
       let reportLibraryItems = [];
       let scanLibraryItems = [];
       let researchPapers = [];
+      let researchComparisonSelectedIds = new Set();
+      let comparisonPatients = [];
+      let comparisonSelectedPatientId = null;
+      let comparisonReports = [];
+      let comparisonSelectedReports = new Map();
+      let comparisonTextLoaded = false;
+      let comparisonRequestVersion = 0;
 
       function updateScanBodyRegionOptions() {
         const modality = scanModalityInput.value;
@@ -2687,10 +3184,13 @@
         if (modality === "CT" && region === "Brain/head") {
           return [".zip", ".nii", ".nii.gz"];
         }
+        if (modality === "CT" && region === "Chest") {
+          return [".jpg", ".jpeg", ".png"];
+        }
         const isImageOnly =
           (modality === "MRI" && ["Brain", "Knee", "Spine", "Cardiac"].includes(region)) ||
           (modality === "X_RAY" && ["Chest", "Bone/joint", "Dental"].includes(region)) ||
-          (modality === "ULTRASOUND" && ["Abdomen", "Obstetric", "Cardiac/echocardiogram"].includes(region));
+          (modality === "ULTRASOUND" && ["Abdomen", "Obstetric", "Cardiac/echocardiogram", "Vascular"].includes(region));
         return isImageOnly ? [".jpg", ".jpeg", ".png"] : [".pdf", ".jpg", ".jpeg", ".png"];
       }
 
@@ -2719,6 +3219,8 @@
           note += "Upload a panoramic Dental X-ray. The OralGuard model detects caries, deep caries, periapical lesions, and impacted teeth with model scores and boxes. These are not confirmed diagnoses.";
         } else if (modality === "CT" && region === "Brain/head") {
           note += "Upload a non-contrast head CT as a ZIP containing one DICOM series, or a 3D NIfTI volume (.nii/.nii.gz). Single JPG/PNG screenshots are not supported. Model output is experimental and not a diagnosis.";
+        } else if (modality === "CT" && region === "Chest") {
+          note += "Upload one 2D chest CT slice as JPG/PNG, exported after HU clipping to -1000..400 and scaling to 0..1 as in the Kaggle preprocessing. This model does not analyze a full 3D CT series. This is an experimental mask and may be inaccurate; it is not a COVID test or diagnosis.";
         } else if (modality === "MRI" && region === "Cardiac") {
           note += "Please upload a cardiac MRI image. Experimental segmentation is not a confirmed diagnosis.";
         } else if (modality === "ULTRASOUND" && region === "Obstetric") {
@@ -2727,6 +3229,8 @@
           note += "Aorta POCUS segmentation only: upload one suitable abdominal aorta-view JPG/PNG image. This is not general abdominal analysis, aneurysm detection, or a diagnosis.";
         } else if (modality === "ULTRASOUND" && region === "Cardiac/echocardiogram") {
           note += "Upload one echocardiogram JPG/PNG still image for an experimental heart-view label (for example, apical four-chamber). It identifies the image view only, not a heart condition or diagnosis.";
+        } else if (modality === "ULTRASOUND" && region === "Vascular") {
+          note += "Upload one carotid ultrasound JPG/PNG image for an experimental predicted artery-region mask. It may be inaccurate and does not assess stenosis, plaque, blockage, DVT, blood flow, or vascular disease.";
         } else if (region === "Other" || modality === "OTHER") {
           note += "Stored for reference only; not eligible for prediction.";
         } else {
@@ -2893,7 +3397,17 @@
         notice.textContent = view.notice || "";
         notice.hidden = !view.notice;
         if (view.workspace) selectPatientWorkspace(view.workspace);
-        if (["reports", "scans", "timeline", "research-papers"].includes(activeWorkspaceView)) {
+        if ([
+          "reports",
+          "scans",
+          "report-comparison",
+          "timeline",
+          "assistant",
+          "research-papers",
+          "research-rag",
+          "research-comparison",
+          "activity",
+        ].includes(activeWorkspaceView)) {
           refreshWorkspaceView(activeWorkspaceView);
         }
       }
@@ -2959,6 +3473,7 @@
       }
 
       function showSignedIn(user) {
+        signedInUser = user;
         authView.hidden = true;
         signedInView.hidden = false;
         document.body.classList.add("dashboard-active");
@@ -2971,7 +3486,11 @@
         document.getElementById("profileName").textContent =
           `${user.first_name} ${user.last_name}`;
         document.getElementById("profileEmail").textContent = user.email;
-        document.getElementById("profileRole").textContent = user.role;
+        document.getElementById("profileFirstName").value = user.first_name;
+        document.getElementById("profileLastName").value = user.last_name;
+        document.getElementById("profileEditForm").hidden = true;
+        document.getElementById("editProfileButton").hidden = false;
+        showWorkspaceMessage("profileMessage", "");
         navigateToWorkspace(workspaceViewFromLocation());
         loadPatients();
       }
@@ -2993,12 +3512,34 @@
           ...options,
           headers,
         });
-        if (response.status === 401 && accessToken) {
-          accessToken = null;
-          showAuthView("login");
-          showMessage("Your session has ended. Sign in again.", "error");
-        }
+        handleUnauthorized(response);
         return readResponse(response, "Patient request failed");
+      }
+
+      function handleUnauthorized(response) {
+        if (response.status !== 401) return;
+        accessToken = null;
+        sessionStorage.removeItem("accessToken");
+        showAuthView("login");
+        showMessage("Your session has ended. Sign in again.", "error");
+      }
+
+      async function deletePatientRecord(path, label, patientId, showMessage) {
+        if (!window.confirm(`Delete this ${label}? This cannot be undone.`)) return;
+        try {
+          const result = await patientRequest(path, { method: "DELETE" });
+          showMessage(
+            result.warning || `${label[0].toUpperCase()}${label.slice(1)} deleted.`,
+            result.warning ? "" : "success",
+          );
+          if (label === "scan") {
+            await loadPatientScans(patientId);
+          } else {
+            await loadPatientReports(patientId);
+          }
+        } catch (error) {
+          showMessage(error.message || `Could not delete ${label}.`, "error");
+        }
       }
 
       function showPatientMessage(text, type = "") {
@@ -3301,6 +3842,7 @@
               headers: { Authorization: `Bearer ${accessToken}` },
               body: formData,
             });
+            handleUnauthorized(response);
             const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
@@ -3317,7 +3859,7 @@
             );
             document.getElementById("reportUploadForm").reset();
             refreshUploadPatientOptions();
-            await loadPatientReports(uploadedReport.patient_id, true);
+            await loadPatientReports(uploadedReport.patient_id);
           } catch (error) {
             showUploadMessage(
               error.message || "Could not upload the report.",
@@ -3391,7 +3933,7 @@
             document.getElementById("scanUploadForm").reset();
             updateScanBodyRegionOptions();
             setTodayMaxDateForInput("scanStudyDateInput");
-            await loadPatientScans(uploadedScans[0].patient_id, true);
+            await loadPatientScans(uploadedScans[0].patient_id);
           } catch (error) {
             showScanMessage(error.message || "Could not upload the scan.", "error");
           } finally {
@@ -3400,7 +3942,7 @@
           }
         });
 
-      async function loadPatientScans(patientId, expandNewest = false) {
+      async function loadPatientScans(patientId) {
         const list = document.getElementById("scanList");
         const empty = document.getElementById("scanListEmpty");
         empty.textContent = "Loading scans...";
@@ -3417,6 +3959,9 @@
             const item = document.createElement("div");
             item.className = "scan-history-item";
             item.style.cursor = "pointer";
+            item.setAttribute("role", "button");
+            item.tabIndex = 0;
+            item.setAttribute("aria-expanded", "false");
             item.style.border = "1px solid #ddd";
             item.style.marginBottom = "8px";
             item.style.padding = "12px";
@@ -3431,8 +3976,18 @@
             header.style.alignItems = "center";
 
             const info = document.createElement("div");
-            const dateStr = scan.created_at ? new Date(scan.created_at).toLocaleString() : "Unknown Date";
-            info.innerHTML = `<strong>${dateStr}</strong><br><span style="color:#666">${scan.modality} | ${scan.body_region || "N/A"}</span>`;
+            const scanName = document.createElement("strong");
+            scanName.textContent = scan.original_filename || "Medical scan";
+            const scanMeta = document.createElement("span");
+            scanMeta.className = "scan-history-meta";
+            const dateStr = scan.study_date
+              ? formatPatientDate(scan.study_date)
+              : scan.created_at
+                ? new Date(scan.created_at).toLocaleString()
+                : "Date not provided";
+            scanMeta.textContent =
+              `${scan.modality} · ${scan.body_region || "Other"} · ${dateStr}`;
+            info.append(scanName, scanMeta);
 
             const statusBadge = document.createElement("span");
             const isSpineMRI =
@@ -3444,11 +3999,20 @@
             const isEchoView47Ultrasound =
               scan.modality === "ULTRASOUND" &&
               scan.body_region === "Cardiac/echocardiogram";
+            const isVascularUltrasound =
+              scan.modality === "ULTRASOUND" && scan.body_region === "Vascular";
+            const isChestCT =
+              scan.modality === "CT" && scan.body_region === "Chest";
             const hasModelOutput =
               Boolean(scan.brain_analysis) ||
               Boolean(scan.spine_analysis) ||
+              Boolean(scan.chest_ct_analysis) ||
               Boolean(scan.obstetric_ultrasound_analysis) ||
               Boolean(scan.echoview47_analysis) ||
+              Boolean(
+                scan.vascular_ultrasound_analysis &&
+                  scan.vascular_ultrasound_analysis.has_mask,
+              ) ||
               Boolean(
                 scan.abdominal_aorta_ultrasound_analysis &&
                   scan.abdominal_aorta_ultrasound_analysis.has_mask,
@@ -3466,6 +4030,14 @@
               isEchoView47Ultrasound &&
               !scan.echoview47_analysis &&
               ["model_unavailable", "analysis_failed"].includes(scan.processing_status);
+            const hasNoVascularOutput =
+              isVascularUltrasound &&
+              !scan.vascular_ultrasound_analysis &&
+              ["model_unavailable", "analysis_failed"].includes(scan.processing_status);
+            const hasNoChestCTOutput =
+              isChestCT &&
+              !scan.chest_ct_analysis &&
+              ["model_unavailable", "analysis_failed"].includes(scan.processing_status);
             statusBadge.textContent = hasModelOutput
               ? "Model output available"
               : hasNoSpineOutput
@@ -3476,6 +4048,10 @@
                   ? "Stored · AI unavailable"
                   : hasNoEchoView47Output
                     ? "Stored · AI unavailable"
+                      : hasNoVascularOutput
+                        ? "Stored · AI unavailable"
+                      : hasNoChestCTOutput
+                      ? "Stored · AI unavailable"
               : scan.processing_status === "analysis_complete"
                 ? "Analysis complete"
                 : "⏳ Processing";
@@ -3492,6 +4068,10 @@
                   ? "#f1f4f6"
                   : hasNoEchoView47Output
                     ? "#f1f4f6"
+                      : hasNoVascularOutput
+                        ? "#f1f4f6"
+                    : hasNoChestCTOutput
+                      ? "#f1f4f6"
               : scan.processing_status === "analysis_complete"
                 ? "#e6f4ea"
                 : "#fef7e0";
@@ -3505,6 +4085,10 @@
                   ? "#60717e"
                   : hasNoEchoView47Output
                     ? "#60717e"
+                  : hasNoVascularOutput
+                    ? "#60717e"
+                    : hasNoChestCTOutput
+                      ? "#60717e"
               : scan.processing_status === "analysis_complete"
                 ? "#137333"
                 : "#b06000";
@@ -3520,23 +4104,61 @@
             detailsContainer.style.borderTop = "1px solid #eee";
             detailsContainer.style.paddingTop = "12px";
 
-            // Original Image Link/Button
+            const actions = document.createElement("div");
+            actions.className = "scan-detail-actions";
             const openButton = document.createElement("button");
             openButton.type = "button";
-            openButton.className = "secondary-button";
-            openButton.textContent = "View Original Image";
-            openButton.style.marginBottom = "10px";
+            openButton.className = "secondary-button scan-open-button";
+            openButton.textContent = "View original image";
             openButton.addEventListener("click", (e) => {
               e.stopPropagation();
               openOriginalFile(scan.original_url, showScanMessage);
             });
-            detailsContainer.append(openButton);
+            const outputButton = document.createElement("button");
+            outputButton.type = "button";
+            outputButton.className = "secondary-button scan-open-button";
+            outputButton.textContent = "View model output";
+            const outputContainer = document.createElement("div");
+            outputContainer.className = "scan-model-output";
+            outputContainer.hidden = true;
+            outputButton.setAttribute("aria-expanded", "false");
+            outputButton.addEventListener("click", (e) => {
+              e.stopPropagation();
+              outputContainer.hidden = !outputContainer.hidden;
+              outputButton.setAttribute("aria-expanded", String(!outputContainer.hidden));
+              outputButton.textContent = outputContainer.hidden
+                ? "View model output"
+                : "Hide model output";
+            });
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "secondary-button danger-button";
+            deleteButton.textContent = "Delete scan";
+            deleteButton.addEventListener("click", (e) => {
+              e.stopPropagation();
+              deletePatientRecord(
+                `/api/scans/${scan.id}`,
+                "scan",
+                patientId,
+                showScanMessage,
+              );
+            });
+            actions.append(openButton, outputButton, deleteButton);
+            detailsContainer.append(actions, outputContainer);
 
             // Toggle Logic
-            item.addEventListener("click", () => {
+            const toggleScanDetails = () => {
               const isHidden = detailsContainer.hidden;
               detailsContainer.hidden = !isHidden;
               item.style.background = isHidden ? "#f9f9f9" : "#fff";
+              item.setAttribute("aria-expanded", String(isHidden));
+            };
+            item.addEventListener("click", toggleScanDetails);
+            item.addEventListener("keydown", (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                toggleScanDetails();
+              }
             });
 
             list.append(item, detailsContainer);
@@ -3569,7 +4191,7 @@
               }
 
               analysisPanel.append(analysisHeading, disclaimer, overlay, legend);
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
               loadProtectedOverlay(scan.analysis.overlay_url, overlay);
             }
             if (
@@ -3608,7 +4230,58 @@
                   "No segmentation mask was returned. This does not establish that the aorta is absent or abnormal.";
                 analysisPanel.append(noMask);
               }
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
+            }
+            if (isVascularUltrasound || scan.vascular_ultrasound_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const analysisHeading = document.createElement("h5");
+              analysisHeading.textContent = "Experimental carotid ultrasound segmentation";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.vascular_ultrasound_analysis
+                ? scan.vascular_ultrasound_analysis.disclaimer
+                : scan.processing_message;
+              analysisPanel.append(analysisHeading, disclaimer);
+
+              const prediction = scan.vascular_ultrasound_analysis;
+              if (prediction?.has_mask) {
+                const result = document.createElement("p");
+                result.className = "knee-analysis-result";
+                result.textContent = prediction.label;
+                const meaning = document.createElement("p");
+                meaning.className = "knee-analysis-meta";
+                meaning.textContent = prediction.meaning;
+                const originalLabel = document.createElement("p");
+                originalLabel.className = "knee-analysis-meta";
+                originalLabel.textContent = "Original ultrasound image";
+                const original = document.createElement("img");
+                original.className = "scan-overlay";
+                original.alt = "Original vascular ultrasound image";
+                const overlayLabel = document.createElement("p");
+                overlayLabel.className = "knee-analysis-meta";
+                overlayLabel.textContent = "Predicted region overlay";
+                const overlay = document.createElement("img");
+                overlay.className = "scan-overlay";
+                overlay.alt = "Experimental predicted carotid artery region overlay";
+                analysisPanel.append(
+                  result,
+                  meaning,
+                  originalLabel,
+                  original,
+                  overlayLabel,
+                  overlay,
+                );
+                loadProtectedOverlay(scan.original_url, original);
+                loadProtectedOverlay(prediction.overlay_url, overlay);
+              } else if (prediction) {
+                const noMask = document.createElement("p");
+                noMask.className = "knee-analysis-meta";
+                noMask.textContent =
+                  "No carotid-region mask was returned. This does not establish that the artery is absent or abnormal.";
+                analysisPanel.append(noMask);
+              }
+              outputContainer.append(analysisPanel);
             }
             if (scan.knee_analysis) {
               const analysisPanel = document.createElement("section");
@@ -3659,7 +4332,7 @@
                 localization,
                 probabilities,
               );
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (
               (scan.modality === "MRI" && scan.body_region === "Spine") ||
@@ -3712,7 +4385,7 @@
                   `Model: ${scan.spine_analysis.model_name}. Values are independent raw scores from 0 to 1, not calibrated probabilities; one 2D image was analyzed, not a full series.`;
                 analysisPanel.append(table, modelInfo);
               }
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (
               (scan.modality === "ULTRASOUND" && scan.body_region === "Obstetric") ||
@@ -3767,7 +4440,7 @@
                   "not confidence estimates or measures of fetal health.";
                 analysisPanel.append(scores, modelInfo);
               }
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (
               (scan.modality === "ULTRASOUND" &&
@@ -3832,7 +4505,7 @@
                   "heart function, diagnose disease, or establish normality.";
                 analysisPanel.append(modelInfo);
               }
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (scan.brain_analysis) {
               const analysisPanel = document.createElement("section");
@@ -3877,7 +4550,7 @@
               modelInfo.className = "knee-analysis-meta";
               modelInfo.textContent = `Model: ${scan.brain_analysis.model_name}. Class order: Glioma, Meningioma, No tumor, Pituitary tumor. Scores are model outputs, not confirmed diagnoses.`;
               analysisPanel.append(analysisHeading, disclaimer, top, scores, modelInfo);
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (scan.chest_xray_analysis) {
               const analysisPanel = document.createElement("section");
@@ -3908,7 +4581,7 @@
                 findingsList.append(item);
               }
               analysisPanel.append(analysisHeading, disclaimer, findingsList);
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (scan.bone_xray_analysis) {
               const analysisPanel = document.createElement("section");
@@ -3924,7 +4597,7 @@
               const confidence = scan.bone_xray_analysis.confidence_score.toFixed(1);
               result.textContent = `${scan.bone_xray_analysis.predicted_label} — ${confidence}%`;
               analysisPanel.append(analysisHeading, disclaimer, result);
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (scan.dental_xray_analysis) {
               const analysisPanel = document.createElement("section");
@@ -4000,7 +4673,7 @@
                 }
                 analysisPanel.append(findingsList);
               }
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
             if (scan.ct_head_analysis) {
               const analysisPanel = document.createElement("section");
@@ -4056,15 +4729,70 @@
                 );
                 analysisPanel.append(heatmap);
               }
-              list.append(analysisPanel);
+              outputContainer.append(analysisPanel);
             }
-            // Move all analysis panels into detailsContainer
-            // (This block is reached after all if(scan.xxx_analysis) blocks)
-
-            if (expandNewest && index === 0) {
-              // Optionally expand the newest item
-              detailsContainer.hidden = false;
-              item.style.background = "#f9f9f9";
+            if (scan.chest_ct_analysis) {
+              const analysisPanel = document.createElement("section");
+              analysisPanel.className = "knee-analysis";
+              const heading = document.createElement("h5");
+              heading.textContent = "Experimental chest CT slice segmentation";
+              const disclaimer = document.createElement("p");
+              disclaimer.className = "scan-analysis-disclaimer";
+              disclaimer.textContent = scan.chest_ct_analysis.disclaimer;
+              const modelNote = document.createElement("p");
+              modelNote.className = "scan-analysis-disclaimer";
+              modelNote.textContent =
+                `Model: ${scan.chest_ct_analysis.model_name} · ` +
+                `input ${scan.chest_ct_analysis.image_shape.join("×")} px · ` +
+                `mask threshold ${scan.chest_ct_analysis.threshold}`;
+              const findingsList = document.createElement("ul");
+              findingsList.className = "knee-probabilities";
+              for (const [name, pixelCount] of Object.entries(
+                scan.chest_ct_analysis.pixel_counts,
+              )) {
+                const item = document.createElement("li");
+                item.className = "knee-probability";
+                const description = document.createElement("span");
+                description.textContent =
+                  scan.chest_ct_analysis.finding_meanings[name] || name;
+                const count = document.createElement("strong");
+                count.textContent =
+                  `${pixelCount.toLocaleString()} pixels marked ` +
+                  `(not a measurement or confidence score)`;
+                item.append(description, count);
+                findingsList.append(item);
+              }
+              const legend = document.createElement("p");
+              legend.className = "scan-analysis-disclaimer";
+              legend.textContent =
+                "Overlay key: blue = ground-glass opacity mask; orange = consolidation mask; " +
+                "yellow = overlapping masks. The masks can overlap.";
+              analysisPanel.append(
+                heading,
+                disclaimer,
+                modelNote,
+                findingsList,
+                legend,
+              );
+              if (scan.chest_ct_analysis.overlay_url) {
+                const overlay = document.createElement("img");
+                overlay.alt =
+                  "Experimental color overlay of model-marked chest CT slice regions";
+                overlay.className = "scan-analysis-image";
+                loadProtectedOverlay(
+                  scan.chest_ct_analysis.overlay_url,
+                  overlay,
+                );
+                analysisPanel.append(overlay);
+              }
+              outputContainer.append(analysisPanel);
+            }
+            if (outputContainer.childElementCount === 0) {
+              const outputMessage = document.createElement("p");
+              outputMessage.className = "report-processing-message";
+              outputMessage.textContent =
+                scan.processing_message || "No model output is available for this scan.";
+              outputContainer.append(outputMessage);
             }
           });
         } catch (error) {
@@ -4078,6 +4806,7 @@
           const response = await fetch(`${API_BASE}${overlayUrl}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
+          handleUnauthorized(response);
           if (!response.ok) throw new Error("Could not load segmentation overlay.");
           imageElement.src = URL.createObjectURL(await response.blob());
         } catch (error) {
@@ -4093,11 +4822,7 @@
           const response = await fetch(`${API_BASE}${originalUrl}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
-          if (response.status === 401 && accessToken) {
-            accessToken = null;
-            showAuthView("login");
-            showMessage("Your session has ended. Sign in again.", "error");
-          }
+          handleUnauthorized(response);
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || "Could not download the original file.");
@@ -4126,6 +4851,7 @@
           const response = await fetch(`${API_BASE}${originalUrl}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
+          handleUnauthorized(response);
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || "Could not open the original file.");
@@ -4138,7 +4864,7 @@
         }
       }
 
-      async function loadPatientReports(patientId, expandNewest = false) {
+      async function loadPatientReports(patientId) {
         const list = document.getElementById("reportList");
         const empty = document.getElementById("reportListEmpty");
         empty.textContent = "Loading reports...";
@@ -4156,16 +4882,20 @@
             ? ""
             : "No reports uploaded for this patient.";
 
-          data.reports.forEach((report, index) => {
+          data.reports.forEach((report) => {
             const item = document.createElement("details");
             item.className = "report-item";
-            item.open = expandNewest && index === 0;
 
             const summary = document.createElement("summary");
             const reportDate = report.report_date
               ? formatPatientDate(report.report_date)
               : "Date not provided";
-            summary.textContent = `${report.report_type} | ${reportDate} | ${report.processing_status.replaceAll("_", " ")}`;
+            const fileExtension = report.file_reference
+              ? report.file_reference.split(".").pop()?.toUpperCase()
+              : null;
+            summary.textContent =
+              `${report.report_type} · ${fileExtension || "Report"} · ${reportDate}`;
+            item.append(summary);
 
             const processingMessage = document.createElement("p");
             processingMessage.className = "report-processing-message";
@@ -4180,6 +4910,45 @@
                 openOriginalFile(report.original_url, showUploadMessage),
               );
               item.append(openOriginalButton);
+            }
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "secondary-button danger-button";
+            deleteButton.textContent = "Delete report";
+            deleteButton.addEventListener("click", () =>
+              deletePatientRecord(
+                `/api/reports/${report.id}`,
+                "report",
+                patientId,
+                showUploadMessage,
+              ),
+            );
+            item.append(deleteButton);
+
+            if (
+              typeof report.extracted_text === "string" &&
+              report.extracted_text.trim()
+            ) {
+              const summaryButton = document.createElement("button");
+              summaryButton.type = "button";
+              summaryButton.className = "secondary-button scan-open-button";
+              summaryButton.textContent = "Generate AI Summary";
+              const summaryStatus = document.createElement("p");
+              summaryStatus.className = "report-processing-message";
+              summaryStatus.setAttribute("role", "status");
+              summaryStatus.setAttribute("aria-live", "polite");
+              const summaryPanel = document.createElement("section");
+              summaryPanel.className = "report-ai-summary";
+              summaryPanel.hidden = true;
+              summaryButton.addEventListener("click", () =>
+                generateReportSummary(
+                  report.id,
+                  summaryButton,
+                  summaryStatus,
+                  summaryPanel,
+                ),
+              );
+              item.append(summaryButton, summaryStatus, summaryPanel);
             }
 
             if (report.metadata) {
@@ -4285,7 +5054,7 @@
               report.extracted_text ||
               "No extracted text is available for this report.";
 
-            item.append(summary, processingMessage, extractedText);
+            item.append(processingMessage, extractedText);
             list.append(item);
           });
         } catch (error) {
@@ -4299,6 +5068,41 @@
         message.textContent = text;
         message.className = `message ${type}`.trim();
         message.hidden = !text;
+      }
+
+      async function generateReportSummary(reportId, button, status, panel) {
+        button.disabled = true;
+        button.textContent = "Generating summary…";
+        status.className = "report-processing-message";
+        status.textContent =
+          "Sending the saved extracted report text to the local AI model…";
+        panel.hidden = true;
+        panel.replaceChildren();
+
+        try {
+          const data = await patientRequest(
+            `/api/reports/${encodeURIComponent(reportId)}/summary`,
+            { method: "POST" },
+          );
+          const heading = document.createElement("h6");
+          heading.textContent = "AI-generated report summary";
+          const summary = document.createElement("p");
+          summary.className = "report-ai-summary-text";
+          summary.textContent = data.summary;
+          const disclaimer = document.createElement("p");
+          disclaimer.className = "report-ai-summary-disclaimer";
+          disclaimer.textContent = data.disclaimer;
+          panel.append(heading, summary, disclaimer);
+          panel.hidden = false;
+          status.textContent = "";
+        } catch (error) {
+          status.className = "report-processing-message error";
+          status.textContent =
+            error.message || "Could not generate a summary for this report.";
+        } finally {
+          button.disabled = false;
+          button.textContent = "Generate AI Summary";
+        }
       }
 
       function formatLibraryDate(value) {
@@ -4733,9 +5537,958 @@
         }
       }
 
+      function renderResearchComparisonPapers() {
+        const list = document.getElementById("researchComparisonPaperList");
+        const button = document.getElementById("compareResearchPapersButton");
+        list.replaceChildren();
+        if (researchPapers.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "library-empty";
+          empty.textContent = "Your research library is empty. Upload papers before comparing them.";
+          list.append(empty);
+          button.disabled = true;
+          return;
+        }
+
+        for (const paper of researchPapers) {
+          const label = document.createElement("label");
+          label.className = "research-comparison-option";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = String(paper.id);
+          checkbox.checked = researchComparisonSelectedIds.has(paper.id);
+          checkbox.disabled =
+            !checkbox.checked && researchComparisonSelectedIds.size >= 2;
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+              researchComparisonSelectedIds.add(paper.id);
+            } else {
+              researchComparisonSelectedIds.delete(paper.id);
+            }
+            document.getElementById("researchComparisonResultSection").hidden = true;
+            renderResearchComparisonPapers();
+            showWorkspaceMessage(
+              "researchComparisonMessage",
+              `${researchComparisonSelectedIds.size} of 2 papers selected.`,
+            );
+          });
+          const details = document.createElement("div");
+          const title = document.createElement("strong");
+          title.textContent = paper.title;
+          const metadata = document.createElement("span");
+          metadata.textContent = [
+            paper.topic,
+            paper.paper_date ? formatLibraryDate(paper.paper_date) : "Date not provided",
+            paper.authors,
+          ].filter(Boolean).join(" · ");
+          details.append(title, metadata);
+          label.append(checkbox, details);
+          list.append(label);
+        }
+        button.disabled = researchComparisonSelectedIds.size !== 2;
+      }
+
+      function renderResearchSources(targetId, sources, includeExcerpt = true) {
+        const container = document.getElementById(targetId);
+        container.replaceChildren();
+        for (const source of sources || []) {
+          const card = document.createElement("article");
+          card.className = "research-source-card";
+          const heading = document.createElement("strong");
+          heading.textContent = [
+            source.citation,
+            source.title || source.paper_title,
+            source.date || source.paper_date
+              ? formatLibraryDate(source.date || source.paper_date)
+              : "",
+          ].filter(Boolean).join(" · ");
+          const excerpt = document.createElement("p");
+          excerpt.textContent = source.excerpt || source.excerpt === "" ? source.excerpt : source.text || "";
+          card.append(heading);
+          if (includeExcerpt && excerpt.textContent) card.append(excerpt);
+          container.append(card);
+        }
+        if (!sources || sources.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "assistant-sources-empty";
+          empty.textContent = "No source references were returned.";
+          container.append(empty);
+        }
+      }
+
+      function setButtonBusy(buttonId, busy, busyText, idleText) {
+        const button = document.getElementById(buttonId);
+        button.disabled = busy;
+        button.textContent = busy ? busyText : idleText;
+      }
+
+      async function submitResearchSearch(event) {
+        event.preventDefault();
+        const query = document.getElementById("researchSearchQuery").value.trim();
+        const results = document.getElementById("researchSearchResults");
+        const empty = document.getElementById("researchSearchEmpty");
+        results.replaceChildren();
+        empty.hidden = true;
+        showWorkspaceMessage("researchSearchMessage", "Searching and indexing local paper text…");
+        setButtonBusy("researchSearchButton", true, "Searching…", "Search papers");
+        try {
+          const data = await patientRequest("/api/research/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query, top_k: 5 }),
+          });
+          if (data.results.length === 0) {
+            empty.textContent = data.message || "No matching excerpts were found.";
+            empty.hidden = false;
+          }
+          renderResearchSources("researchSearchResults", data.results, true);
+          showWorkspaceMessage(
+            "researchSearchMessage",
+            `${data.results.length} relevant excerpt${data.results.length === 1 ? "" : "s"} found.`,
+            "success",
+          );
+        } catch (error) {
+          showWorkspaceMessage(
+            "researchSearchMessage",
+            error.message || "Could not search research papers.",
+            "error",
+          );
+        } finally {
+          setButtonBusy("researchSearchButton", false, "Searching…", "Search papers");
+        }
+      }
+
+      async function submitResearchQuestion(event) {
+        event.preventDefault();
+        document.getElementById("researchAskAnswerSection").hidden = true;
+        showWorkspaceMessage("researchAskMessage", "Retrieving paper excerpts and generating a grounded answer…");
+        setButtonBusy("researchAskButton", true, "Preparing answer…", "Ask research library");
+        try {
+          const data = await patientRequest("/api/research/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question: document.getElementById("researchAskQuestion").value.trim(),
+              top_k: 5,
+            }),
+          });
+          document.getElementById("researchAskAnswer").textContent = data.answer;
+          document.getElementById("researchAskDisclaimer").textContent = data.disclaimer;
+          renderResearchSources("researchAskSources", data.citations, true);
+          document.getElementById("researchAskAnswerSection").hidden = false;
+          showWorkspaceMessage("researchAskMessage", "Answer generated from the cited paper excerpts.", "success");
+        } catch (error) {
+          showWorkspaceMessage(
+            "researchAskMessage",
+            error.message || "Could not answer from your research papers.",
+            "error",
+          );
+        } finally {
+          setButtonBusy("researchAskButton", false, "Preparing answer…", "Ask research library");
+        }
+      }
+
+      function readableResearchField(field) {
+        return field.split("_").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ");
+      }
+
+      function comparisonTextElement(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        element.textContent = text;
+        return element;
+      }
+
+      function comparisonStatusLabel(status) {
+        return status.replaceAll("_", " ");
+      }
+
+      function renderReportComparison(comparison, reports) {
+        const root = document.getElementById("reportComparisonResult");
+        root.replaceChildren();
+        const metrics = document.createElement("div");
+        metrics.className = "comparison-summary";
+        const metricLabels = [
+          ["same_value_count", "Same explicit values"],
+          ["different_value_count", "Different / non-comparable values"],
+          ["related_observation_count", "Related wording pairs"],
+          ["report_1_only_count", "Only in Report 1"],
+          ["report_2_only_count", "Only in Report 2"],
+        ];
+        for (const [key, label] of metricLabels) {
+          metrics.append(
+            comparisonTextElement("span", "", `${label}: ${comparison.summary[key]}`),
+          );
+        }
+        root.append(metrics);
+
+        const parameterSection = document.createElement("section");
+        parameterSection.className = "comparison-subsection";
+        parameterSection.append(
+          comparisonTextElement("h4", "", "Explicit measurements and values"),
+        );
+        if (!comparison.parameters.length) {
+          parameterSection.append(
+            comparisonTextElement(
+              "p",
+              "comparison-disclaimer",
+              "No supported value/unit rows were found in the extracted report text.",
+            ),
+          );
+        } else {
+          const wrapper = document.createElement("div");
+          wrapper.className = "comparison-table-wrap";
+          const table = document.createElement("table");
+          table.className = "comparison-table";
+          const head = document.createElement("thead");
+          const headerRow = document.createElement("tr");
+          for (const label of [
+            "Measure",
+            reports[0],
+            reports[1],
+            "Rule-based result",
+          ]) {
+            headerRow.append(comparisonTextElement("th", "", label));
+          }
+          head.append(headerRow);
+          table.append(head);
+          const body = document.createElement("tbody");
+          for (const row of comparison.parameters) {
+            const tableRow = document.createElement("tr");
+            tableRow.append(comparisonTextElement("th", "", row.label));
+            for (const value of [row.report_1, row.report_2]) {
+              const cell = document.createElement("td");
+              if (value) {
+                cell.append(
+                  comparisonTextElement(
+                    "strong",
+                    "",
+                    `${value.value} ${value.unit}`.trim(),
+                  ),
+                  comparisonTextElement("p", "", value.source),
+                );
+              } else {
+                cell.textContent = "Not found in extracted text";
+              }
+              tableRow.append(cell);
+            }
+            const statusCell = document.createElement("td");
+            const statusClass = [
+              "same_value",
+              "different_value",
+              "units_not_comparable",
+            ].includes(row.status)
+              ? `comparison-status ${
+                  row.status === "same_value" ? "" : "is-different"
+                }`
+              : "comparison-status is-unique";
+            statusCell.append(
+              comparisonTextElement(
+                "span",
+                statusClass,
+                comparisonStatusLabel(row.status),
+              ),
+            );
+            tableRow.append(statusCell);
+            body.append(tableRow);
+          }
+          table.append(body);
+          wrapper.append(table);
+          parameterSection.append(wrapper);
+        }
+        root.append(parameterSection);
+
+        const observations = comparison.observations;
+        const narrativeSection = document.createElement("section");
+        narrativeSection.className = "comparison-subsection";
+        narrativeSection.append(
+          comparisonTextElement("h4", "", "Findings and narrative wording"),
+        );
+        if (observations.related.length) {
+          narrativeSection.append(
+            comparisonTextElement("p", "comparison-disclaimer", "Closest local embedding matches are aligned below. Scores are not probabilities or medical interpretations."),
+          );
+          const relatedGrid = document.createElement("div");
+          relatedGrid.className = "comparison-evidence-grid";
+          for (const item of observations.related) {
+            const card = document.createElement("article");
+            card.className = "comparison-evidence-card";
+            card.append(
+              comparisonTextElement(
+                "span",
+                "comparison-status",
+                `${comparisonStatusLabel(item.relationship)} · similarity score ${item.similarity.toFixed(3)}`,
+              ),
+              comparisonTextElement("p", "", `Report 1: ${item.report_1}`),
+              comparisonTextElement("p", "", `Report 2: ${item.report_2}`),
+            );
+            relatedGrid.append(card);
+          }
+          narrativeSection.append(relatedGrid);
+        } else {
+          narrativeSection.append(
+            comparisonTextElement("p", "comparison-disclaimer", "No explicit findings/impression statements were available to align."),
+          );
+        }
+
+        const uniqueGroups = [
+          ["report_1_only", "Only in Report 1"],
+          ["report_2_only", "Only in Report 2"],
+        ].filter(([key]) => observations[key].length);
+        if (uniqueGroups.length) {
+          narrativeSection.append(
+            comparisonTextElement("h4", "", "Statements found in only one report"),
+          );
+          const uniqueGrid = document.createElement("div");
+          uniqueGrid.className = "comparison-unique-grid";
+          for (const [key, title] of uniqueGroups) {
+            const card = document.createElement("article");
+            card.className = "comparison-unique-card";
+            card.append(comparisonTextElement("strong", "", title));
+            for (const statement of observations[key]) {
+              card.append(comparisonTextElement("p", "", statement));
+            }
+            uniqueGrid.append(card);
+          }
+          narrativeSection.append(uniqueGrid);
+        }
+        const omittedCount =
+          observations.omitted_report_1_count +
+          observations.omitted_report_2_count;
+        if (omittedCount) {
+          narrativeSection.append(
+            comparisonTextElement(
+              "p",
+              "comparison-disclaimer",
+              `${omittedCount} additional narrative statements were omitted from matching to keep the comparison bounded.`,
+            ),
+          );
+        }
+        root.append(narrativeSection);
+      }
+
+      async function compareSelectedResearchPapers() {
+        if (researchComparisonSelectedIds.size !== 2) return;
+        const button = document.getElementById("compareResearchPapersButton");
+        document.getElementById("researchComparisonResultSection").hidden = true;
+        showWorkspaceMessage("researchComparisonMessage", "Retrieving source passages and comparing them locally…");
+        setButtonBusy("compareResearchPapersButton", true, "Comparing…", "Compare selected papers");
+        try {
+          const data = await patientRequest("/api/research/compare", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paper_ids: [...researchComparisonSelectedIds] }),
+          });
+          const headings = document.getElementById("researchComparisonPaperHeadings");
+          headings.replaceChildren();
+          for (const paper of data.papers) {
+            const panel = document.createElement("article");
+            panel.className = "comparison-text-panel";
+            const title = document.createElement("h4");
+            title.textContent = paper.title;
+            const details = document.createElement("p");
+            details.className = "research-paper-meta";
+            details.textContent = [
+              paper.topic,
+              paper.paper_date ? formatLibraryDate(paper.paper_date) : "Date not provided",
+            ].join(" · ");
+            panel.append(title, details);
+            headings.append(panel);
+          }
+          const fields = document.getElementById("researchComparisonFields");
+          fields.replaceChildren();
+          const statusOrder = {
+            related_evidence: 0,
+            different_evidence: 1,
+            only_in_paper_1: 2,
+            only_in_paper_2: 2,
+            not_found: 3,
+          };
+          const orderedFields = [...data.fields].sort(
+            (first, second) =>
+              statusOrder[data.comparison[first].status] -
+              statusOrder[data.comparison[second].status],
+          );
+          for (const field of orderedFields) {
+            const values = data.comparison[field];
+            const card = document.createElement("article");
+            card.className = "research-comparison-field";
+            const title = document.createElement("h4");
+            title.textContent = readableResearchField(field);
+            card.append(
+              title,
+              comparisonTextElement(
+                "span",
+                `comparison-status ${
+                  ["different_evidence", "only_in_paper_1", "only_in_paper_2"].includes(values.status)
+                    ? "is-different"
+                    : ""
+                }`,
+                `${comparisonStatusLabel(values.status)}${
+                  values.similarity === null
+                    ? ""
+                    : ` · similarity score ${values.similarity.toFixed(3)}`
+                }`,
+              ),
+            );
+            const evidence = document.createElement("div");
+            evidence.className = "research-comparison-evidence";
+            for (const [paperLabel, text, citation] of [
+              ["Paper 1", values.paper_1, values.paper_1_citation],
+              ["Paper 2", values.paper_2, values.paper_2_citation],
+            ]) {
+              const panel = document.createElement("div");
+              panel.append(
+                comparisonTextElement(
+                  "strong",
+                  "",
+                  citation ? `${paperLabel} · ${citation}` : paperLabel,
+                ),
+                comparisonTextElement("p", "", text),
+              );
+              evidence.append(panel);
+            }
+            card.append(
+              evidence,
+              comparisonTextElement("p", "comparison-disclaimer", values.comparison),
+            );
+            fields.append(card);
+          }
+          renderResearchSources("researchComparisonCitations", data.citations, false);
+          document.getElementById("researchComparisonDisclaimer").textContent = data.disclaimer;
+          document.getElementById("researchComparisonResultSection").hidden = false;
+          showWorkspaceMessage("researchComparisonMessage", "Comparison built locally from retrieved source passages; no generative AI was used.", "success");
+        } catch (error) {
+          showWorkspaceMessage(
+            "researchComparisonMessage",
+            error.message || "Could not compare the selected papers.",
+            "error",
+          );
+        } finally {
+          setButtonBusy(
+            "compareResearchPapersButton",
+            false,
+            "Comparing…",
+            "Compare selected papers",
+          );
+          document.getElementById("compareResearchPapersButton").disabled =
+            researchComparisonSelectedIds.size !== 2;
+        }
+      }
+
+      function updateAssistantContextControls() {
+        const contextType = document.getElementById("assistantContextType").value;
+        const usesPatient = contextType === "report" || contextType === "patient_timeline";
+        document.getElementById("assistantPatientGroup").hidden = !usesPatient;
+        document.getElementById("assistantReportGroup").hidden = contextType !== "report";
+        if (usesPatient) renderAssistantPatientChoices();
+        if (contextType === "report") loadAssistantReports();
+      }
+
+      function renderAssistantPatientChoices() {
+        const select = document.getElementById("assistantPatientSelect");
+        const currentValue = select.value;
+        select.replaceChildren();
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = patients.length ? "Select a patient" : "No patient records";
+        select.append(placeholder);
+        for (const patient of patients) {
+          const option = document.createElement("option");
+          option.value = String(patient.id);
+          option.textContent = `${patient.first_name} ${patient.last_name} · #${patient.id}`;
+          select.append(option);
+        }
+        if (patients.some((patient) => String(patient.id) === currentValue)) {
+          select.value = currentValue;
+        }
+      }
+
+      async function loadAssistantReports() {
+        const patientId = document.getElementById("assistantPatientSelect").value;
+        const select = document.getElementById("assistantReportSelect");
+        select.replaceChildren();
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = patientId ? "Loading reports…" : "Select a patient first";
+        select.append(placeholder);
+        if (!patientId) return;
+        try {
+          const data = await patientRequest(`/api/reports?patient_id=${encodeURIComponent(patientId)}`);
+          select.replaceChildren();
+          const emptyOption = document.createElement("option");
+          emptyOption.value = "";
+          emptyOption.textContent = data.reports.length ? "Select a report" : "No reports for this patient";
+          select.append(emptyOption);
+          for (const report of data.reports) {
+            const option = document.createElement("option");
+            option.value = String(report.id);
+            option.textContent = `#${report.id} · ${report.report_type} · ${report.report_date || "Date not provided"}`;
+            select.append(option);
+          }
+        } catch (error) {
+          select.replaceChildren();
+          const errorOption = document.createElement("option");
+          errorOption.value = "";
+          errorOption.textContent = error.message || "Could not load reports";
+          select.append(errorOption);
+        }
+      }
+
+      async function submitAssistantQuestion(event) {
+        event.preventDefault();
+        document.getElementById("assistantAnswerSection").hidden = true;
+        const contextType = document.getElementById("assistantContextType").value;
+        const payload = {
+          question: document.getElementById("assistantQuestion").value.trim(),
+          context_type: contextType,
+        };
+        if (contextType === "report") {
+          if (!document.getElementById("assistantReportSelect").value) {
+            showWorkspaceMessage("assistantMessage", "Select a report to use as context.", "error");
+            return;
+          }
+          payload.report_id = Number(document.getElementById("assistantReportSelect").value);
+        } else if (contextType === "patient_timeline") {
+          if (!document.getElementById("assistantPatientSelect").value) {
+            showWorkspaceMessage("assistantMessage", "Select a patient to use as context.", "error");
+            return;
+          }
+          payload.patient_id = Number(document.getElementById("assistantPatientSelect").value);
+        }
+        showWorkspaceMessage("assistantMessage", "Retrieving authorized context and generating a response…");
+        setButtonBusy("assistantSubmitButton", true, "Thinking…", "Ask assistant");
+        try {
+          const data = await patientRequest("/api/ai/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          document.getElementById("assistantAnswer").textContent = data.answer;
+          document.getElementById("assistantDisclaimer").textContent = data.disclaimer;
+          renderResearchSources("assistantSources", data.sources, false);
+          document.getElementById("assistantAnswerSection").hidden = false;
+          showWorkspaceMessage("assistantMessage", "Response generated from the selected source context.", "success");
+        } catch (error) {
+          showWorkspaceMessage(
+            "assistantMessage",
+            error.message || "Could not generate an assistant response.",
+            "error",
+          );
+        } finally {
+          setButtonBusy("assistantSubmitButton", false, "Thinking…", "Ask assistant");
+        }
+      }
+
+      async function loadActivity() {
+        const list = document.getElementById("activityList");
+        const empty = document.getElementById("activityEmpty");
+        list.replaceChildren();
+        empty.hidden = true;
+        showWorkspaceMessage("activityMessage", "Loading activity…");
+
+        try {
+          const data = await patientRequest("/api/audit-logs?limit=100");
+          if (data.logs.length === 0) {
+            showWorkspaceMessage("activityMessage", "");
+            empty.textContent = "No activity has been recorded yet.";
+            empty.hidden = false;
+            return;
+          }
+
+          for (const event of data.logs) {
+            const card = document.createElement("article");
+            card.className = "library-card";
+            const title = document.createElement("strong");
+            title.textContent = event.action.replaceAll(".", " ").replaceAll("_", " ");
+            const details = document.createElement("p");
+            const resource = `${event.resource_type}${event.resource_id ? ` #${event.resource_id}` : ""}`;
+            const actor = event.actor?.name || event.actor?.email || "Unknown user";
+            details.textContent = `${actor} · ${resource} · ${event.status}`;
+            const time = document.createElement("time");
+            time.dateTime = event.timestamp;
+            time.textContent = new Date(event.timestamp).toLocaleString();
+            const metadata = document.createElement("p");
+            metadata.textContent = Object.entries(event.metadata || {})
+              .map(([key, value]) => `${key.replaceAll("_", " ")}: ${value}`)
+              .join(" · ");
+            card.append(title, details, time);
+            if (metadata.textContent) card.append(metadata);
+            list.append(card);
+          }
+          showWorkspaceMessage("activityMessage", "");
+        } catch (error) {
+          list.replaceChildren();
+          showWorkspaceMessage(
+            "activityMessage",
+            error.message || "Could not load activity.",
+            "error",
+          );
+        }
+      }
+
+      function renderReportComparisonPatients() {
+        const results = document.getElementById("reportComparisonPatientResults");
+        const empty = document.getElementById("reportComparisonPatientEmpty");
+        const query = document
+          .getElementById("reportComparisonPatientSearch")
+          .value.trim()
+          .toLocaleLowerCase();
+        const matches = comparisonPatients.filter((patient) => {
+          const searchable = `${patient.first_name} ${patient.last_name} ${patient.id}`.toLocaleLowerCase();
+          return searchable.includes(query);
+        });
+
+        results.replaceChildren();
+        empty.hidden = matches.length > 0;
+        empty.textContent = comparisonPatients.length
+          ? "No patients match that search."
+          : "No patient records are available.";
+        for (const patient of matches) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "comparison-patient-option";
+          button.setAttribute(
+            "aria-pressed",
+            String(patient.id === comparisonSelectedPatientId),
+          );
+          const content = document.createElement("div");
+          const name = document.createElement("strong");
+          name.textContent = patientDisplayName(patient);
+          const id = document.createElement("span");
+          id.textContent = `Patient ID: ${patient.id}`;
+          content.append(name, id);
+          button.append(content);
+          button.addEventListener("click", () =>
+            loadReportComparisonPatient(patient.id),
+          );
+          results.append(button);
+        }
+      }
+
+      async function loadReportComparisonPatients() {
+        const empty = document.getElementById("reportComparisonPatientEmpty");
+        empty.textContent = "Loading patients…";
+        empty.hidden = false;
+        document.getElementById("reportComparisonPatientResults").replaceChildren();
+        document.getElementById("reportComparisonReportsPanel").hidden = true;
+        document.getElementById("reportComparisonReportList").replaceChildren();
+        document.getElementById("reportComparisonReportsEmpty").hidden = true;
+        comparisonReports = [];
+        resetReportComparisonResults();
+        showWorkspaceMessage("reportComparisonMessage", "");
+        try {
+          const data = await patientRequest("/api/patients");
+          comparisonPatients = data.patients;
+          if (
+            comparisonSelectedPatientId !== null &&
+            !comparisonPatients.some(
+              (patient) => patient.id === comparisonSelectedPatientId,
+            )
+          ) {
+            comparisonSelectedPatientId = null;
+            document.getElementById("reportComparisonReportsPanel").hidden = true;
+            resetReportComparisonResults();
+          }
+          renderReportComparisonPatients();
+          if (comparisonSelectedPatientId !== null) {
+            await loadReportComparisonPatient(comparisonSelectedPatientId);
+          }
+        } catch (error) {
+          comparisonPatients = [];
+          renderReportComparisonPatients();
+          showWorkspaceMessage(
+            "reportComparisonMessage",
+            error.message || "Could not load patients.",
+            "error",
+          );
+        }
+      }
+
+      function resetReportComparisonResults() {
+        comparisonTextLoaded = false;
+        document.getElementById("reportComparisonTextSection").hidden = true;
+        document.getElementById("reportComparisonResultSection").hidden = true;
+        document.getElementById("reportComparisonTextPanels").replaceChildren();
+        document.getElementById("reportComparisonResult").textContent = "";
+        document.getElementById("reportComparisonDisclaimer").textContent = "";
+      }
+
+      async function loadReportComparisonPatient(patientId) {
+        const patient = comparisonPatients.find(
+          (item) => item.id === Number(patientId),
+        );
+        if (!patient) return;
+        const requestVersion = ++comparisonRequestVersion;
+        comparisonSelectedPatientId = patient.id;
+        comparisonReports = [];
+        renderReportComparisonPatients();
+        const reportsPanel = document.getElementById("reportComparisonReportsPanel");
+        reportsPanel.hidden = false;
+        document.getElementById("reportComparisonSelectedPatient").textContent =
+          `Browsing reports for ${patientDisplayName(patient)}`;
+        const reportList = document.getElementById("reportComparisonReportList");
+        const empty = document.getElementById("reportComparisonReportsEmpty");
+        reportList.replaceChildren();
+        empty.textContent = "Loading this patient's reports…";
+        empty.hidden = false;
+        updateReportComparisonSelection();
+        showWorkspaceMessage("reportComparisonMessage", "");
+        try {
+          const data = await patientRequest(
+            `/api/reports?patient_id=${encodeURIComponent(patient.id)}`,
+          );
+          if (requestVersion !== comparisonRequestVersion) return;
+          comparisonReports = data.reports;
+          renderReportComparisonReports();
+        } catch (error) {
+          if (requestVersion !== comparisonRequestVersion) return;
+          empty.textContent = "";
+          empty.hidden = true;
+          showWorkspaceMessage(
+            "reportComparisonMessage",
+            error.message || "Could not load this patient's reports.",
+            "error",
+          );
+        }
+      }
+
+      function renderReportComparisonReports() {
+        const reportList = document.getElementById("reportComparisonReportList");
+        const empty = document.getElementById("reportComparisonReportsEmpty");
+        reportList.replaceChildren();
+        empty.hidden = comparisonReports.length > 0;
+        empty.textContent = comparisonReports.length
+          ? ""
+          : "No reports are available for this patient.";
+
+        for (const report of comparisonReports) {
+          const label = document.createElement("label");
+          label.className = "comparison-report-option";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = String(report.id);
+          checkbox.checked = comparisonSelectedReports.has(report.id);
+          checkbox.disabled =
+            comparisonSelectedReports.size === 2 && !checkbox.checked;
+          const details = document.createElement("span");
+          const title = document.createElement("strong");
+          title.textContent = `${report.report_type || "Medical report"} · Report #${report.id}`;
+          const date = document.createElement("span");
+          date.textContent = `Report date: ${report.report_date ? formatPatientDate(report.report_date) : "Not provided"}`;
+          const status = document.createElement("span");
+          status.textContent = `Processing: ${report.processing_status || "unknown"} · ${
+            typeof report.extracted_text === "string" &&
+            report.extracted_text.trim()
+              ? "Saved extracted text available"
+              : "No usable extracted text"
+          }`;
+          details.append(title, date, status);
+          label.append(checkbox, details);
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+              const patient = comparisonPatients.find(
+                (item) => item.id === comparisonSelectedPatientId,
+              );
+              comparisonSelectedReports.set(report.id, {
+                ...report,
+                patient_id: comparisonSelectedPatientId,
+                patient_name: patient ? patientDisplayName(patient) : "Patient",
+              });
+            } else {
+              comparisonSelectedReports.delete(report.id);
+            }
+            resetReportComparisonResults();
+            renderReportComparisonReports();
+            updateReportComparisonSelection();
+          });
+          reportList.append(label);
+        }
+      }
+
+      function getSelectedComparisonReports() {
+        return Array.from(comparisonSelectedReports.values());
+      }
+
+      function renderSelectedComparisonReports() {
+        const container = document.getElementById("reportComparisonSelectedReports");
+        container.replaceChildren();
+        getSelectedComparisonReports().forEach((report, index) => {
+          const card = document.createElement("article");
+          card.className = "comparison-text-panel";
+          const heading = document.createElement("h4");
+          heading.textContent = `Report ${index + 1}: ${report.report_type || "Medical report"} · #${report.id}`;
+          const patient = document.createElement("p");
+          patient.textContent = report.patient_name;
+          const date = document.createElement("p");
+          date.textContent = `Report date: ${report.report_date ? formatPatientDate(report.report_date) : "Not provided"}`;
+          const textStatus = document.createElement("p");
+          textStatus.textContent =
+            typeof report.extracted_text === "string" && report.extracted_text.trim()
+              ? "Saved extracted text available"
+              : "Extracted text not yet confirmed";
+          card.append(heading, patient, date, textStatus);
+          container.append(card);
+        });
+      }
+
+      function updateReportComparisonSelection() {
+        const count = comparisonSelectedReports.size;
+        document.getElementById("reportComparisonSelectionCount").textContent =
+          `${count} of 2 reports selected.`;
+        document.getElementById("extractComparisonTextButton").disabled =
+          count !== 2;
+        renderSelectedComparisonReports();
+        const selected = getSelectedComparisonReports();
+        const hasUsableText =
+          selected.length === 2 &&
+          selected.every(
+            (report) =>
+              typeof report.extracted_text === "string" &&
+              report.extracted_text.trim(),
+          );
+        document.getElementById("compareReportsButton").disabled =
+          !comparisonTextLoaded || !hasUsableText;
+      }
+
+      async function extractSelectedComparisonText() {
+        const selected = getSelectedComparisonReports();
+        if (selected.length !== 2) return;
+        const button = document.getElementById("extractComparisonTextButton");
+        button.disabled = true;
+        button.textContent = "Extracting…";
+        showWorkspaceMessage("reportComparisonMessage", "Loading saved text or extracting from the original reports…");
+        const failures = [];
+        try {
+          for (const report of selected) {
+            try {
+              const data = await patientRequest(
+                `/api/reports/${report.id}/extract-text`,
+                { method: "POST" },
+              );
+              report.extracted_text = data.extracted_text;
+              report.processing_status = data.processing_status;
+            } catch (error) {
+              failures.push(
+                `Report #${report.id}: ${error.message || "Text extraction failed."}`,
+              );
+            }
+          }
+          renderReportComparisonReports();
+          showSelectedComparisonText();
+          if (failures.length) {
+            showWorkspaceMessage(
+              "reportComparisonMessage",
+              failures.join(" "),
+              "error",
+            );
+          }
+        } finally {
+          button.textContent = "Extract Text";
+          updateReportComparisonSelection();
+        }
+      }
+
+      function showSelectedComparisonText() {
+        const selected = getSelectedComparisonReports();
+        if (selected.length !== 2) return;
+        const panels = document.getElementById("reportComparisonTextPanels");
+        panels.replaceChildren();
+        selected.forEach((report, index) => {
+          const panel = document.createElement("article");
+          panel.className = "comparison-text-panel";
+          const heading = document.createElement("h4");
+          heading.textContent = `Report ${index + 1}: ${report.patient_name} · ${report.report_type || "Medical report"} · ${
+            report.report_date
+              ? formatPatientDate(report.report_date)
+              : "Date not provided"
+          }`;
+          const text = document.createElement("pre");
+          text.textContent =
+            typeof report.extracted_text === "string" &&
+            report.extracted_text.trim()
+              ? report.extracted_text
+              : `No saved extracted text is available (status: ${
+                  report.processing_status || "unknown"
+                }). This report cannot be compared.`;
+          panel.append(heading, text);
+          panels.append(panel);
+        });
+        comparisonTextLoaded = true;
+        document.getElementById("reportComparisonTextSection").hidden = false;
+        updateReportComparisonSelection();
+        if (document.getElementById("compareReportsButton").disabled) {
+          showWorkspaceMessage(
+            "reportComparisonMessage",
+            "Both reports need usable saved extracted text before comparison.",
+            "error",
+          );
+        } else {
+          showWorkspaceMessage("reportComparisonMessage", "");
+        }
+      }
+
+      async function requestReportComparison() {
+        const selected = getSelectedComparisonReports();
+        if (
+          selected.length !== 2 ||
+          !comparisonTextLoaded ||
+          selected.some(
+            (report) =>
+              typeof report.extracted_text !== "string" ||
+              !report.extracted_text.trim(),
+          )
+        ) {
+          return;
+        }
+        const button = document.getElementById("compareReportsButton");
+        button.disabled = true;
+        button.textContent = "Comparing…";
+        document.getElementById("reportComparisonResultSection").hidden = true;
+        showWorkspaceMessage("reportComparisonMessage", "Matching explicit measurements and report wording locally…");
+        try {
+          const data = await patientRequest("/api/reports/compare", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              report_id_1: selected[0].id,
+              report_id_2: selected[1].id,
+            }),
+          });
+          renderReportComparison(
+            data.comparison,
+            data.reports.map((report, index) =>
+              `Report ${index + 1} · ${report.patient_name}${
+                report.report_date ? ` · ${formatLibraryDate(report.report_date)}` : ""
+              }`,
+            ),
+          );
+          document.getElementById("reportComparisonDisclaimer").textContent =
+            data.disclaimer;
+          document.getElementById("reportComparisonResultSection").hidden = false;
+          showWorkspaceMessage(
+            "reportComparisonMessage",
+            "Local comparison complete. Similarity does not establish clinical equivalence; review the original reports.",
+            "success",
+          );
+        } catch (error) {
+          showWorkspaceMessage(
+            "reportComparisonMessage",
+            error.message || "Could not compare these reports.",
+            "error",
+          );
+        } finally {
+          button.textContent = "Compare reports";
+          updateReportComparisonSelection();
+        }
+      }
+
       async function refreshWorkspaceView(viewName) {
         if (viewName === "reports") return loadReportsLibrary();
         if (viewName === "scans") return loadScansLibrary();
+        if (viewName === "report-comparison") {
+          return loadReportComparisonPatients();
+        }
         if (viewName === "timeline") {
           renderTimelinePatientList();
           if (timelineSelectedPatientId !== null) {
@@ -4743,9 +6496,24 @@
           }
           return;
         }
+        if (viewName === "assistant") {
+          renderAssistantPatientChoices();
+          updateAssistantContextControls();
+          return;
+        }
         if (viewName === "research-papers") return loadResearchPapers();
+        if (viewName === "research-rag") return loadResearchPapers();
+        if (viewName === "research-comparison") {
+          await loadResearchPapers();
+          renderResearchComparisonPapers();
+          return;
+        }
+        if (viewName === "activity") return loadActivity();
       }
 
+      document
+        .getElementById("refreshActivityButton")
+        .addEventListener("click", loadActivity);
       document
         .getElementById("reportsLibrarySearch")
         .addEventListener("input", renderReportsLibrary);
@@ -4755,6 +6523,37 @@
       document
         .getElementById("researchPaperSearch")
         .addEventListener("input", renderResearchPapers);
+      document
+        .getElementById("reportComparisonPatientSearch")
+        .addEventListener("input", renderReportComparisonPatients);
+      document
+        .getElementById("extractComparisonTextButton")
+        .addEventListener("click", extractSelectedComparisonText);
+      document
+        .getElementById("compareReportsButton")
+        .addEventListener("click", requestReportComparison);
+      document
+        .getElementById("researchSearchForm")
+        .addEventListener("submit", submitResearchSearch);
+      document
+        .getElementById("researchAskForm")
+        .addEventListener("submit", submitResearchQuestion);
+      document
+        .getElementById("compareResearchPapersButton")
+        .addEventListener("click", compareSelectedResearchPapers);
+      document
+        .getElementById("assistantForm")
+        .addEventListener("submit", submitAssistantQuestion);
+      document
+        .getElementById("assistantContextType")
+        .addEventListener("change", updateAssistantContextControls);
+      document
+        .getElementById("assistantPatientSelect")
+        .addEventListener("change", () => {
+          if (document.getElementById("assistantContextType").value === "report") {
+            loadAssistantReports();
+          }
+        });
       setTodayMaxDateForInput("researchPaperDate");
 
       document
@@ -4820,6 +6619,63 @@
         showMessage("");
       });
 
+      document
+        .getElementById("editProfileButton")
+        .addEventListener("click", () => {
+          document.getElementById("profileFirstName").value =
+            signedInUser.first_name;
+          document.getElementById("profileLastName").value =
+            signedInUser.last_name;
+          document.getElementById("profileEditForm").hidden = false;
+          document.getElementById("editProfileButton").hidden = true;
+          showWorkspaceMessage("profileMessage", "");
+        });
+
+      document
+        .getElementById("cancelProfileEditButton")
+        .addEventListener("click", () => {
+          document.getElementById("profileEditForm").hidden = true;
+          document.getElementById("editProfileButton").hidden = false;
+          showWorkspaceMessage("profileMessage", "");
+        });
+
+      document
+        .getElementById("profileEditForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const button = document.getElementById("saveProfileButton");
+          button.disabled = true;
+          showWorkspaceMessage("profileMessage", "");
+          try {
+            const data = await patientRequest("/api/auth/me", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                first_name: document.getElementById("profileFirstName").value,
+                last_name: document.getElementById("profileLastName").value,
+              }),
+            });
+            signedInUser = { ...signedInUser, ...data.user };
+            document.getElementById("profileName").textContent =
+              `${data.user.first_name} ${data.user.last_name}`;
+            document.getElementById("dashboardFirstName").textContent =
+              data.user.first_name;
+            document.getElementById("signedInHeading").textContent =
+              `Welcome, ${data.user.first_name}`;
+            document.getElementById("profileEditForm").hidden = true;
+            document.getElementById("editProfileButton").hidden = false;
+            showWorkspaceMessage("profileMessage", "Name updated.", "success");
+          } catch (error) {
+            showWorkspaceMessage(
+              "profileMessage",
+              error.message || "Could not update your name.",
+              "error",
+            );
+          } finally {
+            button.disabled = false;
+          }
+        });
+
       registerTab.addEventListener("click", () => {
         showAuthView("register");
         showMessage("");
@@ -4843,6 +6699,7 @@
           });
           const data = await readResponse(response, "Sign in failed");
           accessToken = data.access_token;
+          sessionStorage.setItem("accessToken", accessToken);
           loginForm.reset();
           showSignedIn(data.user);
         } catch (error) {
@@ -4908,8 +6765,17 @@
             messageType = "error";
           } finally {
             accessToken = null;
+            sessionStorage.removeItem("accessToken");
             patients = [];
             selectedPatient = null;
+            researchPapers = [];
+            researchComparisonSelectedIds.clear();
+            comparisonSelectedReports.clear();
+            comparisonSelectedPatientId = null;
+            document.getElementById("researchComparisonResultSection").hidden = true;
+            document.getElementById("researchSearchResults").replaceChildren();
+            document.getElementById("researchAskAnswerSection").hidden = true;
+            document.getElementById("assistantAnswerSection").hidden = true;
             document.getElementById("patientList").replaceChildren();
             showAuthView("login");
             showMessage(message, messageType);

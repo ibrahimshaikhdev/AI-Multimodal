@@ -14,12 +14,15 @@ from .chest_xray_analysis import ChestXrayAnalysisRecord
 from .bone_xray_analysis import BoneXrayAnalysisRecord
 from .dental_xray_analysis import DentalXrayAnalysisRecord
 from .ct_head_analysis import CTHeadAnalysisRecord
+from .chest_ct_analysis import ChestCTAnalysisRecord
 from .obstetric_ultrasound_analysis import ObstetricUltrasoundAnalysisRecord
 from .abdominal_aorta_ultrasound_analysis import (
     AbdominalAortaUltrasoundAnalysisRecord,
 )
 from .echoview47_analysis import EchoView47AnalysisRecord
+from .vascular_ultrasound_analysis import VascularUltrasoundAnalysisRecord
 from .research_paper import ResearchPaper
+from .audit_log import AuditLog
 
 __all__ = [
 	"User",
@@ -37,8 +40,11 @@ __all__ = [
 	"BoneXrayAnalysisRecord",
 	"DentalXrayAnalysisRecord",
 	"CTHeadAnalysisRecord",
+	"ChestCTAnalysisRecord",
 	"ObstetricUltrasoundAnalysisRecord",
 	"AbdominalAortaUltrasoundAnalysisRecord",
 	"EchoView47AnalysisRecord",
+	"VascularUltrasoundAnalysisRecord",
 	"ResearchPaper",
+	"AuditLog",
 ]

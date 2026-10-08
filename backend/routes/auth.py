@@ -8,6 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from backend.auth import require_auth
 from backend.extensions import db
 from backend.models import RevokedToken, User
+from backend.services.audit_logging import record_audit_event
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -23,6 +24,12 @@ def login_user():
 
     user = db.session.query(User).filter_by(email=email.strip().lower()).first()
     if user is None or not user.is_active or not check_password_hash(user.password_hash, password):
+        record_audit_event(
+            actor_id=user.id if user is not None else None,
+            action="auth.login",
+            resource_type="authentication",
+            status="failure",
+        )
         return jsonify({"error": "Invalid email or password"}), 401
 
     now = datetime.now(timezone.utc)
@@ -37,6 +44,11 @@ def login_user():
         },
         current_app.config["SECRET_KEY"],
         algorithm="HS256",
+    )
+    record_audit_event(
+        actor_id=user.id,
+        action="auth.login",
+        resource_type="authentication",
     )
 
     return jsonify(
@@ -65,6 +77,11 @@ def logout_user():
     )
     db.session.add(revoked_token)
     db.session.commit()
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="auth.logout",
+        resource_type="authentication",
+    )
 
     return jsonify({"message": "Logged out successfully"}), 200
 
@@ -81,6 +98,51 @@ def current_user():
                 "last_name": user.last_name,
                 "email": user.email,
                 "role": user.role,
+            }
+        }
+    ), 200
+
+
+@auth_bp.put("/auth/me")
+@require_auth
+def update_current_user():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "A JSON object is required"}), 400
+
+    name_values = {}
+    for field in ("first_name", "last_name"):
+        value = data.get(field)
+        if not isinstance(value, str) or not value.strip():
+            return jsonify({"error": f"{field} is required"}), 400
+        value = value.strip()
+        if len(value) > 80:
+            return jsonify({"error": f"{field} must be 80 characters or fewer"}), 400
+        name_values[field] = value
+
+    user = g.current_user
+    user.first_name = name_values["first_name"]
+    user.last_name = name_values["last_name"]
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Could not update profile for user %s", user.id)
+        return jsonify({"error": "Could not update profile"}), 500
+
+    record_audit_event(
+        actor_id=user.id,
+        action="profile.update",
+        resource_type="user",
+        resource_id=user.id,
+    )
+    return jsonify(
+        {
+            "user": {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
             }
         }
     ), 200
@@ -122,6 +184,12 @@ def register_user():
 
     db.session.add(user)
     db.session.commit()
+    record_audit_event(
+        actor_id=user.id,
+        action="auth.register",
+        resource_type="user",
+        resource_id=user.id,
+    )
 
     return jsonify(
         {

@@ -74,6 +74,12 @@ class ScanAsset(db.Model):
         cascade="all, delete-orphan",
         uselist=False,
     )
+    chest_ct_analysis = db.relationship(
+        "ChestCTAnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
     obstetric_ultrasound_analysis = db.relationship(
         "ObstetricUltrasoundAnalysisRecord",
         back_populates="scan",
@@ -88,6 +94,12 @@ class ScanAsset(db.Model):
     )
     echoview47_analysis = db.relationship(
         "EchoView47AnalysisRecord",
+        back_populates="scan",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    vascular_ultrasound_analysis = db.relationship(
+        "VascularUltrasoundAnalysisRecord",
         back_populates="scan",
         cascade="all, delete-orphan",
         uselist=False,

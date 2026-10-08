@@ -1,0 +1,27 @@
+
+Model: best_chest_ct_model.keras
+Task: Chest CT radiological-finding segmentation
+
+Input:
+- Single 2D CT slice
+- Original: 512x512
+- Model input: 256x256
+- 1 channel
+
+Preprocessing:
+- Clip CT values: -1000 to 400
+- Normalize: (pixel + 1000) / 1400
+- Resize: 256x256
+
+Outputs:
+- Channel 0: Ground-glass opacity
+- Channel 1: Consolidation
+
+Model: Lightweight 2D U-Net
+
+Important:
+This model detects/segments the radiological findings represented
+in its training masks. It does NOT confirm COVID-19 or any disease.
+Do not display fabricated confidence percentages.
+
+Test Dice from Kaggle: 0.1711

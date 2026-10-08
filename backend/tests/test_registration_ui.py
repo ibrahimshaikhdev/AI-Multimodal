@@ -12,7 +12,7 @@ def test_registration_form_exists_in_frontend():
     assert "/api/auth/register" in html
 
 
-def test_authentication_views_and_memory_only_token_handling_exist():
+def test_authentication_views_share_session_token_for_standalone_pages():
     html = Path("frontend/index.html").read_text(encoding="utf-8")
 
     assert 'id="loginForm"' in html
@@ -23,7 +23,10 @@ def test_authentication_views_and_memory_only_token_handling_exist():
     assert "/api/auth/logout" in html
     assert "let accessToken" in html
     assert "localStorage" not in html
-    assert "sessionStorage" not in html
+    assert 'sessionStorage.setItem("accessToken", accessToken)' in html
+    assert 'sessionStorage.removeItem("accessToken")' in html
+    assert "function handleUnauthorized(response)" in html
+    assert "accessToken = null;" in html
 
 
 def test_patient_management_views_are_connected_to_the_api():

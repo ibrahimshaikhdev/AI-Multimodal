@@ -11,6 +11,7 @@ from backend.models import (
     BrainScanAnalysis,
     BoneXrayAnalysisRecord,
     CardiacScanAnalysis,
+    ChestCTAnalysisRecord,
     ChestXrayAnalysisRecord,
     CTHeadAnalysisRecord,
     DentalXrayAnalysisRecord,
@@ -20,6 +21,7 @@ from backend.models import (
     Patient,
     ScanAsset,
     SpineScanAnalysis,
+    VascularUltrasoundAnalysisRecord,
 )
 from backend.services.cardiac_segmentation import (
     CARDIAC_CLASS_COLORS,
@@ -58,6 +60,12 @@ from backend.services.ct_head_hemorrhage import (
     CTHeadInputError,
     CTHeadModelContractError,
     CTHeadModelUnavailableError,
+)
+from backend.services.chest_ct_segmentation import (
+    ChestCTImageError,
+    ChestCTModelContractError,
+    ChestCTModelUnavailableError,
+    ChestCTSegmentationService,
 )
 from backend.services.knee_mri import (
     ACLROILocalizerUnavailableError,
@@ -99,11 +107,20 @@ from backend.services.echoview47 import (
     EchoView47ModelUnavailableError,
     describe_view_class,
 )
+from backend.services.vascular_ultrasound import (
+    MODEL_ID as VASCULAR_ULTRASOUND_MODEL_ID,
+    VascularUltrasoundAnalysisService,
+    VascularUltrasoundImageError,
+    VascularUltrasoundModelContractError,
+    VascularUltrasoundModelUnavailableError,
+)
 from backend.services.file_storage import (
+    delete_stored_file,
     get_stored_file_location,
     save_uploaded_file,
     validate_uploaded_file,
 )
+from backend.services.audit_logging import record_audit_event
 
 scans_bp = Blueprint("scans", __name__)
 
@@ -111,7 +128,7 @@ SUPPORTED_SCAN_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 SUPPORTED_MODALITIES = {"MRI", "CT", "X_RAY", "ULTRASOUND", "OTHER"}
 SCAN_SUBTYPES = {
     "MRI": {"Brain", "Knee", "Spine", "Cardiac", "Other"},
-    "CT": {"Brain/head", "Chest", "Abdomen/pelvis", "Spine", "Other"},
+    "CT": {"Brain/head", "Chest", "Other"},
     "X_RAY": {"Chest", "Bone/joint", "Dental", "Other"},
     "ULTRASOUND": {
         "Abdomen",
@@ -139,6 +156,8 @@ def _serialize_scan(scan):
         scan.abdominal_aorta_ultrasound_analysis
     )
     echoview47_analysis = scan.echoview47_analysis
+    vascular_ultrasound_analysis = scan.vascular_ultrasound_analysis
+    chest_ct_analysis = scan.chest_ct_analysis
     is_knee_mri = scan.modality == "MRI" and scan.body_region == "Knee"
     is_spine_mri = scan.modality == "MRI" and scan.body_region == "Spine"
     is_brain_mri = scan.modality == "MRI" and scan.body_region == "Brain"
@@ -183,6 +202,33 @@ def _serialize_scan(scan):
         processing_message = (
             "Spine MRI scan is stored, but no model output is available for this scan."
         )
+    elif scan.modality == "ULTRASOUND" and scan.body_region == "Vascular":
+        if vascular_ultrasound_analysis and vascular_ultrasound_analysis.mask_pixel_count:
+            processing_message = (
+                "Experimental predicted carotid-region mask from one 2D ultrasound "
+                "image. It may be inaccurate and does not assess stenosis, plaque, "
+                "blockage, DVT, blood flow, or vascular disease."
+            )
+        elif vascular_ultrasound_analysis:
+            processing_message = (
+                "The model returned no carotid-region mask. This does not establish "
+                "that the artery is absent or abnormal."
+            )
+        elif scan.processing_status == "model_unavailable":
+            processing_message = (
+                "Vascular ultrasound image is stored, but the carotid segmentation "
+                "model is unavailable."
+            )
+        elif scan.processing_status == "analysis_failed":
+            processing_message = (
+                "Vascular ultrasound image is stored, but carotid segmentation failed; "
+                "no result is available."
+            )
+        else:
+            processing_message = (
+                "Experimental carotid-region segmentation is available for suitable "
+                "vascular ultrasound images only."
+            )
     elif (
         scan.modality == "ULTRASOUND"
         and scan.body_region == "Abdomen"
@@ -285,6 +331,24 @@ def _serialize_scan(scan):
         processing_message = (
             "Experimental Head CT AI/model scores; not confirmed diagnoses."
         )
+    elif scan.modality == "CT" and scan.body_region == "Chest":
+        if chest_ct_analysis:
+            processing_message = (
+                "Experimental mask from one chest CT slice; it may be inaccurate "
+                "and is not a diagnosis."
+            )
+        elif scan.processing_status == "model_unavailable":
+            processing_message = (
+                "Chest CT slice is stored, but the local segmentation model is unavailable."
+            )
+        elif scan.processing_status == "analysis_failed":
+            processing_message = (
+                "Chest CT slice is stored, but segmentation failed; no model output is available."
+            )
+        else:
+            processing_message = (
+                "Chest CT model analyzes one 2D slice only; no result is available."
+            )
     elif is_other:
         processing_message = "Stored as Other; it is not eligible for prediction."
     elif scan.processing_status in {
@@ -478,6 +542,36 @@ def _serialize_scan(scan):
             if ct_head_analysis
             else None
         ),
+        "chest_ct_analysis": (
+            {
+                "model_name": chest_ct_analysis.model_name,
+                "pixel_counts": chest_ct_analysis.pixel_counts,
+                "image_shape": chest_ct_analysis.image_shape,
+                "threshold": chest_ct_analysis.threshold,
+                "overlay_url": (
+                    f"/api/scans/{scan.id}/analysis/chest-ct-overlay"
+                    if chest_ct_analysis.overlay_file_reference
+                    else None
+                ),
+                "finding_meanings": {
+                    "Ground-glass opacity": (
+                        "A hazy-appearing region pattern. The model mask does not "
+                        "identify its cause or establish a disease."
+                    ),
+                    "Consolidation": (
+                        "A denser-appearing region pattern. The model mask does not "
+                        "identify its cause or establish a disease."
+                    ),
+                },
+                "disclaimer": (
+                    "This is an experimental mask from one 2D CT slice and may be "
+                    "inaccurate. Pixel counts are not probabilities, physical "
+                    "measurements, severity, COVID status, or a diagnosis."
+                ),
+            }
+            if chest_ct_analysis
+            else None
+        ),
         "obstetric_ultrasound_analysis": (
             {
                 "model_name": obstetric_ultrasound_analysis.model_name,
@@ -520,6 +614,32 @@ def _serialize_scan(scan):
                 ),
             }
             if abdominal_aorta_ultrasound_analysis
+            else None
+        ),
+        "vascular_ultrasound_analysis": (
+            {
+                "model_name": vascular_ultrasound_analysis.model_name,
+                "label": "Predicted carotid artery region",
+                "meaning": (
+                    "The highlighted area contains pixels labeled by the model as "
+                    "carotid-like anatomy; it is not an assessment of vessel disease."
+                ),
+                "has_mask": bool(
+                    vascular_ultrasound_analysis.mask_pixel_count
+                    and vascular_ultrasound_analysis.overlay_file_reference
+                ),
+                "overlay_url": (
+                    f"/api/scans/{scan.id}/analysis/vascular-ultrasound-overlay"
+                    if vascular_ultrasound_analysis.overlay_file_reference
+                    else None
+                ),
+                "disclaimer": (
+                    "Experimental mask that may be inaccurate. It does not diagnose "
+                    "stenosis, plaque, blockage, DVT, or vascular disease, and does "
+                    "not assess blood flow."
+                ),
+            }
+            if vascular_ultrasound_analysis
             else None
         ),
         "echoview47_analysis": (
@@ -819,6 +939,76 @@ def _upload_abdominal_aorta_ultrasound(patient, study_date):
                 model_name=ABDOMINAL_AORTA_ULTRASOUND_MODEL_ID,
                 confidence_score=prediction.confidence_score,
                 mask_area_pixels=prediction.mask_area_pixels,
+                image_shape=list(prediction.image_shape),
+                overlay_file_reference=overlay_reference,
+            )
+        )
+        scan.processing_status = "analysis_complete"
+
+    db.session.commit()
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
+def _upload_vascular_ultrasound(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(uploaded_file)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if validated["extension"] not in {".jpg", ".jpeg", ".png"}:
+        return jsonify(
+            {"error": "Vascular ultrasound uploads support JPG and PNG images only."}
+        ), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("vascular_ultrasound_service")
+    if service is None:
+        service = VascularUltrasoundAnalysisService()
+    try:
+        image = service.prepare_image(image_bytes)
+    except VascularUltrasoundImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="ULTRASOUND",
+        body_region="Vascular",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status="awaiting_model",
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    try:
+        prediction = service.analyze_prepared_image(image)
+    except VascularUltrasoundModelUnavailableError as exc:
+        current_app.logger.warning("Carotid ultrasound model unavailable: %s", exc)
+        scan.processing_status = "model_unavailable"
+    except VascularUltrasoundModelContractError as exc:
+        current_app.logger.error("Carotid ultrasound model contract failure: %s", exc)
+        scan.processing_status = "analysis_failed"
+    else:
+        overlay_reference = None
+        if prediction.overlay_png is not None:
+            overlay_upload = FileStorage(
+                stream=BytesIO(prediction.overlay_png),
+                filename="carotid-ultrasound-segmentation-overlay.png",
+                content_type="image/png",
+            )
+            overlay_reference = save_uploaded_file(
+                overlay_upload,
+                patient_id=patient.id,
+            )
+        db.session.add(
+            VascularUltrasoundAnalysisRecord(
+                scan_id=scan.id,
+                model_name=VASCULAR_ULTRASOUND_MODEL_ID,
+                mask_pixel_count=prediction.mask_pixel_count,
                 image_shape=list(prediction.image_shape),
                 overlay_file_reference=overlay_reference,
             )
@@ -1211,6 +1401,76 @@ def _upload_ct_head(patient, study_date):
     return jsonify({"scan": _serialize_scan(scan)}), 201
 
 
+def _upload_ct_chest(patient, study_date):
+    uploaded_file = request.files.get("file")
+    try:
+        validated = validate_uploaded_file(
+            uploaded_file,
+            allowed_extensions={".jpg", ".jpeg", ".png"},
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    uploaded_file.stream.seek(0)
+    image_bytes = uploaded_file.stream.read()
+    uploaded_file.stream.seek(0)
+    service = current_app.extensions.get("chest_ct_segmentation_service")
+    if service is None:
+        service = ChestCTSegmentationService()
+
+    try:
+        result = service.analyze_bytes(image_bytes)
+    except ChestCTImageError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except ChestCTModelUnavailableError as exc:
+        current_app.logger.warning("Chest CT model unavailable: %s", exc)
+        result = None
+        processing_status = "model_unavailable"
+    except ChestCTModelContractError as exc:
+        current_app.logger.error("Chest CT model contract failure: %s", exc)
+        result = None
+        processing_status = "analysis_failed"
+    else:
+        processing_status = "analysis_complete"
+
+    file_reference = save_uploaded_file(uploaded_file, patient_id=patient.id)
+    scan = ScanAsset(
+        patient_id=patient.id,
+        modality="CT",
+        body_region="Chest",
+        study_date=study_date,
+        original_filename=validated["safe_name"],
+        file_reference=file_reference,
+        processing_status=processing_status,
+    )
+    db.session.add(scan)
+    db.session.flush()
+
+    if result is not None:
+        overlay_upload = FileStorage(
+            stream=BytesIO(result.overlay_png),
+            filename="chest-ct-segmentation-overlay.png",
+            content_type="image/png",
+        )
+        overlay_reference = save_uploaded_file(
+            overlay_upload,
+            patient_id=patient.id,
+        )
+        db.session.add(
+            ChestCTAnalysisRecord(
+                scan_id=scan.id,
+                model_name=result.model_name,
+                pixel_counts=result.pixel_counts,
+                image_shape=list(result.image_shape),
+                threshold=result.threshold,
+                overlay_file_reference=overlay_reference,
+            )
+        )
+
+    db.session.commit()
+    return jsonify({"scan": _serialize_scan(scan)}), 201
+
+
 def _owned_scan(scan_id):
     return (
         db.session.query(ScanAsset)
@@ -1246,7 +1506,54 @@ def list_scans():
         .order_by(ScanAsset.created_at.desc(), ScanAsset.id.desc())
         .all()
     )
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="scan.list",
+        resource_type="patient",
+        resource_id=patient.id,
+        metadata={"count": len(scans)},
+    )
     return jsonify({"scans": [_serialize_scan(scan) for scan in scans]}), 200
+
+
+def _record_scan_upload(response, patient, modality, body_region):
+    response_body, response_status = response
+    if response_status != 201:
+        return response
+
+    payload = response_body.get_json()
+    scans = payload.get("scans")
+    if scans is None:
+        scan = payload.get("scan")
+        scans = [scan] if scan is not None else []
+
+    for scan in scans:
+        record_audit_event(
+            actor_id=g.current_user.id,
+            action="scan.upload",
+            resource_type="scan",
+            resource_id=scan["id"],
+            metadata={
+                "patient_id": patient.id,
+                "modality": modality,
+                "body_region": body_region,
+                "processing_status": scan["processing_status"],
+            },
+        )
+        if scan["processing_status"] not in {"awaiting_model", "unsupported_region"}:
+            record_audit_event(
+                actor_id=g.current_user.id,
+                action="ai.scan_analysis",
+                resource_type="scan",
+                resource_id=scan["id"],
+                status=(
+                    "success"
+                    if scan["processing_status"] == "analysis_complete"
+                    else "failure"
+                ),
+                metadata={"processing_status": scan["processing_status"]},
+            )
+    return response
 
 
 @scans_bp.post("/scans/upload")
@@ -1287,11 +1594,15 @@ def upload_scan():
     is_bone_xray = modality == "X_RAY" and body_region == "Bone/joint"
     is_dental_xray = modality == "X_RAY" and body_region == "Dental"
     is_ct_head = modality == "CT" and body_region == "Brain/head"
+    is_ct_chest = modality == "CT" and body_region == "Chest"
     is_obstetric_ultrasound = (
         modality == "ULTRASOUND" and body_region == "Obstetric"
     )
     is_abdominal_aorta_ultrasound = (
         modality == "ULTRASOUND" and body_region == "Abdomen"
+    )
+    is_vascular_ultrasound = (
+        modality == "ULTRASOUND" and body_region == "Vascular"
     )
     is_echoview47_ultrasound = (
         modality == "ULTRASOUND"
@@ -1313,26 +1624,38 @@ def upload_scan():
     else:
         return jsonify({"error": "study_date must use YYYY-MM-DD format or be null"}), 400
 
+    upload_handler = None
     if is_knee_mri:
-        return _upload_knee_mri(patient, study_date)
-    if is_spine_mri:
-        return _upload_spine_mri(patient, study_date)
-    if is_brain_mri:
-        return _upload_brain_mri(patient, study_date)
-    if is_chest_xray:
-        return _upload_chest_xray(patient, study_date)
-    if is_bone_xray:
-        return _upload_bone_xray(patient, study_date)
-    if is_dental_xray:
-        return _upload_dental_xray(patient, study_date)
-    if is_ct_head:
-        return _upload_ct_head(patient, study_date)
-    if is_obstetric_ultrasound:
-        return _upload_obstetric_ultrasound(patient, study_date)
-    if is_abdominal_aorta_ultrasound:
-        return _upload_abdominal_aorta_ultrasound(patient, study_date)
-    if is_echoview47_ultrasound:
-        return _upload_echoview47_ultrasound(patient, study_date)
+        upload_handler = _upload_knee_mri
+    elif is_spine_mri:
+        upload_handler = _upload_spine_mri
+    elif is_brain_mri:
+        upload_handler = _upload_brain_mri
+    elif is_chest_xray:
+        upload_handler = _upload_chest_xray
+    elif is_bone_xray:
+        upload_handler = _upload_bone_xray
+    elif is_dental_xray:
+        upload_handler = _upload_dental_xray
+    elif is_ct_head:
+        upload_handler = _upload_ct_head
+    elif is_ct_chest:
+        upload_handler = _upload_ct_chest
+    elif is_obstetric_ultrasound:
+        upload_handler = _upload_obstetric_ultrasound
+    elif is_abdominal_aorta_ultrasound:
+        upload_handler = _upload_abdominal_aorta_ultrasound
+    elif is_vascular_ultrasound:
+        upload_handler = _upload_vascular_ultrasound
+    elif is_echoview47_ultrasound:
+        upload_handler = _upload_echoview47_ultrasound
+    if upload_handler is not None:
+        return _record_scan_upload(
+            upload_handler(patient, study_date),
+            patient,
+            modality,
+            body_region,
+        )
 
     uploaded_file = request.files.get("file")
     try:
@@ -1392,7 +1715,12 @@ def upload_scan():
 
     db.session.commit()
 
-    return jsonify({"scan": _serialize_scan(scan)}), 201
+    return _record_scan_upload(
+        (jsonify({"scan": _serialize_scan(scan)}), 201),
+        patient,
+        modality,
+        body_region,
+    )
 
 
 @scans_bp.get("/scans/<int:scan_id>/analysis/overlay")
@@ -1409,6 +1737,13 @@ def get_cardiac_overlay(scan_id):
     if location is None:
         abort(404)
 
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="ai.scan_analysis.view",
+        resource_type="scan",
+        resource_id=scan.id,
+        metadata={"output_type": "cardiac_overlay"},
+    )
     upload_root, relative_path = location
     return send_from_directory(
         upload_root,
@@ -1437,12 +1772,54 @@ def get_abdominal_aorta_overlay(scan_id):
     if location is None:
         abort(404)
 
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="ai.scan_analysis.view",
+        resource_type="scan",
+        resource_id=scan.id,
+        metadata={"output_type": "aorta_overlay"},
+    )
     upload_root, relative_path = location
     return send_from_directory(
         upload_root,
         relative_path,
         as_attachment=False,
         download_name=f"abdominal-aorta-scan-{scan.id}-overlay.png",
+    )
+
+
+@scans_bp.get("/scans/<int:scan_id>/analysis/vascular-ultrasound-overlay")
+@require_auth
+def get_vascular_ultrasound_overlay(scan_id):
+    scan = _owned_scan(scan_id)
+    analysis = (
+        scan.vascular_ultrasound_analysis
+        if scan is not None
+        else None
+    )
+    if analysis is None or not analysis.overlay_file_reference:
+        return jsonify({"error": "Carotid ultrasound overlay not found"}), 404
+
+    location = get_stored_file_location(
+        analysis.overlay_file_reference,
+        scan.patient_id,
+    )
+    if location is None:
+        abort(404)
+
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="ai.scan_analysis.view",
+        resource_type="scan",
+        resource_id=scan.id,
+        metadata={"output_type": "vascular_ultrasound_overlay"},
+    )
+    upload_root, relative_path = location
+    return send_from_directory(
+        upload_root,
+        relative_path,
+        as_attachment=False,
+        download_name=f"carotid-ultrasound-scan-{scan.id}-overlay.png",
     )
 
 
@@ -1461,12 +1838,50 @@ def get_ct_localization(scan_id):
     if location is None:
         abort(404)
 
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="ai.scan_analysis.view",
+        resource_type="scan",
+        resource_id=scan.id,
+        metadata={"output_type": "ct_localization"},
+    )
     upload_root, relative_path = location
     return send_from_directory(
         upload_root,
         relative_path,
         as_attachment=False,
         download_name=f"ct-head-{scan.id}-localization.png",
+    )
+
+
+@scans_bp.get("/scans/<int:scan_id>/analysis/chest-ct-overlay")
+@require_auth
+def get_chest_ct_overlay(scan_id):
+    scan = _owned_scan(scan_id)
+    analysis = scan.chest_ct_analysis if scan is not None else None
+    if analysis is None or not analysis.overlay_file_reference:
+        return jsonify({"error": "Chest CT segmentation overlay not found"}), 404
+
+    location = get_stored_file_location(
+        analysis.overlay_file_reference,
+        scan.patient_id,
+    )
+    if location is None:
+        abort(404)
+
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="ai.scan_analysis.view",
+        resource_type="scan",
+        resource_id=scan.id,
+        metadata={"output_type": "chest_ct_overlay"},
+    )
+    upload_root, relative_path = location
+    return send_from_directory(
+        upload_root,
+        relative_path,
+        as_attachment=False,
+        download_name=f"chest-ct-{scan.id}-segmentation.png",
     )
 
 
@@ -1481,6 +1896,12 @@ def get_original_scan(scan_id):
     if location is None:
         abort(404)
 
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="scan.view",
+        resource_type="scan",
+        resource_id=scan.id,
+    )
     upload_root, relative_path = location
     return send_from_directory(
         upload_root,
@@ -1488,6 +1909,63 @@ def get_original_scan(scan_id):
         as_attachment=False,
         download_name=scan.original_filename,
     )
+
+
+@scans_bp.delete("/scans/<int:scan_id>")
+@require_auth
+def delete_scan(scan_id):
+    scan = _owned_scan(scan_id)
+    if scan is None:
+        return jsonify({"error": "Scan not found"}), 404
+
+    patient_id = scan.patient_id
+    file_references = {scan.file_reference}
+    for relationship in scan.__mapper__.relationships:
+        if relationship.key == "patient":
+            continue
+        analysis = getattr(scan, relationship.key)
+        if analysis is None or not hasattr(analysis, "__table__"):
+            continue
+        file_references.update(
+            getattr(analysis, column.name)
+            for column in analysis.__table__.columns
+            if column.name.endswith("_file_reference")
+            and getattr(analysis, column.name)
+        )
+
+    db.session.delete(scan)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Could not delete scan %s", scan_id)
+        return jsonify({"error": "Could not delete scan"}), 500
+
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="scan.delete",
+        resource_type="scan",
+        resource_id=scan_id,
+    )
+    cleanup_failed = False
+    for file_reference in file_references:
+        try:
+            delete_stored_file(file_reference, patient_id)
+        except (OSError, ValueError):
+            cleanup_failed = True
+            current_app.logger.exception(
+                "Scan %s was deleted but an uploaded file could not be removed",
+                scan_id,
+            )
+
+    if cleanup_failed:
+        return jsonify(
+            {
+                "deleted": True,
+                "warning": "Scan was deleted, but one or more uploaded files could not be removed.",
+            }
+        ), 200
+    return jsonify({"deleted": True}), 200
 
 
 __all__ = ["scans_bp"]

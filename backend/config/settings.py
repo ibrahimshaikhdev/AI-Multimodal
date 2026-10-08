@@ -23,6 +23,20 @@ class Settings:
     MAX_CT_UPLOAD_SIZE: int = int(
         os.getenv("MAX_CT_UPLOAD_SIZE", 512 * 1024 * 1024)
     )
+    AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini")
+    AI_FALLBACK_PROVIDER: str = os.getenv("AI_FALLBACK_PROVIDER", "openrouter")
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL: str = os.getenv(
+        "OPENROUTER_MODEL",
+        "google/gemini-2.5-flash:free",
+    )
+    AI_TIMEOUT_SECONDS: float = float(os.getenv("AI_TIMEOUT_SECONDS", "60"))
+    RESEARCH_EMBEDDING_MODEL: str = os.getenv(
+        "RESEARCH_EMBEDDING_MODEL",
+        "sentence-transformers/all-MiniLM-L6-v2",
+    )
 
 
 settings = Settings()

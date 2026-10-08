@@ -179,3 +179,12 @@ def get_stored_file_location(file_reference, patient_id):
 
     upload_root = Path(__file__).resolve().parents[2] / "instance" / "uploads"
     return upload_root, PurePosixPath(*parts[1:]).as_posix()
+
+
+def delete_stored_file(file_reference, patient_id):
+    location = get_stored_file_location(file_reference, patient_id)
+    if location is None:
+        raise ValueError("Stored file reference is invalid for this patient")
+
+    upload_root, relative_path = location
+    (upload_root / relative_path).unlink(missing_ok=True)

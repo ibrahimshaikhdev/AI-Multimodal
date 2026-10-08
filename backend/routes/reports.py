@@ -1,12 +1,15 @@
 from datetime import date, datetime
+from pathlib import Path
 from pathlib import PurePosixPath
 
-from flask import Blueprint, abort, g, jsonify, request, send_from_directory
+from flask import Blueprint, abort, current_app, g, jsonify, request, send_from_directory
+from werkzeug.exceptions import BadRequest
 
 from backend.auth import require_auth
 from backend.extensions import db
 from backend.models import MedicalReport, Patient
 from backend.services.file_storage import (
+    delete_stored_file,
     get_stored_file_location,
     save_uploaded_file,
     validate_uploaded_file,
@@ -16,8 +19,20 @@ from backend.services.parameter_persistence import persist_report_parameters
 from backend.services.report_parameters import extract_report_parameters
 from backend.services.report_metadata import extract_report_metadata
 from backend.services.text_cleaning import clean_extracted_text
+from backend.services.audit_logging import record_audit_event
+from backend.services.ai_service import AIServiceError
+from backend.services.document_comparison import compare_report_texts
 
 reports_bp = Blueprint("reports", __name__)
+SUMMARY_DISCLAIMER = (
+    "AI-generated summary for informational purposes; requires human review. "
+    "This is not a diagnosis."
+)
+COMPARISON_DISCLAIMER = (
+    "Local, rule-based and embedding-assisted comparison of extracted source text. "
+    "Similarity scores are not probabilities and do not establish clinical equivalence or a diagnosis; "
+    "review the original reports."
+)
 
 
 def _serialize_parameter(parameter):
@@ -88,7 +103,244 @@ def list_reports():
         .order_by(MedicalReport.created_at.desc(), MedicalReport.id.desc())
         .all()
     )
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="report.list",
+        resource_type="patient",
+        resource_id=patient.id,
+        metadata={"count": len(reports)},
+    )
     return jsonify({"reports": [_serialize_report(report) for report in reports]}), 200
+
+
+@reports_bp.post("/reports/<int:report_id>/extract-text")
+@require_auth
+def extract_report_text(report_id):
+    report = (
+        db.session.query(MedicalReport)
+        .join(Patient)
+        .filter(
+            MedicalReport.id == report_id,
+            Patient.created_by_id == g.current_user.id,
+        )
+        .first()
+    )
+    if report is None:
+        return jsonify({"success": False, "error": "Report not found"}), 404
+
+    if isinstance(report.extracted_text, str) and report.extracted_text.strip():
+        return jsonify(
+            {
+                "success": True,
+                "report_id": report.id,
+                "extracted_text": report.extracted_text,
+                "processing_status": report.processing_status,
+                "reused": True,
+            }
+        ), 200
+
+    location = get_stored_file_location(report.file_reference, report.patient_id)
+    if location is None:
+        return jsonify(
+            {
+                "success": False,
+                "error": "The original report file is unavailable for text extraction.",
+            }
+        ), 422
+
+    upload_root, relative_path = location
+    try:
+        document_bytes = (Path(upload_root) / relative_path).read_bytes()
+    except FileNotFoundError:
+        return jsonify(
+            {
+                "success": False,
+                "error": "The original report file could not be found.",
+            }
+        ), 404
+    except OSError:
+        current_app.logger.exception(
+            "Could not read source file for report %s text extraction",
+            report.id,
+        )
+        return jsonify(
+            {"success": False, "error": "Could not read the original report file."}
+        ), 500
+
+    filename = PurePosixPath(report.file_reference).name
+    try:
+        extracted_text = clean_extracted_text(
+            extract_document_text(document_bytes, filename)
+        )
+    except ValueError as exc:
+        report.processing_status = (
+            "no_text_found"
+            if "no readable text found" in str(exc).lower()
+            else "extraction_failed"
+        )
+        db.session.commit()
+        return jsonify(
+            {
+                "success": False,
+                "error": "The existing text extraction service could not extract usable text.",
+                "processing_status": report.processing_status,
+            }
+        ), 422
+    except RuntimeError:
+        current_app.logger.exception(
+            "Text extraction failed for report %s",
+            report.id,
+        )
+        report.processing_status = "extraction_failed"
+        db.session.commit()
+        return jsonify(
+            {
+                "success": False,
+                "error": "The existing text extraction service could not process this report.",
+                "processing_status": report.processing_status,
+            }
+        ), 422
+
+    if not isinstance(extracted_text, str) or not extracted_text.strip():
+        report.processing_status = "no_text_found"
+        db.session.commit()
+        return jsonify(
+            {
+                "success": False,
+                "error": "The existing text extraction service found no readable text.",
+                "processing_status": report.processing_status,
+            }
+        ), 422
+
+    report.extracted_text = extracted_text
+    report.processing_status = "processed"
+    metadata = extract_report_metadata(extracted_text)
+    document_date = (
+        report.report_date.isoformat()
+        if report.report_date
+        else metadata["document_date"]
+    )
+    parameters = extract_report_parameters(
+        extracted_text,
+        document_date=document_date,
+    )
+    persist_report_parameters(report.id, parameters)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Could not save extracted text for report %s",
+            report.id,
+        )
+        return jsonify(
+            {"success": False, "error": "Could not save extracted report text."}
+        ), 500
+
+    return jsonify(
+        {
+            "success": True,
+            "report_id": report.id,
+            "extracted_text": report.extracted_text,
+            "processing_status": report.processing_status,
+            "reused": False,
+        }
+    ), 200
+
+
+@reports_bp.post("/reports/compare")
+@require_auth
+def compare_reports():
+    if not request.is_json:
+        return jsonify({"success": False, "error": "A JSON request body is required."}), 400
+    try:
+        data = request.get_json()
+    except BadRequest:
+        return jsonify({"success": False, "error": "Request body must be valid JSON."}), 400
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "error": "A JSON object is required."}), 400
+
+    report_ids = (data.get("report_id_1"), data.get("report_id_2"))
+    if any(
+        isinstance(report_id, bool) or not isinstance(report_id, int) or report_id <= 0
+        for report_id in report_ids
+    ):
+        return jsonify(
+            {
+                "success": False,
+                "error": "Exactly two positive integer report IDs are required.",
+            }
+        ), 400
+    if report_ids[0] == report_ids[1]:
+        return jsonify(
+            {"success": False, "error": "Select two different reports to compare."}
+        ), 400
+
+    reports = (
+        db.session.query(MedicalReport)
+        .join(Patient)
+        .filter(
+            MedicalReport.id.in_(report_ids),
+            Patient.created_by_id == g.current_user.id,
+        )
+        .all()
+    )
+    if len(reports) != 2:
+        return jsonify({"success": False, "error": "One or both reports were not found."}), 404
+
+    reports_by_id = {report.id: report for report in reports}
+    report_1, report_2 = (reports_by_id[report_id] for report_id in report_ids)
+    report_texts = (report_1.extracted_text, report_2.extracted_text)
+    if any(
+        not isinstance(text, str) or not text.strip()
+        for text in report_texts
+    ):
+        return jsonify(
+            {
+                "success": False,
+                "error": "Both reports must have usable extracted text before comparison.",
+            }
+        ), 422
+
+    try:
+        comparison = compare_report_texts(
+            *report_texts,
+            similarity_matrix=current_app.extensions[
+                "research_rag_service"
+            ].similarity_matrix,
+        )
+    except Exception:
+        current_app.logger.exception(
+            "Local comparison failed for reports %s and %s",
+            report_1.id,
+            report_2.id,
+        )
+        return jsonify(
+            {
+                "success": False,
+                "error": "Local text comparison is temporarily unavailable. Please try again.",
+            }
+        ), 503
+
+    def report_details(report):
+        return {
+            "id": report.id,
+            "patient_id": report.patient_id,
+            "patient_name": f"{report.patient.first_name} {report.patient.last_name}",
+            "report_type": report.report_type,
+            "report_date": report.report_date.isoformat() if report.report_date else None,
+            "metadata": extract_report_metadata(report.extracted_text),
+            "processing_status": report.processing_status,
+        }
+
+    return jsonify(
+        {
+            "success": True,
+            "reports": [report_details(report_1), report_details(report_2)],
+            "comparison": comparison,
+            "disclaimer": COMPARISON_DISCLAIMER,
+        }
+    ), 200
 
 
 @reports_bp.get("/reports/<int:report_id>/original")
@@ -110,6 +362,12 @@ def get_original_report(report_id):
     if location is None:
         abort(404)
 
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="report.view",
+        resource_type="report",
+        resource_id=report.id,
+    )
     upload_root, relative_path = location
     extension = PurePosixPath(relative_path).suffix
     return send_from_directory(
@@ -118,6 +376,156 @@ def get_original_report(report_id):
         as_attachment=False,
         download_name=f"report-{report.id}{extension}",
     )
+
+
+@reports_bp.post("/reports/<int:report_id>/summary")
+@require_auth
+def summarize_report(report_id):
+    if request.get_data(cache=True):
+        if not request.is_json:
+            return jsonify({"success": False, "error": "This endpoint does not accept a request body."}), 400
+        try:
+            data = request.get_json()
+        except BadRequest:
+            return jsonify({"success": False, "error": "Request body must be valid JSON."}), 400
+        if not isinstance(data, dict) or data:
+            return jsonify(
+                {
+                    "success": False,
+                    "error": "This endpoint summarizes the saved report and accepts no input fields.",
+                }
+            ), 400
+
+    report = (
+        db.session.query(MedicalReport)
+        .join(Patient)
+        .filter(
+            MedicalReport.id == report_id,
+            Patient.created_by_id == g.current_user.id,
+        )
+        .first()
+    )
+    if report is None:
+        return jsonify({"success": False, "error": "Report not found"}), 404
+    if not isinstance(report.extracted_text, str) or not report.extracted_text.strip():
+        return jsonify(
+            {
+                "success": False,
+                "error": "This report has no extracted text available to summarize.",
+            }
+        ), 422
+
+    ai_service = current_app.extensions["ai_service"]
+    if len(report.extracted_text) > ai_service.MAX_INPUT_CHARACTERS:
+        return jsonify(
+            {
+                "success": False,
+                "error": "The extracted report text is too long to summarize in one request.",
+            }
+        ), 413
+
+    try:
+        summary = ai_service.summarize(report.extracted_text)
+    except ValueError as exc:
+        current_app.logger.info(
+            "Report %s summary request exceeded or failed input validation: %s",
+            report.id,
+            str(exc),
+        )
+        return jsonify(
+            {
+                "success": False,
+                "error": "The extracted report text could not be accepted by the AI service.",
+            }
+        ), 413
+    except AIServiceError as exc:
+        record_audit_event(
+            actor_id=g.current_user.id,
+            action="ai.report_summary",
+            resource_type="report",
+            resource_id=report.id,
+            status="failure",
+        )
+        return jsonify({"success": False, "error": str(exc)}), exc.status_code
+    except Exception:
+        current_app.logger.exception(
+            "Unexpected error generating summary for report %s",
+            report.id,
+        )
+        record_audit_event(
+            actor_id=g.current_user.id,
+            action="ai.report_summary",
+            resource_type="report",
+            resource_id=report.id,
+            status="failure",
+        )
+        return jsonify(
+            {"success": False, "error": "Could not generate a summary for this report."}
+        ), 500
+
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="ai.report_summary",
+        resource_type="report",
+        resource_id=report.id,
+    )
+    return jsonify(
+        {
+            "success": True,
+            "report_id": report.id,
+            "summary": summary,
+            "disclaimer": SUMMARY_DISCLAIMER,
+        }
+    ), 200
+
+
+@reports_bp.delete("/reports/<int:report_id>")
+@require_auth
+def delete_report(report_id):
+    report = (
+        db.session.query(MedicalReport)
+        .join(Patient)
+        .filter(
+            MedicalReport.id == report_id,
+            Patient.created_by_id == g.current_user.id,
+        )
+        .first()
+    )
+    if report is None:
+        return jsonify({"error": "Report not found"}), 404
+
+    file_reference = report.file_reference
+    patient_id = report.patient_id
+    db.session.delete(report)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Could not delete report %s", report_id)
+        return jsonify({"error": "Could not delete report"}), 500
+
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="report.delete",
+        resource_type="report",
+        resource_id=report_id,
+    )
+    if file_reference:
+        try:
+            delete_stored_file(file_reference, patient_id)
+        except (OSError, ValueError):
+            current_app.logger.exception(
+                "Report %s was deleted but its uploaded file could not be removed",
+                report_id,
+            )
+            return jsonify(
+                {
+                    "deleted": True,
+                    "warning": "Report was deleted, but its uploaded file could not be removed.",
+                }
+            ), 200
+
+    return jsonify({"deleted": True}), 200
 
 
 @reports_bp.post("/reports/upload")
@@ -206,5 +614,16 @@ def upload_report():
         persist_report_parameters(report.id, parameters)
 
     db.session.commit()
+    record_audit_event(
+        actor_id=g.current_user.id,
+        action="report.upload",
+        resource_type="report",
+        resource_id=report.id,
+        metadata={
+            "patient_id": patient.id,
+            "report_type": report.report_type,
+            "processing_status": report.processing_status,
+        },
+    )
 
     return jsonify({"report": _serialize_report(report)}), 201

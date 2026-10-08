@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from flask import Flask
 from flask import send_from_directory
@@ -10,6 +11,8 @@ from backend.config.settings import settings
 from backend.config.settings import DEFAULT_DATABASE_PATH, PROJECT_ROOT
 from backend.extensions import db
 from backend.routes import register_blueprints
+from backend.services.ai_service import AIService
+from backend.services.research_rag_service import ResearchRAGService
 from backend.services.brain_mri import (
     BrainMRIPredictionService,
     BrainModelContractError,
@@ -36,11 +39,17 @@ from backend.services.ct_head_hemorrhage import (
     CTHeadHemorrhageService,
     CTHeadModelUnavailableError,
 )
+from backend.services.chest_ct_segmentation import ChestCTSegmentationService
 from backend.services.obstetric_ultrasound import ObstetricUltrasoundAnalysisService
 from backend.services.abdominal_aorta_ultrasound import (
     AbdominalAortaUltrasoundAnalysisService,
     AbdominalAortaUltrasoundModelContractError,
     AbdominalAortaUltrasoundModelUnavailableError,
+)
+from backend.services.vascular_ultrasound import (
+    VascularUltrasoundAnalysisService,
+    VascularUltrasoundModelContractError,
+    VascularUltrasoundModelUnavailableError,
 )
 from backend.services.echoview47 import EchoView47AnalysisService
 
@@ -54,6 +63,10 @@ def create_app(testing: bool = False):
         not in {"1", "true", "yes", "on"}
     )
     app.config["SECRET_KEY"] = settings.SECRET_KEY
+    app.config["AI_PROVIDER"] = settings.AI_PROVIDER
+    app.config["AI_FALLBACK_PROVIDER"] = settings.AI_FALLBACK_PROVIDER
+    app.config["AI_TIMEOUT_SECONDS"] = settings.AI_TIMEOUT_SECONDS
+    app.config["RESEARCH_EMBEDDING_MODEL"] = settings.RESEARCH_EMBEDDING_MODEL
 
     if testing:
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
@@ -75,6 +88,20 @@ def create_app(testing: bool = False):
     CORS(app)
     db.init_app(app)
     register_blueprints(app)
+    app.extensions["ai_service"] = AIService(
+        provider=app.config["AI_PROVIDER"],
+        fallback_provider=app.config["AI_FALLBACK_PROVIDER"],
+        gemini_api_key=settings.GEMINI_API_KEY,
+        gemini_model=settings.GEMINI_MODEL,
+        openrouter_api_key=settings.OPENROUTER_API_KEY,
+        openrouter_model=settings.OPENROUTER_MODEL,
+        timeout_seconds=app.config["AI_TIMEOUT_SECONDS"],
+    )
+    app.extensions["research_rag_service"] = ResearchRAGService(
+        index_root=Path(app.instance_path) / "research_indexes",
+        embedding_model=app.config["RESEARCH_EMBEDDING_MODEL"],
+        upload_root=app.config["UPLOAD_FOLDER"],
+    )
 
     spine_mri_service = SpineMRIPredictionService()
     app.extensions["spine_mri_service"] = spine_mri_service
@@ -124,12 +151,16 @@ def create_app(testing: bool = False):
         except CTHeadModelUnavailableError as exc:
             app.logger.warning("Head CT model unavailable at startup: %s", exc)
 
+    app.extensions["chest_ct_segmentation_service"] = ChestCTSegmentationService()
+
     app.extensions["obstetric_ultrasound_service"] = (
         ObstetricUltrasoundAnalysisService()
     )
     abdominal_aorta_service = AbdominalAortaUltrasoundAnalysisService()
     app.extensions["abdominal_aorta_ultrasound_service"] = abdominal_aorta_service
     app.extensions["echoview47_service"] = EchoView47AnalysisService()
+    vascular_ultrasound_service = VascularUltrasoundAnalysisService()
+    app.extensions["vascular_ultrasound_service"] = vascular_ultrasound_service
     if warm_models_at_startup:
         try:
             abdominal_aorta_service.load()
@@ -138,6 +169,13 @@ def create_app(testing: bool = False):
             AbdominalAortaUltrasoundModelUnavailableError,
         ) as exc:
             app.logger.warning("Abdominal aorta model unavailable at startup: %s", exc)
+        try:
+            vascular_ultrasound_service.load()
+        except (
+            VascularUltrasoundModelContractError,
+            VascularUltrasoundModelUnavailableError,
+        ) as exc:
+            app.logger.warning("Carotid ultrasound model unavailable at startup: %s", exc)
 
     with app.app_context():
         db.create_all()
