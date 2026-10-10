@@ -7,6 +7,7 @@ from .research_papers import research_papers_bp
 from .audit_logs import audit_logs_bp
 from .ai import ai_bp
 from .local_assistant import local_assistant_bp
+from .own_model import own_model_bp
 
 
 def register_blueprints(app):
@@ -19,3 +20,4 @@ def register_blueprints(app):
     app.register_blueprint(audit_logs_bp, url_prefix="/api")
     app.register_blueprint(ai_bp, url_prefix="/api")
     app.register_blueprint(local_assistant_bp, url_prefix="/api")
+    app.register_blueprint(own_model_bp, url_prefix="/api")

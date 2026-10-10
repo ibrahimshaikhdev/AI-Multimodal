@@ -5,22 +5,20 @@ from flask import Blueprint, current_app, g, jsonify, request
 from backend.auth import require_auth
 from backend.extensions import db
 from backend.models import LocalAssistantConversation
-from backend.services.local_llm import (
-    local_context_size,
-    local_generate,
-    local_token_count,
+from backend.services.own_llm import (
+    OWN_ASSISTANT_SYSTEM,
+    build_own_assistant_prompt,
+    own_generate,
 )
 from .ai import (
     AI_QUERY_DISCLAIMER,
     LOCAL_ASSISTANT_MAX_HISTORY_MESSAGES,
-    LOCAL_ASSISTANT_SYSTEM_PROMPT,
     _local_assistant_sources,
 )
 
 
 local_assistant_bp = Blueprint("local_assistant", __name__)
 LOCAL_ASSISTANT_MAX_OUTPUT_TOKENS = 500
-LOCAL_ASSISTANT_CONTEXT_RESERVE_TOKENS = 120
 
 
 @local_assistant_bp.get("/ai/local-conversation")
@@ -93,20 +91,6 @@ def clear_local_assistant_conversation():
     return jsonify({"success": True, "messages": []}), 200
 
 
-def _shrink_local_assistant_context(context):
-    sources = context.get("sources", [])
-    if len(sources) > 1:
-        sources.pop()
-        return True
-    for source in sources:
-        for key in ("extracted_text", "excerpt"):
-            value = source.get(key)
-            if isinstance(value, str) and value:
-                source[key] = value[: max(0, len(value) * 3 // 4)]
-                return True
-    return False
-
-
 @local_assistant_bp.post("/ai/query-local")
 @require_auth
 def query_local_assistant():
@@ -123,10 +107,15 @@ def query_local_assistant():
             }
         ), 400
     question = question.strip()
-    context, sources, context_error = _local_assistant_sources(
-        g.current_user.id,
-        {**data, "question": question},
-    )
+    if data.get("context_type") == "research":
+        context = {"context_type": "research"}
+        sources = []
+        context_error = None
+    else:
+        context, sources, context_error = _local_assistant_sources(
+            g.current_user.id,
+            {**data, "question": question},
+        )
     if context_error:
         return context_error
 
@@ -168,71 +157,16 @@ def query_local_assistant():
                 }
             ), 500
 
-    history = previous_messages[-LOCAL_ASSISTANT_MAX_HISTORY_MESSAGES:]
     try:
-        context_size = local_context_size()
-    except Exception as exc:
-        current_app.logger.exception(
-            "Could not read local model context size for user %s",
-            g.current_user.id,
-        )
-        return jsonify({"success": False, "error": str(exc)}), 502
-    prompt_budget = (
-        context_size
-        - LOCAL_ASSISTANT_MAX_OUTPUT_TOKENS
-        - LOCAL_ASSISTANT_CONTEXT_RESERVE_TOKENS
-    )
-    if prompt_budget < 1:
-        return jsonify(
-            {
-                "success": False,
-                "error": "The local model server context is too small for a response. Restart it with a larger context size.",
-            }
-        ), 502
-
-    while True:
-        serialized_context = json.dumps(context, ensure_ascii=False, separators=(",", ":"))
-        prompt = (
-            f"Current source context:\n{serialized_context}\n\n"
-            "Conversation history (use it only to understand follow-up questions; "
-            "current source context is the authority for facts):\n"
-            f"{json.dumps(history, ensure_ascii=False, indent=2)}\n\n"
-            f"Current question:\n{question}"
-        )
-        try:
-            prompt_tokens = local_token_count(
-                f"{LOCAL_ASSISTANT_SYSTEM_PROMPT}\n{prompt}"
-            )
-        except Exception as exc:
-            current_app.logger.exception(
-                "Could not tokenize local assistant prompt for user %s",
-                g.current_user.id,
-            )
-            return jsonify({"success": False, "error": str(exc)}), 502
-        if prompt_tokens <= prompt_budget:
-            break
-        if history:
-            history = history[2:] if len(history) > 1 else []
-        elif not _shrink_local_assistant_context(context):
-            return jsonify(
-                {
-                    "success": False,
-                    "error": (
-                        "The question and selected context are too large for the local model's "
-                        f"{context_size}-token context window, even after shortening the source excerpts."
-                    ),
-                }
-            ), 413
-
-    try:
-        answer = local_generate(
+        prompt = build_own_assistant_prompt(question, g.current_user.id)
+        answer = own_generate(
             prompt,
-            system=LOCAL_ASSISTANT_SYSTEM_PROMPT,
-            max_tokens=LOCAL_ASSISTANT_MAX_OUTPUT_TOKENS,
+            LOCAL_ASSISTANT_MAX_OUTPUT_TOKENS,
+            system=OWN_ASSISTANT_SYSTEM,
         )
     except Exception as exc:
         current_app.logger.exception(
-            "Local assistant generation failed for user %s",
+            "Own-model assistant generation failed for user %s",
             g.current_user.id,
         )
         return jsonify(

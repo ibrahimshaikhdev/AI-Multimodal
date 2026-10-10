@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash
 from backend.app import create_app
 from backend.extensions import db
 from backend.models import LocalAssistantConversation, MedicalReport, Patient, User
+from backend.services.own_llm import OWN_ASSISTANT_SYSTEM, build_own_assistant_prompt
 
 
 @pytest.fixture
@@ -80,19 +81,19 @@ def test_local_assistant_persists_account_scoped_turns_and_reuses_them(
     other_token = _token(client, "other-local-assistant@example.com")
     captured = []
 
-    def generate(prompt, system=None, max_tokens=900):
+    def generate(prompt, max_tokens, system=None):
         captured.append((prompt, system))
         assert max_tokens == 500
         return "The report lists hemoglobin as 13.2 g/dL."
 
-    monkeypatch.setattr("backend.routes.local_assistant.local_generate", generate)
+    monkeypatch.setattr("backend.routes.local_assistant.own_generate", generate)
     monkeypatch.setattr(
-        "backend.routes.local_assistant.local_context_size",
-        lambda: 2048,
-    )
-    monkeypatch.setattr(
-        "backend.routes.local_assistant.local_token_count",
-        lambda _text: 100,
+        "backend.routes.local_assistant.build_own_assistant_prompt",
+        lambda question, _user_id: (
+            "PROJECT KNOWLEDGE:\n(nothing relevant found)\n\nPATIENT DATA:\n"
+            "(none)\n\n"
+            f"QUESTION: {question}"
+        ),
     )
 
     first = client.post(
@@ -110,7 +111,7 @@ def test_local_assistant_persists_account_scoped_turns_and_reuses_them(
     assert first_body["sources"][0]["report_id"] == report_id
     assert len(first_body["messages"]) == 2
     assert captured[0][1]
-    assert "Hemoglobin: 13.2 g/dL" in captured[0][0]
+    assert "QUESTION: What hemoglobin value is reported?" in captured[0][0]
 
     with app.app_context():
         saved = db.session.query(LocalAssistantConversation).filter_by(user_id=owner_id).one()
@@ -126,8 +127,8 @@ def test_local_assistant_persists_account_scoped_turns_and_reuses_them(
         },
     )
     assert second.status_code == 200
-    assert "What hemoglobin value is reported?" in captured[1][0]
     assert "And what unit?" in captured[1][0]
+    assert "What hemoglobin value is reported?" not in captured[1][0]
 
     other_history = client.get(
         "/api/ai/local-conversation",
@@ -177,17 +178,13 @@ def test_local_assistant_failure_is_reported_without_fallback(
     client, app, owner_id, *_rest = local_assistant_workspace
     token = _token(client, "local-assistant@example.com")
 
-    def fail_local(_prompt, system=None):
-        raise RuntimeError("Local model failed (is llama-server running?): refused")
+    def fail_local(_prompt, _max_tokens, system=None):
+        raise RuntimeError("Own model generation failed: refused")
 
-    monkeypatch.setattr("backend.routes.local_assistant.local_generate", fail_local)
+    monkeypatch.setattr("backend.routes.local_assistant.own_generate", fail_local)
     monkeypatch.setattr(
-        "backend.routes.local_assistant.local_context_size",
-        lambda: 2048,
-    )
-    monkeypatch.setattr(
-        "backend.routes.local_assistant.local_token_count",
-        lambda _text: 100,
+        "backend.routes.local_assistant.build_own_assistant_prompt",
+        lambda _question, _user_id: "Own-model prompt",
     )
     response = client.post(
         "/api/ai/query-local",
@@ -202,14 +199,14 @@ def test_local_assistant_failure_is_reported_without_fallback(
     assert response.status_code == 502
     assert response.get_json() == {
         "success": False,
-        "error": "Local model failed (is llama-server running?): refused",
+        "error": "Own model generation failed: refused",
     }
     with app.app_context():
         saved = db.session.query(LocalAssistantConversation).filter_by(user_id=owner_id).first()
         assert saved is None
 
 
-def test_local_assistant_shortens_source_context_to_fit_server_window(
+def test_own_assistant_uses_the_project_prompt_and_500_token_limit(
     local_assistant_workspace,
     monkeypatch,
 ):
@@ -222,27 +219,24 @@ def test_local_assistant_shortens_source_context_to_fit_server_window(
 
     captured = {}
 
-    def count_tokens(text):
-        return len(text) // 3
-
-    def generate(prompt, system=None, max_tokens=900):
+    def generate(prompt, max_tokens, system=None):
         captured["prompt"] = prompt
         captured["system"] = system
         captured["max_tokens"] = max_tokens
         return "A recent lab report with saved extracted results."
 
+    monkeypatch.setattr("backend.routes.local_assistant.own_generate", generate)
     monkeypatch.setattr(
-        "backend.routes.local_assistant.local_context_size",
-        lambda: 2048,
+        "backend.routes.local_assistant.build_own_assistant_prompt",
+        lambda _question, _user_id: (
+            "PROJECT KNOWLEDGE:\nRelevant project details\n\n"
+            "PATIENT DATA:\nRecent report details.\n\n"
+            "QUESTION: What's the recent report about?"
+        ),
     )
-    monkeypatch.setattr(
-        "backend.routes.local_assistant.local_token_count",
-        count_tokens,
-    )
-    monkeypatch.setattr("backend.routes.local_assistant.local_generate", generate)
     response = client.post(
         "/api/ai/query-local",
-        headers={"Authorization": f"******"},
+        headers={"Authorization": f"Bearer {token}"},
         json={
             "question": "What's the recent report about?",
             "context_type": "report",
@@ -250,7 +244,67 @@ def test_local_assistant_shortens_source_context_to_fit_server_window(
         },
     )
 
-    assert response.status_code == 200
-    assert len(captured["prompt"]) < len("Recent report details. " * 1200) + 1000
+    assert response.status_code == 200, response.get_json()
+    assert "PROJECT KNOWLEDGE:" in captured["prompt"]
     assert captured["max_tokens"] == 500
     assert response.get_json()["success"] is True
+
+
+def test_own_assistant_prompt_retrieves_project_kb_and_only_owned_named_patients(
+    local_assistant_workspace,
+):
+    _client, app, owner_id, _other_id, *_rest = local_assistant_workspace
+    with app.app_context():
+        prompt = build_own_assistant_prompt(
+            "What does OCR use, and what does Jamie Reed's latest report say?",
+            owner_id,
+        )
+        unowned_prompt = build_own_assistant_prompt(
+            "What does Private Patient's latest report say?",
+            owner_id,
+        )
+
+    assert OWN_ASSISTANT_SYSTEM == (
+        "You are the built-in assistant of the project 'Multimodal AI Research & "
+        "Medical Report Intelligence'. Answer questions about the project using ONLY "
+        "the PROJECT KNOWLEDGE provided. For questions about a patient, use ONLY the "
+        "PATIENT DATA provided. If the answer is not in the provided context, say you "
+        "don't have that information. Never diagnose or prescribe; for personal "
+        "medical decisions tell the user to consult a doctor. Be concise."
+    )
+    assert prompt.startswith("PROJECT KNOWLEDGE:\n")
+    assert "OCR" in prompt
+    assert "Jamie Reed, latest report (2025-05-01)" in prompt
+    assert "Hemoglobin: 13.2 g/dL" in prompt
+    assert "Private account data." not in prompt
+    assert "PATIENT DATA:\n(none)" in unowned_prompt
+
+
+def test_own_assistant_project_question_does_not_require_uploaded_research(
+    local_assistant_workspace,
+    monkeypatch,
+):
+    client, _app, _owner_id, *_rest = local_assistant_workspace
+    token = _token(client, "local-assistant@example.com")
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.build_own_assistant_prompt",
+        lambda question, _user_id: (
+            "PROJECT KNOWLEDGE:\nProject overview\n\n"
+            "PATIENT DATA:\n(none)\n\n"
+            f"QUESTION: {question}"
+        ),
+    )
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.own_generate",
+        lambda _prompt, _max_tokens, system=None: "The project uses OCR.",
+    )
+
+    response = client.post(
+        "/api/ai/query-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"question": "What does the project use for OCR?", "context_type": "research"},
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["context_type"] == "research"
+    assert response.get_json()["sources"] == []

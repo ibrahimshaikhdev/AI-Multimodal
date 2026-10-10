@@ -347,6 +347,53 @@ def test_local_report_comparison_returns_python_differences_and_local_summary(
     assert captured["system"] is None
 
 
+def test_own_report_comparison_returns_python_differences_and_own_summary(
+    upload_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = upload_client
+    token = login(client)
+    with client.application.app_context():
+        first_id = _create_comparison_report(
+            owner_patient_id,
+            "Study date: 2024-01-15\nHemoglobin: 12.1 g/dL",
+            date(2024, 1, 15),
+        )
+        second_id = _create_comparison_report(
+            owner_patient_id,
+            "Study date: 2025-01-15\nHemoglobin: 13.4 g/dL",
+            date(2025, 1, 15),
+        )
+    monkeypatch.setattr(
+        client.application.extensions["research_rag_service"],
+        "similarity_matrix",
+        lambda first, second: [[0.1 for _ in second] for _ in first],
+    )
+    captured = {}
+
+    def own_summary(prompt, max_tokens, system=None):
+        captured["prompt"] = prompt
+        captured["max_tokens"] = max_tokens
+        captured["system"] = system
+        return "The reports differ. The reports differ."
+
+    monkeypatch.setattr("backend.routes.own_model.own_generate", own_summary)
+    response = client.post(
+        "/api/reports/compare-own",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"report_id_1": first_id, "report_id_2": second_id},
+    )
+
+    assert response.status_code == 200, response.get_json()
+    body = response.get_json()
+    assert body["ai_summary"] == "The reports differ."
+    assert body["comparison"]["parameters"]
+    assert "Request:\nCompare only the two sources" in captured["prompt"]
+    assert "Never repeat a sentence or finding" in captured["prompt"]
+    assert captured["max_tokens"] == 600
+    assert captured["system"] is None
+
+
 def test_report_comparison_requires_authentication_and_two_valid_ids(upload_client):
     client, owner_patient_id, _ = upload_client
     with client.application.app_context():

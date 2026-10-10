@@ -455,6 +455,130 @@ def test_research_comparison_preserves_local_fields_when_ai_provider_fails(ai_wo
     assert payload["ai_error"] == "Configured AI providers are unavailable."
 
 
+def test_own_research_question_uses_three_retrieved_chunks_and_returns_sources(
+    ai_workspace,
+    monkeypatch,
+):
+    client, app, owner_id, _, uploads = ai_workspace
+    token = _login(client, "research-ai-owner@example.com")
+    with app.app_context():
+        paper_id = _add_paper(
+            owner_id,
+            uploads,
+            "Own model RAG study",
+            "A study reports sensitivity and specificity.",
+        )
+    captured = {}
+
+    def search(user_id, papers, question, top_k, paper_ids=None):
+        captured["top_k"] = top_k
+        captured["question"] = question
+        paper = papers[0]
+        return [
+            {
+                "citation": f"[P{paper.id}-C{index}]",
+                "paper_id": paper.id,
+                "paper_title": paper.title,
+                "paper_date": "2024-01-01",
+                "text": f"Evidence excerpt {index}.",
+            }
+            for index in range(1, 4)
+        ]
+
+    def generate(prompt, max_tokens, system=None):
+        captured["prompt"] = prompt
+        captured["max_tokens"] = max_tokens
+        return "The excerpts report sensitivity [S1]."
+
+    monkeypatch.setattr(app.extensions["research_rag_service"], "search", search)
+    monkeypatch.setattr("backend.routes.own_model.own_generate", generate)
+    response = client.post(
+        "/api/research/ask-own",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"question": "What sensitivity is reported?", "paper_ids": [paper_id]},
+    )
+
+    assert response.status_code == 200, response.get_json()
+    body = response.get_json()
+    assert body["answer"] == "The excerpts report sensitivity [S1]."
+    assert len(body["citations"]) == 3
+    assert captured["top_k"] == 3
+    assert "using only the supplied research excerpts" in captured["prompt"]
+    assert "such as [S1]" in captured["prompt"]
+    assert captured["max_tokens"] == 500
+
+
+def test_own_research_comparison_truncates_evidence_and_parses_fenced_json(
+    ai_workspace,
+    monkeypatch,
+):
+    client, app, owner_id, _, uploads = ai_workspace
+    token = _login(client, "research-ai-owner@example.com")
+    with app.app_context():
+        paper_ids = [
+            _add_paper(owner_id, uploads, title, "Readable source text.")
+            for title in ("Own comparison first", "Own comparison second")
+        ]
+    captured = {}
+    fields = ("methodology", "dataset", "model", "results", "limitations", "future_work")
+    rag_service = app.extensions["research_rag_service"]
+    monkeypatch.setattr(rag_service, "paper_text", lambda *_args: "Source text")
+
+    def search(user_id, papers, query, top_k, paper_ids=None):
+        paper = next(paper for paper in papers if paper.id in paper_ids)
+        return [
+            {
+                "citation": f"[P{paper.id}-C1]",
+                "paper_id": paper.id,
+                "paper_title": paper.title,
+                "paper_date": "2024-01-01",
+                "text": "E" * 1200,
+            }
+        ]
+
+    def generate(prompt, max_tokens, system=None):
+        captured["context"] = json.loads(
+            prompt.split("\n\nRequest:\n", maxsplit=1)[0].removeprefix("Context:\n")
+        )
+        captured["max_tokens"] = max_tokens
+        result = {
+            "papers": [
+                {
+                    "id": paper_id,
+                    "title": title,
+                    **{field: f"Supported {field}." for field in fields},
+                }
+                for paper_id, title in zip(
+                    paper_ids,
+                    ("Own comparison first", "Own comparison second"),
+                )
+            ],
+            "overall": "The evidence supports this comparison.",
+        }
+        return f"```json\n{json.dumps(result)}\n```"
+
+    monkeypatch.setattr(rag_service, "search", search)
+    monkeypatch.setattr("backend.routes.own_model.own_generate", generate)
+    response = client.post(
+        "/api/research/compare-own",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"paper_ids": paper_ids},
+    )
+
+    assert response.status_code == 200, response.get_json()
+    assert response.get_json()["ai_comparison"]["overall"] == (
+        "The evidence supports this comparison."
+    )
+    assert captured["max_tokens"] == 1500
+    for paper in captured["context"]["papers"]:
+        excerpt_characters = sum(
+            len(passage["excerpt"])
+            for passages in paper["evidence"].values()
+            for passage in passages
+        )
+        assert excerpt_characters <= 3500
+
+
 def test_research_comparison_supports_three_papers(ai_workspace):
     client, app, owner_id, _, uploads = ai_workspace
     token = _login(client, "research-ai-owner@example.com")
