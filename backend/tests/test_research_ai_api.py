@@ -536,11 +536,10 @@ def test_own_research_comparison_truncates_evidence_and_parses_fenced_json(
             }
         ]
 
-    def generate(prompt, max_tokens, system=None):
-        captured["context"] = json.loads(
-            prompt.split("\n\nRequest:\n", maxsplit=1)[0].removeprefix("Context:\n")
-        )
+    def generate(prompt, max_tokens, system=None, json_mode=False):
+        captured["prompt"] = prompt
         captured["max_tokens"] = max_tokens
+        captured["json_mode"] = json_mode
         result = {
             "papers": [
                 {
@@ -570,13 +569,11 @@ def test_own_research_comparison_truncates_evidence_and_parses_fenced_json(
         "The evidence supports this comparison."
     )
     assert captured["max_tokens"] == 1500
-    for paper in captured["context"]["papers"]:
-        excerpt_characters = sum(
-            len(passage["excerpt"])
-            for passages in paper["evidence"].values()
-            for passage in passages
-        )
-        assert excerpt_characters <= 3500
+    assert captured["json_mode"] is True
+    assert "Compare these papers using ONLY their text." in captured["prompt"]
+    assert 'Return ONLY JSON like {"papers":[' in captured["prompt"]
+    assert "### PAPER" in captured["prompt"]
+    assert "E" * 1000 not in captured["prompt"]
 
 
 def test_research_comparison_supports_three_papers(ai_workspace):

@@ -10,6 +10,7 @@ from backend.services.own_llm import (
     build_own_assistant_prompt,
     own_generate,
 )
+from backend.services.web_search import search_web
 from .ai import (
     AI_QUERY_DISCLAIMER,
     LOCAL_ASSISTANT_MAX_HISTORY_MESSAGES,
@@ -107,6 +108,11 @@ def query_local_assistant():
             }
         ), 400
     question = question.strip()
+    web_search_enabled = data.get("web_search", False)
+    if not isinstance(web_search_enabled, bool):
+        return jsonify(
+            {"success": False, "error": "web_search must be a boolean."}
+        ), 400
     if data.get("context_type") == "research":
         context = {"context_type": "research"}
         sources = []
@@ -157,8 +163,28 @@ def query_local_assistant():
                 }
             ), 500
 
+    web_search_results = []
+    web_search_error = None
+    if web_search_enabled:
+        try:
+            web_search_results = search_web(question)
+        except Exception as exc:
+            web_search_error = str(exc)
+            current_app.logger.warning(
+                "SerpApi web search failed for assistant user %s: %s",
+                g.current_user.id,
+                web_search_error,
+            )
+
     try:
-        prompt = build_own_assistant_prompt(question, g.current_user.id)
+        if web_search_results:
+            prompt = build_own_assistant_prompt(
+                question,
+                g.current_user.id,
+                web_search_results=web_search_results,
+            )
+        else:
+            prompt = build_own_assistant_prompt(question, g.current_user.id)
         answer = own_generate(
             prompt,
             LOCAL_ASSISTANT_MAX_OUTPUT_TOKENS,
@@ -176,10 +202,14 @@ def query_local_assistant():
             }
         ), 502
 
+    assistant_message = {"role": "assistant", "content": answer}
+    if web_search_enabled:
+        assistant_message["web_search_results"] = web_search_results
+        assistant_message["web_search_error"] = web_search_error
     messages = [
         *previous_messages[-(LOCAL_ASSISTANT_MAX_HISTORY_MESSAGES - 2):],
         {"role": "user", "content": question},
-        {"role": "assistant", "content": answer},
+        assistant_message,
     ]
     if conversation is None:
         conversation = LocalAssistantConversation(
@@ -210,6 +240,9 @@ def query_local_assistant():
             "answer": answer,
             "context_type": context["context_type"],
             "sources": sources,
+            "web_search_enabled": web_search_enabled,
+            "web_search_results": web_search_results,
+            "web_search_error": web_search_error,
             "messages": messages,
             "disclaimer": AI_QUERY_DISCLAIMER,
         }

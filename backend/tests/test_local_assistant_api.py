@@ -280,6 +280,20 @@ def test_own_assistant_prompt_retrieves_project_kb_and_only_owned_named_patients
     assert "PATIENT DATA:\n(none)" in unowned_prompt
 
 
+def test_own_assistant_includes_account_report_count_for_count_questions(
+    local_assistant_workspace,
+):
+    _client, app, owner_id, _other_id, *_rest = local_assistant_workspace
+    with app.app_context():
+        prompt = build_own_assistant_prompt(
+            "How many reports we uploaded?",
+            owner_id,
+        )
+
+    assert "your account has 1 uploaded medical report" in prompt
+    assert "Private account data." not in prompt
+
+
 def test_own_assistant_project_question_does_not_require_uploaded_research(
     local_assistant_workspace,
     monkeypatch,
@@ -308,3 +322,107 @@ def test_own_assistant_project_question_does_not_require_uploaded_research(
     assert response.status_code == 200
     assert response.get_json()["context_type"] == "research"
     assert response.get_json()["sources"] == []
+
+
+def test_own_assistant_web_search_returns_and_persists_separate_results(
+    local_assistant_workspace,
+    monkeypatch,
+):
+    client, _app, _owner_id, *_rest = local_assistant_workspace
+    token = _token(client, "local-assistant@example.com")
+    search_results = [
+        {
+            "title": "Research source",
+            "link": "https://example.org/source",
+            "snippet": "A relevant web excerpt.",
+        }
+    ]
+    captured = {}
+
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.search_web",
+        lambda query: (captured.setdefault("query", query), search_results)[1],
+    )
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.build_own_assistant_prompt",
+        lambda question, _user_id, web_search_results=None: (
+            captured.update({"web_search_results": web_search_results})
+            or f"PROJECT KNOWLEDGE:\n{question}"
+        ),
+    )
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.own_generate",
+        lambda *_args, **_kwargs: "The own model answer.",
+    )
+
+    response = client.post(
+        "/api/ai/query-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "question": "Summarize current research",
+            "context_type": "research",
+            "web_search": True,
+        },
+    )
+
+    assert response.status_code == 200, response.get_json()
+    payload = response.get_json()
+    assert payload["answer"] == "The own model answer."
+    assert payload["web_search_enabled"] is True
+    assert payload["web_search_results"] == search_results
+    assert captured["query"] == "Summarize current research"
+    assert captured["web_search_results"] == search_results
+    assert payload["messages"][-1]["web_search_results"] == search_results
+
+
+def test_own_assistant_reports_web_search_error_without_skipping_own_model(
+    local_assistant_workspace,
+    monkeypatch,
+):
+    client, _app, _owner_id, *_rest = local_assistant_workspace
+    token = _token(client, "local-assistant@example.com")
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.search_web",
+        lambda _query: (_ for _ in ()).throw(
+            RuntimeError("Web search is not configured (set SERPAPI_API_KEY).")
+        ),
+    )
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.build_own_assistant_prompt",
+        lambda question, _user_id: f"PROJECT KNOWLEDGE:\n{question}",
+    )
+    monkeypatch.setattr(
+        "backend.routes.local_assistant.own_generate",
+        lambda *_args, **_kwargs: "The answer without web results.",
+    )
+
+    response = client.post(
+        "/api/ai/query-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "question": "Question",
+            "context_type": "research",
+            "web_search": True,
+        },
+    )
+
+    assert response.status_code == 200, response.get_json()
+    payload = response.get_json()
+    assert payload["answer"] == "The answer without web results."
+    assert payload["web_search_results"] == []
+    assert "set SERPAPI_API_KEY" in payload["web_search_error"]
+    assert payload["messages"][-1]["web_search_error"] == payload["web_search_error"]
+
+
+def test_own_assistant_rejects_non_boolean_web_search(local_assistant_workspace):
+    client, *_rest = local_assistant_workspace
+    token = _token(client, "local-assistant@example.com")
+
+    response = client.post(
+        "/api/ai/query-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"question": "Question", "web_search": "true"},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "web_search must be a boolean."

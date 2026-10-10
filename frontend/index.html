@@ -2931,8 +2931,8 @@
                 <section id="reportComparisonResultSection" class="comparison-panel" aria-labelledby="comparisonResultHeading" hidden>
                   <h3 id="comparisonResultHeading">AI report comparison</h3>
                   <div id="reportComparisonResponseChoices" class="comparison-actions" hidden>
-                    <button id="showGeminiReportComparison" class="secondary-button" type="button">Show Gemini response</button>
-                    <button id="showLocalReportComparison" class="secondary-button" type="button">Show local model response</button>
+                    <button id="showGeminiReportComparison" data-alternative-model-response class="secondary-button" type="button">Show Gemini response</button>
+                    <button id="showLocalReportComparison" data-alternative-model-response class="secondary-button" type="button">Show local model response</button>
                     <button id="showOwnReportComparison" class="secondary-button" type="button">Show own model response</button>
                   </div>
                   <div id="reportComparisonAiSummary" class="comparison-result" hidden></div>
@@ -2987,6 +2987,7 @@
                   <button id="clearLocalAssistantConversation" class="secondary-button" type="button">Clear saved chat</button>
                 </div>
                 <p class="workspace-notice">Project knowledge and the latest report for any patient named in your question are sent to the configured own model. Saved chat history is scoped to your signed-in account and is not sent as conversation context. Do not treat responses as medical advice or a diagnosis.</p>
+                <p class="workspace-notice">Web search uses SerpApi when enabled. Your question is sent to that external service, so do not include patient names or private medical details in a web-search question.</p>
                 <div class="field-group">
                   <label for="localAssistantContextType">Use context from</label>
                   <select id="localAssistantContextType" required>
@@ -3002,6 +3003,12 @@
                 <div id="localAssistantReportGroup" class="field-group" hidden>
                   <label for="localAssistantReportSelect">Medical report</label>
                   <select id="localAssistantReportSelect"></select>
+                </div>
+                <div class="field-group">
+                  <label>
+                    <input id="localAssistantWebSearch" type="checkbox" />
+                    Enable web search (SerpApi)
+                  </label>
                 </div>
                 <div id="localAssistantTranscript" class="local-assistant-transcript" aria-live="polite">
                   <p class="assistant-sources-empty">Loading saved local chat…</p>
@@ -3025,7 +3032,7 @@
                 This Botpress chat is not connected to patient records or the app's login identity.
                 Do not enter information you do not intend to share with the Botpress bot.
               </p>
-              <details class="model-technical-details">
+              <details id="legacySourceGroundedAssistant" class="model-technical-details">
                 <summary>Use the existing source-grounded assistant</summary>
                 <form id="assistantForm" class="comparison-panel ai-query-form">
                   <div class="field-group">
@@ -3153,8 +3160,8 @@
                   </form>
                   <p id="researchAskMessage" class="message" role="status" aria-live="polite" hidden></p>
                   <div id="researchAskResponseChoices" class="comparison-actions" hidden>
-                    <button id="showGeminiResearchAnswer" class="secondary-button" type="button">Show Gemini response</button>
-                    <button id="showLocalResearchAnswer" class="secondary-button" type="button">Show local model response</button>
+                    <button id="showGeminiResearchAnswer" data-alternative-model-response class="secondary-button" type="button">Show Gemini response</button>
+                    <button id="showLocalResearchAnswer" data-alternative-model-response class="secondary-button" type="button">Show local model response</button>
                     <button id="showOwnResearchAnswer" class="secondary-button" type="button">Show own model response</button>
                   </div>
                   <section id="researchAskAnswerSection" hidden>
@@ -3186,8 +3193,8 @@
                 <h3>Research comparison</h3>
                 <div id="researchComparisonPaperHeadings" class="comparison-text-panels"></div>
               <div id="researchComparisonResponseChoices" class="comparison-actions" hidden>
-                <button id="showGeminiResearchComparison" class="secondary-button" type="button">Show Gemini response</button>
-                <button id="showLocalResearchComparison" class="secondary-button" type="button">Show local model response</button>
+                <button id="showGeminiResearchComparison" data-alternative-model-response class="secondary-button" type="button">Show Gemini response</button>
+                <button id="showLocalResearchComparison" data-alternative-model-response class="secondary-button" type="button">Show local model response</button>
                 <button id="showOwnResearchComparison" class="secondary-button" type="button">Show own model response</button>
               </div>
               <section id="researchComparisonAiResult">
@@ -3264,6 +3271,16 @@
 
     <script>
       const API_BASE = "";
+      const ENABLE_ALTERNATIVE_MODEL_RESPONSES = false;
+      const SHOW_LEGACY_SOURCE_GROUNDED_ASSISTANT = false;
+      const SHOW_REPORT_AI_SUMMARY_BUTTON = false;
+      document
+        .querySelectorAll("[data-alternative-model-response]")
+        .forEach((button) => {
+          button.hidden = !ENABLE_ALTERNATIVE_MODEL_RESPONSES;
+        });
+      document.getElementById("legacySourceGroundedAssistant").hidden =
+        !SHOW_LEGACY_SOURCE_GROUNDED_ASSISTANT;
       let accessToken = null;
       let signedInUser = null;
 
@@ -5344,6 +5361,7 @@
               summaryButton.type = "button";
               summaryButton.className = "secondary-button scan-open-button";
               summaryButton.textContent = "Generate AI Summary";
+              summaryButton.hidden = !SHOW_REPORT_AI_SUMMARY_BUTTON;
               const summaryStatus = document.createElement("p");
               summaryStatus.className = "report-processing-message";
               summaryStatus.setAttribute("role", "status");
@@ -6214,7 +6232,9 @@
         }
         showWorkspaceMessage(
           "researchAskMessage",
-          "Retrieving sources and generating answers with all three models. Each option will be available as soon as it is ready…",
+          ENABLE_ALTERNATIVE_MODEL_RESPONSES
+            ? "Retrieving sources and generating answers with all three models. Each option will be available as soon as it is ready…"
+            : "Retrieving sources and generating an answer with your own model…",
         );
         setButtonBusy(
           "researchAskButton",
@@ -6229,36 +6249,41 @@
           paper_ids: paperIds,
         });
         try {
-          const geminiRequest = patientRequest("/api/research/ask", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-          });
-          const localRequest = patientRequest("/api/research/ask-local", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-          });
+          const pendingResponses = [];
+          if (ENABLE_ALTERNATIVE_MODEL_RESPONSES) {
+            const geminiRequest = patientRequest("/api/research/ask", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            });
+            const localRequest = patientRequest("/api/research/ask-local", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            });
+            pendingResponses.push(
+              trackPairedModelResponse(
+                "gemini",
+                geminiRequest,
+                pairedResearchAnswer,
+                "showGeminiResearchAnswer",
+                "Gemini",
+              ),
+              trackPairedModelResponse(
+                "local",
+                localRequest,
+                pairedResearchAnswer,
+                "showLocalResearchAnswer",
+                "local model",
+              ),
+            );
+          }
           const ownRequest = patientRequest("/api/research/ask-own", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body,
           });
-          await Promise.allSettled([
-            trackPairedModelResponse(
-              "gemini",
-              geminiRequest,
-              pairedResearchAnswer,
-              "showGeminiResearchAnswer",
-              "Gemini",
-            ),
-            trackPairedModelResponse(
-              "local",
-              localRequest,
-              pairedResearchAnswer,
-              "showLocalResearchAnswer",
-              "local model",
-            ),
+          pendingResponses.push(
             trackPairedModelResponse(
               "own",
               ownRequest,
@@ -6266,13 +6291,18 @@
               "showOwnResearchAnswer",
               "own model",
             ),
-          ]);
-          if (pairedResearchAnswerSelected === null) {
-            showWorkspaceMessage(
-              "researchAskMessage",
-              "All response attempts finished. Choose which answer to display.",
-              "success",
-            );
+          );
+          await Promise.allSettled(pendingResponses);
+          if (ENABLE_ALTERNATIVE_MODEL_RESPONSES) {
+            if (pairedResearchAnswerSelected === null) {
+              showWorkspaceMessage(
+                "researchAskMessage",
+                "All response attempts finished. Choose which answer to display.",
+                "success",
+              );
+            }
+          } else {
+            showPairedResearchAnswer("own");
           }
         } finally {
           setButtonBusy(
@@ -6636,7 +6666,9 @@
         }
         showWorkspaceMessage(
           "researchComparisonMessage",
-          "Retrieving source passages and generating comparisons with all three models. Each option will be available as soon as it is ready…",
+          ENABLE_ALTERNATIVE_MODEL_RESPONSES
+            ? "Retrieving source passages and generating comparisons with all three models. Each option will be available as soon as it is ready…"
+            : "Retrieving source passages and generating a comparison with your own model…",
         );
         setButtonBusy(
           "compareResearchPapersButton",
@@ -6654,38 +6686,43 @@
               pairedResearchComparisonShared = true;
             }
           };
-          const geminiRequest = patientRequest("/api/research/compare", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-          });
-          const localRequest = patientRequest("/api/research/compare-local", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-          });
+          const pendingResponses = [];
+          if (ENABLE_ALTERNATIVE_MODEL_RESPONSES) {
+            const geminiRequest = patientRequest("/api/research/compare", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            });
+            const localRequest = patientRequest("/api/research/compare-local", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            });
+            pendingResponses.push(
+              trackPairedModelResponse(
+                "gemini",
+                geminiRequest,
+                pairedResearchComparison,
+                "showGeminiResearchComparison",
+                "Gemini",
+                renderSharedResponse,
+              ),
+              trackPairedModelResponse(
+                "local",
+                localRequest,
+                pairedResearchComparison,
+                "showLocalResearchComparison",
+                "local model",
+                renderSharedResponse,
+              ),
+            );
+          }
           const ownRequest = patientRequest("/api/research/compare-own", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body,
           });
-          await Promise.allSettled([
-            trackPairedModelResponse(
-              "gemini",
-              geminiRequest,
-              pairedResearchComparison,
-              "showGeminiResearchComparison",
-              "Gemini",
-              renderSharedResponse,
-            ),
-            trackPairedModelResponse(
-              "local",
-              localRequest,
-              pairedResearchComparison,
-              "showLocalResearchComparison",
-              "local model",
-              renderSharedResponse,
-            ),
+          pendingResponses.push(
             trackPairedModelResponse(
               "own",
               ownRequest,
@@ -6694,16 +6731,21 @@
               "own model",
               renderSharedResponse,
             ),
-          ]);
+          );
+          await Promise.allSettled(pendingResponses);
           if (!pairedResearchComparisonShared) {
             renderPairedResearchComparisonShared(null);
           }
-          if (pairedResearchComparisonSelected === null) {
-            showWorkspaceMessage(
-              "researchComparisonMessage",
-              "All response attempts finished. Choose which comparison to display.",
-              "success",
-            );
+          if (ENABLE_ALTERNATIVE_MODEL_RESPONSES) {
+            if (pairedResearchComparisonSelected === null) {
+              showWorkspaceMessage(
+                "researchComparisonMessage",
+                "All response attempts finished. Choose which comparison to display.",
+                "success",
+              );
+            }
+          } else {
+            showPairedResearchComparison("own");
           }
           scrollToWorkspaceResult("researchComparisonResultSection");
         } finally {
@@ -6990,10 +7032,48 @@
           const item = document.createElement("article");
           item.className = `local-assistant-message ${message.role}`;
           const speaker = document.createElement("strong");
-          speaker.textContent = message.role === "user" ? "You" : "Local model";
+          speaker.textContent = message.role === "user" ? "You" : "Own model";
           const content = document.createElement("p");
           content.textContent = message.content;
           item.append(speaker, content);
+          if (message.role === "assistant" && message.web_search_error) {
+            const searchError = document.createElement("p");
+            searchError.className = "message error";
+            searchError.textContent = `Web search failed: ${message.web_search_error}`;
+            item.append(searchError);
+          }
+          if (
+            message.role === "assistant" &&
+            Array.isArray(message.web_search_results)
+          ) {
+            const searchHeading = document.createElement("strong");
+            searchHeading.textContent = "Web search results";
+            item.append(searchHeading);
+            if (message.web_search_results.length === 0) {
+              const empty = document.createElement("p");
+              empty.className = "assistant-sources-empty";
+              empty.textContent = message.web_search_error
+                ? "Search results are unavailable."
+                : "No results were returned.";
+              item.append(empty);
+            } else {
+              const results = document.createElement("div");
+              results.className = "research-source-list";
+              for (const result of message.web_search_results) {
+                const resultItem = document.createElement("article");
+                const link = document.createElement("a");
+                link.href = result.link;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.textContent = result.title;
+                const snippet = document.createElement("p");
+                snippet.textContent = result.snippet || result.link;
+                resultItem.append(link, snippet);
+                results.append(resultItem);
+              }
+              item.append(results);
+            }
+          }
           if (message.role === "assistant" && message.sources?.length) {
             const sourceList = document.createElement("div");
             sourceList.className = "research-source-list";
@@ -7101,6 +7181,7 @@
         const payload = {
           question: document.getElementById("localAssistantQuestion").value.trim(),
           context_type: contextType,
+          web_search: document.getElementById("localAssistantWebSearch").checked,
         };
         if (contextType === "report") {
           const reportId = document.getElementById("localAssistantReportSelect").value;
@@ -7119,7 +7200,9 @@
         }
         showWorkspaceMessage(
           "localAssistantMessage",
-          "Preparing project and patient context and waiting for the own model…",
+          payload.web_search
+            ? "Searching the web with SerpApi and preparing your own-model response…"
+            : "Preparing project and patient context and waiting for the own model…",
         );
         setButtonBusy(
           "localAssistantSubmitButton",
@@ -7693,45 +7776,52 @@
         }
         showWorkspaceMessage(
           "reportComparisonMessage",
-          "Comparing reports with Gemini, the local model, and your own model. Each response will be selectable as soon as it is ready…",
+          ENABLE_ALTERNATIVE_MODEL_RESPONSES
+            ? "Comparing reports with Gemini, the local model, and your own model. Each response will be selectable as soon as it is ready…"
+            : "Comparing reports with your own model…",
         );
         const body = JSON.stringify({
           report_id_1: selected[0].id,
           report_id_2: selected[1].id,
         });
         try {
-          const geminiRequest = patientRequest("/api/reports/compare", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-          });
-          const localRequest = patientRequest("/api/reports/compare-local", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-          });
+          const pendingResponses = [];
+          if (ENABLE_ALTERNATIVE_MODEL_RESPONSES) {
+            const geminiRequest = patientRequest("/api/reports/compare", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            });
+            const localRequest = patientRequest("/api/reports/compare-local", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            });
+            pendingResponses.push(
+              trackPairedModelResponse(
+                "gemini",
+                geminiRequest,
+                pairedReportComparison,
+                "showGeminiReportComparison",
+                "Gemini",
+                renderSharedReportComparison,
+              ),
+              trackPairedModelResponse(
+                "local",
+                localRequest,
+                pairedReportComparison,
+                "showLocalReportComparison",
+                "local model",
+                renderSharedReportComparison,
+              ),
+            );
+          }
           const ownRequest = patientRequest("/api/reports/compare-own", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body,
           });
-          await Promise.allSettled([
-            trackPairedModelResponse(
-              "gemini",
-              geminiRequest,
-              pairedReportComparison,
-              "showGeminiReportComparison",
-              "Gemini",
-              renderSharedReportComparison,
-            ),
-            trackPairedModelResponse(
-              "local",
-              localRequest,
-              pairedReportComparison,
-              "showLocalReportComparison",
-              "local model",
-              renderSharedReportComparison,
-            ),
+          pendingResponses.push(
             trackPairedModelResponse(
               "own",
               ownRequest,
@@ -7740,13 +7830,18 @@
               "own model",
               renderSharedReportComparison,
             ),
-          ]);
-          if (pairedReportComparisonSelected === null) {
-            showWorkspaceMessage(
-              "reportComparisonMessage",
-              "All response attempts finished. Choose which summary to display.",
-              "success",
-            );
+          );
+          await Promise.allSettled(pendingResponses);
+          if (ENABLE_ALTERNATIVE_MODEL_RESPONSES) {
+            if (pairedReportComparisonSelected === null) {
+              showWorkspaceMessage(
+                "reportComparisonMessage",
+                "All response attempts finished. Choose which summary to display.",
+                "success",
+              );
+            }
+          } else {
+            showReportComparisonResponse("own");
           }
           scrollToWorkspaceResult("reportComparisonResultSection");
         } finally {

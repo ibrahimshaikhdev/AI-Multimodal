@@ -65,6 +65,23 @@ def test_own_generate_http_includes_system_message_when_given(monkeypatch):
     ]
 
 
+def test_own_generate_http_requests_json_mode(monkeypatch):
+    monkeypatch.setenv("OWN_MODEL_PATH", "")
+    monkeypatch.setenv("OWN_LLM_URL", "http://localhost:8081/v1/chat/completions")
+    captured = {}
+
+    def fake_urlopen(request, timeout):
+        captured["body"] = json.loads(request.data.decode("utf-8"))
+        return _Response('{"valid": true}')
+
+    monkeypatch.setattr(own_llm, "urlopen", fake_urlopen)
+
+    assert own_llm.own_generate("Question", 1500, json_mode=True) == (
+        '{"valid": true}'
+    )
+    assert captured["body"]["response_format"] == {"type": "json_object"}
+
+
 def test_own_generate_in_process_loads_once_and_uses_physical_cores(
     monkeypatch,
     tmp_path,
@@ -112,6 +129,38 @@ def test_own_generate_in_process_loads_once_and_uses_physical_cores(
     assert captured["calls"][1]["messages"] == [
         {"role": "user", "content": "Second question"}
     ]
+
+
+def test_own_generate_in_process_requests_json_mode(monkeypatch, tmp_path):
+    model_path = tmp_path / "fine-tuned.gguf"
+    model_path.write_bytes(b"test model file")
+    monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
+    monkeypatch.setattr(own_llm, "_MODEL", None)
+    captured = {}
+
+    class FakeLlama:
+        def __init__(self, **_kwargs):
+            pass
+
+        def create_chat_completion(self, **kwargs):
+            captured.update(kwargs)
+            return {"choices": [{"message": {"content": '{"valid": true}'}}]}
+
+    monkeypatch.setitem(
+        sys.modules,
+        "llama_cpp",
+        types.SimpleNamespace(Llama=FakeLlama),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "psutil",
+        types.SimpleNamespace(cpu_count=lambda logical: 8 if not logical else 16),
+    )
+
+    assert own_llm.own_generate("Question", 1500, json_mode=True) == (
+        '{"valid": true}'
+    )
+    assert captured["response_format"] == {"type": "json_object"}
 
 
 def test_own_generate_requires_a_model_configuration(monkeypatch):

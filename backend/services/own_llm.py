@@ -11,6 +11,8 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from sqlalchemy import func
+
 from backend.extensions import db
 from backend.models import MedicalReport, Patient
 
@@ -75,6 +77,7 @@ def own_generate(
     prompt: str,
     max_tokens: int,
     system: str | None = None,
+    json_mode: bool = False,
 ) -> str:
     if not isinstance(prompt, str) or not prompt.strip():
         raise ValueError("prompt must be a non-empty string")
@@ -82,6 +85,8 @@ def own_generate(
         raise ValueError("max_tokens must be a positive integer")
     if system is not None and not isinstance(system, str):
         raise ValueError("system must be a string or None")
+    if not isinstance(json_mode, bool):
+        raise ValueError("json_mode must be a boolean")
 
     model_path = os.environ.get("OWN_MODEL_PATH", "").strip()
     model_url = os.environ.get("OWN_LLM_URL", "").strip()
@@ -89,11 +94,14 @@ def own_generate(
     if model_path:
         with _GENERATION_LOCK:
             try:
-                result = _load_model().create_chat_completion(
-                    messages=messages,
-                    temperature=0.1,
-                    max_tokens=max_tokens,
-                )
+                generation_options = {
+                    "messages": messages,
+                    "temperature": 0.1,
+                    "max_tokens": max_tokens,
+                }
+                if json_mode:
+                    generation_options["response_format"] = {"type": "json_object"}
+                result = _load_model().create_chat_completion(**generation_options)
                 content = result["choices"][0]["message"]["content"]
             except Exception as exc:
                 raise RuntimeError(f"Own model generation failed: {exc}") from exc
@@ -103,6 +111,8 @@ def own_generate(
             "temperature": 0.1,
             "max_tokens": max_tokens,
         }
+        if json_mode:
+            payload["response_format"] = {"type": "json_object"}
         request = Request(
             model_url,
             data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
@@ -162,7 +172,7 @@ def _split_knowledge_chunks(text: str, chunk_size: int = 700) -> list[str]:
     return chunks
 
 
-def _retrieve_project_knowledge(question: str) -> str:
+def _retrieve_project_knowledge(question: str, user_id: int) -> str:
     if not PROJECT_KB_DIRECTORY.is_dir():
         raise RuntimeError(f"Project knowledge directory was not found: {PROJECT_KB_DIRECTORY}")
 
@@ -203,7 +213,25 @@ def _retrieve_project_knowledge(question: str) -> str:
         for score, index in sorted(scores, key=lambda item: (-item[0], item[1]))[:4]
         if score > 0
     ]
-    return "\n---\n".join(selected) if selected else "(nothing relevant found)"
+    knowledge = "\n---\n".join(selected) if selected else "(nothing relevant found)"
+    question_folded = question.casefold()
+    if (
+        re.search(r"\b(how many|number of|count|total)\b", question_folded)
+        and re.search(r"\breports?\b", question_folded)
+    ):
+        report_count = (
+            db.session.query(func.count(MedicalReport.id))
+            .join(Patient, MedicalReport.patient_id == Patient.id)
+            .filter(Patient.created_by_id == user_id)
+            .scalar()
+        ) or 0
+        report_label = "report" if report_count == 1 else "reports"
+        knowledge = (
+            f"{knowledge}\n---\n"
+            f"Current account data: your account has {report_count} uploaded "
+            f"medical {report_label} across patients you own."
+        )
+    return knowledge
 
 
 def _patient_data_for_question(question: str, user_id: int) -> str:
@@ -256,8 +284,24 @@ def _patient_data_for_question(question: str, user_id: int) -> str:
     return "\n---\n".join(patient_records) if patient_records else "(none)"
 
 
-def build_own_assistant_prompt(question: str, user_id: int) -> str:
-    project_knowledge = _retrieve_project_knowledge(question)
+def build_own_assistant_prompt(
+    question: str,
+    user_id: int,
+    web_search_results: list[dict[str, str]] | None = None,
+) -> str:
+    project_knowledge = _retrieve_project_knowledge(question, user_id)
+    if web_search_results:
+        formatted_results = "\n".join(
+            f"[W{index}] {result['title']}\n"
+            f"Snippet: {result['snippet']}\n"
+            f"URL: {result['link']}"
+            for index, result in enumerate(web_search_results, start=1)
+        )
+        project_knowledge = (
+            f"{project_knowledge}\n\n"
+            "WEB SEARCH RESULTS (use as external context when relevant):\n"
+            f"{formatted_results}"
+        )
     patient_data = _patient_data_for_question(question, user_id)
     return (
         f"PROJECT KNOWLEDGE:\n{project_knowledge}\n\n"
