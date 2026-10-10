@@ -1936,6 +1936,72 @@
         color: #788995;
         font-size: 12px;
       }
+      .assistant-web-search-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        width: fit-content;
+        margin: 0 0 10px;
+        padding: 7px 11px;
+        border: 1px solid #dce6e8;
+        border-radius: 999px;
+        background: #fff;
+        color: #405b67;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: border-color 150ms ease, background 150ms ease;
+      }
+      .assistant-web-search-toggle:has(input:checked) {
+        border-color: #8fc9b1;
+        background: #eef8f2;
+      }
+      .assistant-web-search-toggle input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+      }
+      .assistant-web-search-toggle-track {
+        position: relative;
+        width: 30px;
+        height: 17px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: #bdc9cc;
+        transition: background 150ms ease;
+      }
+      .assistant-web-search-toggle-track::after {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(27, 48, 57, .24);
+        content: "";
+        transition: transform 150ms ease;
+      }
+      .assistant-web-search-toggle input:checked + .assistant-web-search-toggle-track {
+        background: #368b68;
+      }
+      .assistant-web-search-toggle input:checked + .assistant-web-search-toggle-track::after {
+        transform: translateX(13px);
+      }
+      .assistant-web-search-toggle input:focus-visible + .assistant-web-search-toggle-track {
+        outline: 3px solid rgba(54, 139, 104, .25);
+        outline-offset: 2px;
+      }
+      .assistant-web-search-label {
+        display: grid;
+        gap: 1px;
+      }
+      .assistant-web-search-label small {
+        color: #788995;
+        font-size: 10px;
+        font-weight: 400;
+      }
       .botpress-embedded-chat {
         width: 100%;
         height: min(75vh, 760px);
@@ -3004,16 +3070,18 @@
                   <label for="localAssistantReportSelect">Medical report</label>
                   <select id="localAssistantReportSelect"></select>
                 </div>
-                <div class="field-group">
-                  <label>
-                    <input id="localAssistantWebSearch" type="checkbox" />
-                    Enable web search (SerpApi)
-                  </label>
-                </div>
                 <div id="localAssistantTranscript" class="local-assistant-transcript" aria-live="polite">
                   <p class="assistant-sources-empty">Loading saved local chat…</p>
                 </div>
                 <form id="localAssistantForm" class="ai-query-form">
+                  <label class="assistant-web-search-toggle" for="localAssistantWebSearch">
+                    <input id="localAssistantWebSearch" type="checkbox" />
+                    <span class="assistant-web-search-toggle-track" aria-hidden="true"></span>
+                    <span class="assistant-web-search-label">
+                      <span>Web search</span>
+                      <small>Search with SerpApi</small>
+                    </span>
+                  </label>
                   <div class="field-group">
                     <label for="localAssistantQuestion">Your message</label>
                     <textarea id="localAssistantQuestion" maxlength="2000" rows="3" required placeholder="Ask about the project, or name a patient for report context"></textarea>
