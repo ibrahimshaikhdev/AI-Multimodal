@@ -21,6 +21,7 @@ from backend.services.ct_head_inference import (
 
 MODEL_ID = "ianpan/ct-head-hemorrhage-detection"
 MODEL_REVISION = "e6d89c253fdcc2a597dd0fd0f5771821f4947b37"
+LOCALIZATION_THRESHOLD = 0.5
 MAX_CT_ARCHIVE_MEMBERS = 4096
 MAX_CT_ARCHIVE_UNPACKED_BYTES = 1024 * 1024 * 1024
 MAX_CT_ARCHIVE_MEMBER_BYTES = 256 * 1024 * 1024
@@ -133,6 +134,16 @@ class CTHeadHemorrhageService:
         )
         base = cv2.cvtColor(brain_window, cv2.COLOR_GRAY2BGR)
         overlay = cv2.addWeighted(base, 0.55, heatmap, 0.45, 0)
+        rows, columns = np.nonzero(mask >= LOCALIZATION_THRESHOLD)
+        if len(rows):
+            bounds = (
+                int(columns.min()),
+                int(rows.min()),
+                int(columns.max()),
+                int(rows.max()),
+            )
+            cv2.rectangle(overlay, bounds[:2], bounds[2:], (0, 0, 0), 5)
+            cv2.rectangle(overlay, bounds[:2], bounds[2:], (0, 255, 0), 2)
         success, encoded = cv2.imencode(".png", overlay)
         if not success:
             raise CTHeadModelContractError("Could not encode the CT localization map.")
@@ -274,6 +285,7 @@ __all__ = [
     "CTHeadInputError",
     "CTHeadModelContractError",
     "CTHeadModelUnavailableError",
+    "LOCALIZATION_THRESHOLD",
     "MODEL_ID",
     "MODEL_REVISION",
 ]

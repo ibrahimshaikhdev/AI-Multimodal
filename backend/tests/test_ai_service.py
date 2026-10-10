@@ -181,7 +181,7 @@ def test_ai_service_summary_prompt_preserves_source_and_safety_instructions():
     assert source_text in content
 
 
-def test_ai_service_comparison_prompt_requires_source_separation_and_evidence():
+def test_ai_service_comparison_prompt_requires_named_sources_and_evidence():
     report_1 = "Report 1 date: 2024-01-15. Hemoglobin: 12.1 g/dL."
     report_2 = "Report 2 date: 2025-01-15. Hemoglobin: 13.4 g/dL."
     response_body = json.dumps(
@@ -197,12 +197,16 @@ def test_ai_service_comparison_prompt_requires_source_separation_and_evidence():
         return_value=BytesIO(response_body),
     ) as open_url:
         assert _configured_ai_service().compare(
-            report_1, report_2
+            report_1,
+            report_2,
+            "Morgan Reed — Lab report — 2024-01-15 (#12)",
+            "Morgan Reed — Lab report — 2025-01-15 (#18)",
         ) == "Evidence-based comparison."
 
     content = json.loads(open_url.call_args.args[0].data)["contents"][0]["parts"][0]["text"]
     for required_instruction in (
-        "Compare ONLY Report 1 with Report 2",
+        "Refer to each source by its exact context label",
+        "never call them Report 1, Report 2, Paper 1, or Paper 2",
         "Keep the two sources separate",
         "exact source wording from BOTH reports",
         "same measurement and compatible units",
@@ -211,6 +215,8 @@ def test_ai_service_comparison_prompt_requires_source_separation_and_evidence():
         assert required_instruction in content
     assert report_1 in content
     assert report_2 in content
+    assert "Morgan Reed — Lab report — 2024-01-15 (#12)" in content
+    assert "Morgan Reed — Lab report — 2025-01-15 (#18)" in content
 
 
 @pytest.mark.parametrize(

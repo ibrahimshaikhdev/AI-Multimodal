@@ -202,6 +202,26 @@ class AbdominalAortaUltrasoundAnalysisService:
             overlay[mask].astype(np.float32) * 0.55
             + tint.astype(np.float32) * 0.45
         ).astype(np.uint8)
+        mask_points = cv2.findNonZero(mask.astype(np.uint8))
+        if mask_points is None:
+            raise AbdominalAortaUltrasoundModelContractError(
+                "The aorta mask does not contain a drawable region."
+            )
+        x, y, box_width, box_height = cv2.boundingRect(mask_points)
+        cv2.rectangle(
+            overlay,
+            (x, y),
+            (x + box_width - 1, y + box_height - 1),
+            (0, 0, 0),
+            thickness=5,
+        )
+        cv2.rectangle(
+            overlay,
+            (x, y),
+            (x + box_width - 1, y + box_height - 1),
+            (255, 255, 0),
+            thickness=2,
+        )
         output = BytesIO()
         Image.fromarray(overlay).save(output, format="PNG")
         return AbdominalAortaUltrasoundPrediction(

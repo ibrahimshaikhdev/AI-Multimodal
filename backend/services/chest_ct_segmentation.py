@@ -6,7 +6,7 @@ from io import BytesIO
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageDraw, UnidentifiedImageError
 
 
 MODEL_NAME = "best_chest_ct_model.keras"
@@ -153,22 +153,35 @@ class ChestCTSegmentationService:
         base = np.repeat(image[..., np.newaxis], 3, axis=-1).astype(np.float32)
         output = base.copy()
         colors = (
-            np.array([36.0, 165.0, 255.0], dtype=np.float32),
-            np.array([255.0, 145.0, 38.0], dtype=np.float32),
+            (36, 165, 255),
+            (255, 145, 38),
         )
         ground_glass = masks[..., 0]
         consolidation = masks[..., 1]
-        output[ground_glass & ~consolidation] = colors[0]
-        output[consolidation & ~ground_glass] = colors[1]
+        output[ground_glass & ~consolidation] = np.asarray(colors[0], dtype=np.float32)
+        output[consolidation & ~ground_glass] = np.asarray(colors[1], dtype=np.float32)
         output[ground_glass & consolidation] = np.array(
             [255.0, 235.0, 59.0],
             dtype=np.float32,
         )
 
+        overlay = Image.fromarray(np.clip(output, 0, 255).astype(np.uint8))
+        draw = ImageDraw.Draw(overlay)
+        for class_index, color in enumerate(colors):
+            rows, columns = np.nonzero(masks[..., class_index])
+            if not len(rows):
+                continue
+            bounds = (
+                int(columns.min()),
+                int(rows.min()),
+                int(columns.max()),
+                int(rows.max()),
+            )
+            draw.rectangle(bounds, outline=(0, 0, 0), width=5)
+            draw.rectangle(bounds, outline=color, width=2)
+
         encoded = BytesIO()
-        Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
-            encoded, format="PNG"
-        )
+        overlay.save(encoded, format="PNG")
         return encoded.getvalue()
 
     def analyze_bytes(self, image_bytes: bytes) -> ChestCTSegmentation:

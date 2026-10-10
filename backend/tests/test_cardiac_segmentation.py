@@ -21,15 +21,40 @@ class FakeCardiacModel:
     input_shape = (None, 256, 256, 1)
     output_shape = (None, 256, 256, 4)
 
-    def __init__(self, class_index=2):
+    def __init__(self, class_index=2, regions=None):
         self.class_index = class_index
+        self.regions = regions
         self.received = None
 
     def predict(self, batch, verbose=0):
         self.received = batch
         output = np.zeros((1, 256, 256, 4), dtype=np.float32)
-        output[:, :, :, self.class_index] = 1.0
+        if self.regions is None:
+            output[:, :, :, self.class_index] = 1.0
+        else:
+            output[:, :, :, 0] = 1.0
+            for class_index, (top, left, bottom, right) in self.regions.items():
+                output[:, top:bottom, left:right, class_index] = 2.0
         return output
+
+
+def test_cardiac_overlay_draws_a_class_colored_box_around_each_foreground_mask():
+    model = FakeCardiacModel(
+        regions={
+            1: (20, 10, 50, 45),
+            2: (70, 60, 100, 95),
+            3: (120, 110, 150, 145),
+        }
+    )
+    service = CardiacSegmentationService(model_loader=lambda _: model)
+
+    result = service.segment(png_image())
+
+    with Image.open(BytesIO(result.overlay_png)) as overlay:
+        assert overlay.getpixel((10, 20)) == (255, 77, 79)
+        assert overlay.getpixel((60, 70)) == (255, 197, 61)
+        assert overlay.getpixel((110, 120)) == (22, 119, 255)
+        assert overlay.getpixel((5, 5)) != (0, 0, 0)
 
 
 def test_cardiac_segmentation_preprocesses_argmaxes_and_builds_overlay():

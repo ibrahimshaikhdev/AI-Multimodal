@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 import torch
+import cv2
 from PIL import Image
 
 from backend.services.abdominal_aorta_ultrasound import (
@@ -64,6 +65,7 @@ def test_aorta_segmentation_returns_mask_overlay_and_original_dimensions():
     with Image.open(BytesIO(result.overlay_png)) as overlay:
         assert overlay.size == (64, 48)
         assert overlay.getpixel((25, 15)) != (80, 90, 100)
+        assert overlay.getpixel((20, 10)) == (255, 255, 0)
         assert overlay.getpixel((5, 5)) == (80, 90, 100)
 
 

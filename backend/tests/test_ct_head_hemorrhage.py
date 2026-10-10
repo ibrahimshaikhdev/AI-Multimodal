@@ -11,6 +11,7 @@ from backend.services.ct_head_hemorrhage import (
     CLASS_NAMES,
     CTHeadHemorrhageService,
     CTHeadInputError,
+    LOCALIZATION_THRESHOLD,
     MODEL_ID,
 )
 
@@ -66,6 +67,21 @@ def test_nifti_series_returns_six_class_scores_and_localization():
     assert result.slice_count == 3
     assert result.input_format == "NIfTI volume"
     assert result.localization_png.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_localization_overlay_draws_box_around_thresholded_mask():
+    import cv2
+
+    image = np.zeros((512, 512), dtype=np.float32)
+    mask = np.zeros((512, 512), dtype=np.float32)
+    mask[100:120, 200:230] = LOCALIZATION_THRESHOLD
+
+    encoded = CTHeadHemorrhageService._localization_png(image, mask)
+    overlay = cv2.imdecode(np.frombuffer(encoded, dtype=np.uint8), cv2.IMREAD_COLOR)
+
+    assert tuple(overlay[100, 210]) == (0, 255, 0)
+    assert tuple(overlay[110, 200]) == (0, 255, 0)
+    assert tuple(overlay[110, 210]) != (0, 255, 0)
 
 
 def test_jpeg_screenshot_is_rejected_for_head_ct():

@@ -2,6 +2,7 @@ from io import BytesIO
 
 import numpy as np
 import pytest
+import cv2
 from PIL import Image
 
 from backend.services.vascular_ultrasound import (
@@ -48,9 +49,21 @@ def test_vascular_ultrasound_service_returns_mask_overlay_at_source_size():
     assert result.mask_pixel_count == 100
     assert result.image_shape == (96, 128)
     assert result.overlay_png
+    expected_mask = cv2.resize(
+        np.pad(
+            np.ones((10, 10), dtype=np.uint8),
+            ((20, INPUT_SIZE - 30), (40, INPUT_SIZE - 50)),
+        ),
+        (128, 96),
+        interpolation=cv2.INTER_NEAREST,
+    )
+    points = cv2.findNonZero(expected_mask)
+    assert points is not None
+    x, y, _, _ = cv2.boundingRect(points)
     with Image.open(BytesIO(result.overlay_png)) as overlay:
         assert overlay.size == (128, 96)
         assert overlay.mode == "RGB"
+        assert overlay.getpixel((x, y)) == (255, 255, 0)
 
 
 def test_vascular_ultrasound_service_returns_no_overlay_for_empty_mask():

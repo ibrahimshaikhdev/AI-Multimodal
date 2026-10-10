@@ -50,6 +50,9 @@ def test_chest_ct_service_returns_two_thresholded_masks_and_overlay():
     with Image.open(BytesIO(result.overlay_png)) as overlay:
         assert overlay.size == (INPUT_SIZE, INPUT_SIZE)
         assert overlay.mode == "RGB"
+        assert overlay.getpixel((30, 10)) == (36, 165, 255)
+        assert overlay.getpixel((60, 40)) == (255, 145, 38)
+        assert overlay.getpixel((100, 100)) == (128, 128, 128)
 
 
 def test_chest_ct_service_rejects_non_image_input():

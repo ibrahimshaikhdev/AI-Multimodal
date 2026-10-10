@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 import fitz
@@ -8,7 +9,7 @@ from werkzeug.security import generate_password_hash
 from backend.app import create_app
 from backend.extensions import db
 from backend.models import MedicalReport, Patient, ResearchPaper, ScanAsset, User
-from backend.services.ai_service import AIServiceTimeout
+from backend.services.ai_service import AIServiceTimeout, AIServiceUnavailable
 from backend.services.research_rag_service import ResearchRAGService
 
 
@@ -104,11 +105,12 @@ def test_research_search_extracts_real_local_text_and_is_account_scoped(ai_works
             "Cardiac methods",
             "The study used echocardiography and reported a cohort of 42 participants.",
         )
+        _add_paper(owner_id, uploads, "Other imaging", "The paper discusses computed tomography.")
 
     response = client.post(
         "/api/research/search",
         headers={"Authorization": f"Bearer {owner_token}"},
-        json={"query": "echocardiography methods"},
+        json={"query": "echocardiography methods", "paper_ids": [paper_id]},
     )
 
     assert response.status_code == 200
@@ -124,6 +126,12 @@ def test_research_search_extracts_real_local_text_and_is_account_scoped(ai_works
     )
     assert other_response.status_code == 200
     assert other_response.get_json()["results"] == []
+    private_paper_response = client.post(
+        "/api/research/search",
+        headers={"Authorization": f"Bearer {other_token}"},
+        json={"query": "echocardiography methods", "paper_ids": [paper_id]},
+    )
+    assert private_paper_response.status_code == 404
     assert other_id != owner_id
 
 
@@ -131,12 +139,13 @@ def test_research_ask_uses_retrieved_excerpts_and_returns_citations(ai_workspace
     client, app, owner_id, _, uploads = ai_workspace
     token = _login(client, "research-ai-owner@example.com")
     with app.app_context():
-        _add_paper(
+        selected_paper_id = _add_paper(
             owner_id,
             uploads,
             "Imaging findings",
             "The paper reports an imaging sensitivity of 91 percent.",
         )
+        _add_paper(owner_id, uploads, "Excluded findings", "The paper reports a specificity of 75 percent.")
 
     captured = {}
 
@@ -149,15 +158,100 @@ def test_research_ask_uses_retrieved_excerpts_and_returns_citations(ai_workspace
     response = client.post(
         "/api/research/ask",
         headers={"Authorization": f"Bearer {token}"},
-        json={"question": "What sensitivity is reported?"},
+        json={
+            "question": "What sensitivity is reported?",
+            "paper_ids": [selected_paper_id],
+        },
     )
 
     assert response.status_code == 200
     body = response.get_json()
     assert body["answer"].startswith("The retrieved paper")
     assert body["citations"][0]["citation"].startswith("[P")
-    assert "91 percent" in captured["context"][0]["excerpt"]
+    excerpts = captured["context"]["excerpts"]
+    assert "91 percent" in excerpts[0]["excerpt"]
     assert captured["question"] == "What sensitivity is reported?"
+    assert all(
+        source["citation"].startswith(f"[P{selected_paper_id}-")
+        for source in excerpts
+    )
+
+
+def test_local_research_ask_uses_three_chunks_and_returns_source_citations(
+    ai_workspace,
+    monkeypatch,
+):
+    client, app, owner_id, _, uploads = ai_workspace
+    token = _login(client, "research-ai-owner@example.com")
+    with app.app_context():
+        paper_id = _add_paper(
+            owner_id,
+            uploads,
+            "Local source study",
+            "The study measured sensitivity at 91 percent.",
+        )
+    captured = {}
+    rag_service = app.extensions["research_rag_service"]
+    original_search = rag_service.search
+
+    def search(user_id, papers, query, *, top_k=5, paper_ids=None):
+        captured["top_k"] = top_k
+        return original_search(
+            user_id,
+            papers,
+            query,
+            top_k=top_k,
+            paper_ids=paper_ids,
+        )
+
+    monkeypatch.setattr(rag_service, "search", search)
+
+    def local_answer(prompt, system=None):
+        captured["prompt"] = prompt
+        return "Sensitivity was 91 percent [S1]."
+
+    monkeypatch.setattr("backend.routes.research_papers.local_generate", local_answer)
+    response = client.post(
+        "/api/research/ask-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"question": "What sensitivity is reported?", "paper_ids": [paper_id], "top_k": 5},
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["answer"] == "Sensitivity was 91 percent [S1]."
+    assert len(body["citations"]) <= 3
+    assert body["citations"][0]["citation"].startswith("[S1] · ")
+    assert f"[P{paper_id}-" in body["citations"][0]["citation"]
+    assert captured["top_k"] == 3
+    assert '"citation": "[S1]"' in captured["prompt"]
+    assert "Cite every factual claim" in captured["prompt"]
+
+
+def test_local_research_ask_returns_local_error_without_fallback(ai_workspace, monkeypatch):
+    client, app, owner_id, _, uploads = ai_workspace
+    token = _login(client, "research-ai-owner@example.com")
+    with app.app_context():
+        paper_id = _add_paper(owner_id, uploads, "Local error study", "A readable paper.")
+
+    def failed_local_model(_prompt, system=None):
+        raise RuntimeError("Local model failed (is llama-server running?): refused")
+
+    monkeypatch.setattr(
+        "backend.routes.research_papers.local_generate",
+        failed_local_model,
+    )
+    response = client.post(
+        "/api/research/ask-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"question": "What is reported?", "paper_ids": [paper_id]},
+    )
+
+    assert response.status_code == 502
+    assert response.get_json() == {
+        "success": False,
+        "error": "Local model failed (is llama-server running?): refused",
+    }
 
 
 def test_research_ask_returns_ai_timeout(ai_workspace):
@@ -180,7 +274,7 @@ def test_research_ask_returns_ai_timeout(ai_workspace):
     assert "timed out" in response.get_json()["error"]
 
 
-def test_research_comparison_requires_two_owned_papers_and_returns_local_fields(ai_workspace):
+def test_research_comparison_returns_ai_and_local_fields_for_two_owned_papers(ai_workspace):
     client, app, owner_id, other_id, uploads = ai_workspace
     token = _login(client, "research-ai-owner@example.com")
     with app.app_context():
@@ -207,10 +301,26 @@ def test_research_comparison_requires_two_owned_papers_and_returns_local_fields(
 
     app.extensions["research_rag_service"].similarity_matrix = low_similarity
 
-    def unexpected_generation(_evidence):
-        raise AssertionError("Research comparison must not call generative AI")
+    captured = {}
 
-    app.extensions["ai_service"].compare_research = unexpected_generation
+    def compare_set(evidence):
+        captured["evidence"] = evidence
+        fields = ("methodology", "dataset", "model", "results", "limitations", "future_work")
+        return json.dumps(
+            {
+                "papers": [
+                    {
+                        "id": paper["id"],
+                        "title": paper["title"],
+                        **{field: f"{field} from {paper['title']}" for field in fields},
+                    }
+                    for paper in evidence
+                ],
+                "overall": "Paper 1 used MRI, whereas Paper 2 used CT.",
+            }
+        )
+
+    app.extensions["ai_service"].compare_research_set = compare_set
     response = client.post(
         "/api/research/compare",
         headers={"Authorization": f"Bearer {token}"},
@@ -220,21 +330,117 @@ def test_research_comparison_requires_two_owned_papers_and_returns_local_fields(
     assert response.status_code == 200
     payload = response.get_json()
     assert payload["papers"][0]["id"] == first_id
-    assert payload["comparison"]["methodology"]["status"] == "different_evidence"
-    assert payload["comparison"]["methodology"]["similarity"] == 0.4
-    assert response.get_json()["citations"]
+    assert payload["comparison"] is None
+    assert payload["ai_comparison"]["overall"] == (
+        "First study used MRI, whereas Second study used CT."
+    )
+    assert len(captured["evidence"]) == 2
+    assert payload["citations"]
 
 
-def test_research_comparison_does_not_depend_on_ai_provider(ai_workspace):
+def test_local_research_comparison_parses_json_fences_and_limits_excerpt_context(
+    ai_workspace,
+    monkeypatch,
+):
+    client, app, owner_id, _, uploads = ai_workspace
+    token = _login(client, "research-ai-owner@example.com")
+    with app.app_context():
+        first_id = _add_paper(
+            owner_id,
+            uploads,
+            "First local study",
+            "Methods and results from the first study. " * 30,
+        )
+        second_id = _add_paper(
+            owner_id,
+            uploads,
+            "Second local study",
+            "Methods and results from the second study. " * 30,
+        )
+    captured = {}
+    fields = ("methodology", "dataset", "model", "results", "limitations", "future_work")
+
+    def local_comparison(prompt, system=None):
+        context = prompt.split("\n\nRequest:\n", maxsplit=1)[0].removeprefix("Context:\n")
+        captured["context"] = json.loads(context)
+        captured["system"] = system
+        papers = captured["context"]["papers"]
+        result = {
+            "papers": [
+                {
+                    "id": paper["id"],
+                    "title": paper["title"],
+                    **{field: f"Supported {field}." for field in fields},
+                }
+                for paper in papers
+            ],
+            "overall": "The supplied excerpts support this comparison.",
+        }
+        return f"```json\n{json.dumps(result)}\n```"
+
+    monkeypatch.setattr(
+        "backend.routes.research_papers.local_generate",
+        local_comparison,
+    )
+    response = client.post(
+        "/api/research/compare-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"paper_ids": [first_id, second_id]},
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["ai_comparison"]["overall"] == (
+        "The supplied excerpts support this comparison."
+    )
+    assert body["ai_error"] is None
+    assert body["citations"]
+    for paper in captured["context"]["papers"]:
+        excerpt_characters = sum(
+            len(passage["excerpt"])
+            for passages in paper["evidence"].values()
+            for passage in passages
+        )
+        assert excerpt_characters <= 3500
+    assert captured["system"] is None
+
+
+def test_local_research_comparison_returns_error_for_invalid_json(ai_workspace, monkeypatch):
+    client, app, owner_id, _, uploads = ai_workspace
+    token = _login(client, "research-ai-owner@example.com")
+    with app.app_context():
+        paper_ids = [
+            _add_paper(owner_id, uploads, title, "Readable study text.")
+            for title in ("Malformed first study", "Malformed second study")
+        ]
+    monkeypatch.setattr(
+        "backend.routes.research_papers.local_generate",
+        lambda _prompt, system=None: "not json",
+    )
+
+    response = client.post(
+        "/api/research/compare-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"paper_ids": paper_ids},
+    )
+
+    assert response.status_code == 502
+    body = response.get_json()
+    assert body["success"] is False
+    assert body["error"].startswith("Local model returned unreadable JSON:")
+
+
+def test_research_comparison_preserves_local_fields_when_ai_provider_fails(ai_workspace):
     client, app, owner_id, _, uploads = ai_workspace
     token = _login(client, "research-ai-owner@example.com")
     with app.app_context():
         first_id = _add_paper(owner_id, uploads, "First paper", "First paper text.")
         second_id = _add_paper(owner_id, uploads, "Second paper", "Second paper text.")
-    def unavailable_generation(_evidence):
-        raise AssertionError("Research comparison must not call generative AI")
 
-    app.extensions["ai_service"].compare_research = unavailable_generation
+    def unavailable_generation(_evidence):
+        raise AIServiceUnavailable()
+
+    app.extensions["ai_service"].compare_research_set = unavailable_generation
 
     response = client.post(
         "/api/research/compare",
@@ -243,7 +449,55 @@ def test_research_comparison_does_not_depend_on_ai_provider(ai_workspace):
     )
 
     assert response.status_code == 200
-    assert response.get_json()["comparison"]["methodology"]["status"] == "related_evidence"
+    payload = response.get_json()
+    assert payload["comparison"]["methodology"]["status"] == "related_evidence"
+    assert payload["ai_comparison"] is None
+    assert payload["ai_error"] == "Configured AI providers are unavailable."
+
+
+def test_research_comparison_supports_three_papers(ai_workspace):
+    client, app, owner_id, _, uploads = ai_workspace
+    token = _login(client, "research-ai-owner@example.com")
+    with app.app_context():
+        paper_ids = [
+            _add_paper(owner_id, uploads, title, f"The study {title} used a prospective design.")
+            for title in ("First study", "Second study", "Third study")
+        ]
+
+    app.extensions["research_rag_service"].similarity_matrix = (
+        lambda first, second: [[0.5 for _ in second] for _ in first]
+    )
+
+    def compare_set(evidence):
+        fields = ("methodology", "dataset", "model", "results", "limitations", "future_work")
+        return json.dumps(
+            {
+                "papers": [
+                    {
+                        "id": paper["id"],
+                        "title": paper["title"],
+                        **{field: "Not stated in the retrieved excerpts." for field in fields},
+                    }
+                    for paper in evidence
+                ],
+                "overall": "The excerpts do not support further comparison.",
+            }
+        )
+
+    app.extensions["ai_service"].compare_research_set = compare_set
+    response = client.post(
+        "/api/research/compare",
+        headers={"Authorization": f"******"},
+        json={"paper_ids": paper_ids},
+        environ_overrides={"HTTP_AUTHORIZATION": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert [paper["id"] for paper in payload["ai_comparison"]["papers"]] == paper_ids
+    assert len(payload["papers"]) == 3
+    assert payload["comparison"] is None
+    assert len(payload["citations"]) >= 3
 
 
 def test_assistant_report_context_is_owner_checked_and_uses_saved_text(ai_workspace):

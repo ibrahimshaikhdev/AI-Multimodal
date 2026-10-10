@@ -533,16 +533,22 @@ Extract/prepare comparison fields:
 **Done when:** Each paper has a structured comparison representation.
 
 ## M51 — Research Comparison Engine
-Compare retrieved source passages across the configured fields using local
-embedding similarity. Display the passages and citations; do not generate or
-invent a paper-level synthesis.
+Retrieve source passages across the configured fields for two or more
+account-owned papers and generate a structured synthesis using the configured
+AI provider. Bound the excerpts sent to the provider and validate the returned
+paper IDs, titles, and fields. Show retrieved passages and citations. Generate
+the local embedding-similarity comparison for the first two selected papers
+only if AI generation fails, then display it as a temporary fallback.
 
 If information is unavailable, mark it unavailable. Do not invent it.
 
-**Done when:** Structured paper comparison is produced.
+**Done when:** A structured AI comparison is produced from retrieved evidence,
+or a clear provider error is shown alongside the available local comparison.
 
 ## M52 — Research Comparison UI
-Create paper selection and comparison display.
+Allow selecting at least two papers and display the AI field comparison,
+overall synthesis, local evidence alignment, retrieved source passages, and
+provider errors without hiding the local results.
 
 **Done when:** User can compare papers from the UI.
 

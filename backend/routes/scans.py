@@ -536,7 +536,9 @@ def _serialize_scan(scan):
                 ),
                 "disclaimer": (
                     "AI/model output from an experimental research model, NOT a confirmed "
-                    "medical diagnosis. The localization map is qualitative only."
+                    "medical diagnosis. The localization map is qualitative only; its green "
+                    "outline encloses pixels at or above a 0.5 model-output threshold and "
+                    "is not a verified lesion boundary."
                 ),
             }
             if ct_head_analysis

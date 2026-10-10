@@ -167,6 +167,26 @@ class VascularUltrasoundAnalysisService:
             overlay[source_mask] = (
                 overlay[source_mask].astype(np.float32) * 0.55 + tint * 0.45
             ).astype(np.uint8)
+            mask_points = cv2.findNonZero(source_mask.astype(np.uint8))
+            if mask_points is None:
+                raise VascularUltrasoundModelContractError(
+                    "The carotid mask could not be mapped to the source image."
+                )
+            x, y, box_width, box_height = cv2.boundingRect(mask_points)
+            cv2.rectangle(
+                overlay,
+                (x, y),
+                (x + box_width - 1, y + box_height - 1),
+                (0, 0, 0),
+                thickness=5,
+            )
+            cv2.rectangle(
+                overlay,
+                (x, y),
+                (x + box_width - 1, y + box_height - 1),
+                (255, 255, 0),
+                thickness=2,
+            )
             output_buffer = BytesIO()
             Image.fromarray(overlay).save(output_buffer, format="PNG")
             overlay_png = output_buffer.getvalue()

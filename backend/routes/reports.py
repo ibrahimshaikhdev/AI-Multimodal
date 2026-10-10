@@ -1,6 +1,8 @@
+import json
 from datetime import date, datetime
 from pathlib import Path
 from pathlib import PurePosixPath
+import re
 
 from flask import Blueprint, abort, current_app, g, jsonify, request, send_from_directory
 from werkzeug.exceptions import BadRequest
@@ -22,6 +24,7 @@ from backend.services.text_cleaning import clean_extracted_text
 from backend.services.audit_logging import record_audit_event
 from backend.services.ai_service import AIServiceError
 from backend.services.document_comparison import compare_report_texts
+from backend.services.local_llm import local_generate
 
 reports_bp = Blueprint("reports", __name__)
 SUMMARY_DISCLAIMER = (
@@ -29,9 +32,9 @@ SUMMARY_DISCLAIMER = (
     "This is not a diagnosis."
 )
 COMPARISON_DISCLAIMER = (
-    "Local, rule-based and embedding-assisted comparison of extracted source text. "
-    "Similarity scores are not probabilities and do not establish clinical equivalence or a diagnosis; "
-    "review the original reports."
+    "Structured values and wording are compared locally; the AI narrative summary uses only the two saved "
+    "extracted texts. Similarity scores are not probabilities and do not establish clinical equivalence or a "
+    "diagnosis; review the original reports."
 )
 
 
@@ -302,25 +305,73 @@ def compare_reports():
             }
         ), 422
 
-    try:
-        comparison = compare_report_texts(
-            *report_texts,
-            similarity_matrix=current_app.extensions[
-                "research_rag_service"
-            ].similarity_matrix,
+    ai_summary = None
+    ai_error = None
+    comparison = None
+    fallback_error = None
+    def comparison_source_name(report):
+        report_date = (
+            report.report_date.isoformat()
+            if report.report_date
+            else "date unavailable"
         )
+        report_type = (report.report_type or "Medical report").replace(
+            "_",
+            " ",
+        ).title()
+        return (
+            f"{report.patient.first_name} {report.patient.last_name} — "
+            f"{report_type} — {report_date} "
+            f"(report #{report.id})"
+        )
+
+    source_names = (
+        comparison_source_name(report_1),
+        comparison_source_name(report_2),
+    )
+    try:
+        ai_summary = current_app.extensions["ai_service"].compare(
+            report_texts[0],
+            report_texts[1],
+            *source_names,
+        )
+        if not isinstance(ai_summary, str) or not ai_summary.strip():
+            ai_summary = None
+            ai_error = "AI provider returned an empty comparison."
+        else:
+            ai_summary = re.sub(
+                r"\b(?:Report|Paper)\s*([12])\b",
+                lambda match: source_names[int(match.group(1)) - 1],
+                ai_summary,
+                flags=re.IGNORECASE,
+            )
+    except (ValueError, AIServiceError) as exc:
+        ai_error = str(exc)
     except Exception:
         current_app.logger.exception(
-            "Local comparison failed for reports %s and %s",
+            "AI report comparison summary failed for reports %s and %s",
             report_1.id,
             report_2.id,
         )
-        return jsonify(
-            {
-                "success": False,
-                "error": "Local text comparison is temporarily unavailable. Please try again.",
-            }
-        ), 503
+        ai_error = "AI-generated report comparison is temporarily unavailable."
+
+    if ai_summary is None:
+        try:
+            comparison = compare_report_texts(
+                *report_texts,
+                similarity_matrix=current_app.extensions[
+                    "research_rag_service"
+                ].similarity_matrix,
+            )
+        except Exception:
+            current_app.logger.exception(
+                "Local fallback comparison failed for reports %s and %s",
+                report_1.id,
+                report_2.id,
+            )
+            fallback_error = (
+                "The local fallback comparison is temporarily unavailable."
+            )
 
     def report_details(report):
         return {
@@ -338,6 +389,161 @@ def compare_reports():
             "success": True,
             "reports": [report_details(report_1), report_details(report_2)],
             "comparison": comparison,
+            "ai_summary": ai_summary,
+            "ai_error": ai_error,
+            "fallback_error": fallback_error,
+            "disclaimer": COMPARISON_DISCLAIMER,
+        }
+    ), 200
+
+
+@reports_bp.post("/reports/compare-local")
+@require_auth
+def compare_reports_local():
+    if not request.is_json:
+        return jsonify({"success": False, "error": "A JSON request body is required."}), 400
+    try:
+        data = request.get_json()
+    except BadRequest:
+        return jsonify({"success": False, "error": "Request body must be valid JSON."}), 400
+    if not isinstance(data, dict):
+        return jsonify({"success": False, "error": "A JSON object is required."}), 400
+
+    report_ids = (data.get("report_id_1"), data.get("report_id_2"))
+    if any(
+        isinstance(report_id, bool) or not isinstance(report_id, int) or report_id <= 0
+        for report_id in report_ids
+    ):
+        return jsonify(
+            {
+                "success": False,
+                "error": "Exactly two positive integer report IDs are required.",
+            }
+        ), 400
+    if report_ids[0] == report_ids[1]:
+        return jsonify(
+            {"success": False, "error": "Select two different reports to compare."}
+        ), 400
+
+    reports = (
+        db.session.query(MedicalReport)
+        .join(Patient)
+        .filter(
+            MedicalReport.id.in_(report_ids),
+            Patient.created_by_id == g.current_user.id,
+        )
+        .all()
+    )
+    if len(reports) != 2:
+        return jsonify({"success": False, "error": "One or both reports were not found."}), 404
+
+    reports_by_id = {report.id: report for report in reports}
+    report_1, report_2 = (reports_by_id[report_id] for report_id in report_ids)
+    report_texts = (report_1.extracted_text, report_2.extracted_text)
+    if any(not isinstance(text, str) or not text.strip() for text in report_texts):
+        return jsonify(
+            {
+                "success": False,
+                "error": "Both reports must have usable extracted text before comparison.",
+            }
+        ), 422
+
+    def comparison_source_name(report):
+        report_date = (
+            report.report_date.isoformat()
+            if report.report_date
+            else "date unavailable"
+        )
+        report_type = (report.report_type or "Medical report").replace(
+            "_",
+            " ",
+        ).title()
+        return (
+            f"{report.patient.first_name} {report.patient.last_name} — "
+            f"{report_type} — {report_date} "
+            f"(report #{report.id})"
+        )
+
+    source_names = (
+        comparison_source_name(report_1),
+        comparison_source_name(report_2),
+    )
+    prompt = (
+        "Compare only the two sources in the supplied context. Refer to each "
+        "source by its exact context label; never call them Report 1, Report 2, "
+        "Paper 1, or Paper 2. "
+        "Keep the two sources separate; "
+        "never transfer, repeat, or attribute a finding, measurement, or date from one report to the other. "
+        "Do not invent medical information or fabricate trends. For every stated change, identify the "
+        "exact source wording from BOTH reports that supports it. If either source does not explicitly "
+        "support a comparison, say there is not enough information instead of inferring a change. "
+        "Only say a measurement increased or decreased when the same measurement and compatible units "
+        "are explicitly present in both reports; preserve each exact value and unit. Only compare dates "
+        "that are explicitly present. Compare recommendations and distinguish reported facts from "
+        "interpretation. Do not claim to diagnose the patient. Support possible improvement or worsening "
+        "only when the exact report text directly supports it. "
+        "Use clear section headings such as: Overall changes; New findings; Findings no longer reported; "
+        "Changed measurements; Possible improvement / worsening; Recommendations; Important observations. "
+        "State that this is an AI-generated comparison for informational purposes; requires human review. "
+        "This is not a diagnosis."
+    )
+    prompt = (
+        f"Context:\n{json.dumps(dict(zip(source_names, report_texts)), ensure_ascii=False, indent=2)}"
+        f"\n\nRequest:\n{prompt}"
+        "\n\nKeep the response to five concise bullets and at most 150 words. "
+        "Never repeat a sentence or finding; stop when the summary is complete."
+    )
+
+    try:
+        comparison = compare_report_texts(
+            *report_texts,
+            similarity_matrix=current_app.extensions[
+                "research_rag_service"
+            ].similarity_matrix,
+        )
+        ai_summary = local_generate(prompt, max_tokens=240)
+        summary_sentences = re.split(r"(?<=[.!?])\s+", ai_summary)
+        unique_sentences = []
+        seen_sentences = set()
+        for sentence in summary_sentences:
+            normalized = re.sub(r"[\W_]+", " ", sentence).strip().casefold()
+            if normalized and normalized not in seen_sentences:
+                seen_sentences.add(normalized)
+                unique_sentences.append(sentence)
+        ai_summary = " ".join(unique_sentences)
+        ai_summary = re.sub(
+            r"\b(?:Report|Paper)\s*([12])\b",
+            lambda match: source_names[int(match.group(1)) - 1],
+            ai_summary,
+            flags=re.IGNORECASE,
+        )
+    except Exception as exc:
+        current_app.logger.exception(
+            "Local report comparison failed for reports %s and %s",
+            report_1.id,
+            report_2.id,
+        )
+        return jsonify({"success": False, "error": str(exc)}), 502
+
+    def report_details(report):
+        return {
+            "id": report.id,
+            "patient_id": report.patient_id,
+            "patient_name": f"{report.patient.first_name} {report.patient.last_name}",
+            "report_type": report.report_type,
+            "report_date": report.report_date.isoformat() if report.report_date else None,
+            "metadata": extract_report_metadata(report.extracted_text),
+            "processing_status": report.processing_status,
+        }
+
+    return jsonify(
+        {
+            "success": True,
+            "reports": [report_details(report_1), report_details(report_2)],
+            "comparison": comparison,
+            "ai_summary": ai_summary,
+            "ai_error": None,
+            "fallback_error": None,
             "disclaimer": COMPARISON_DISCLAIMER,
         }
     ), 200

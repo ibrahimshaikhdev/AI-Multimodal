@@ -264,11 +264,11 @@ def test_report_comparison_uses_saved_text_and_returns_report_details(
             owner_patient_id, text_2, date(2025, 1, 15)
         )
 
-    class UnusedAIService:
+    class FakeAIService:
         def compare(self, *_args):
-            raise AssertionError("Report comparison must not call a generative AI service")
+            return "Source-grounded report comparison."
 
-    monkeypatch.setitem(client.application.extensions, "ai_service", UnusedAIService())
+    monkeypatch.setitem(client.application.extensions, "ai_service", FakeAIService())
     monkeypatch.setattr(
         client.application.extensions["research_rag_service"],
         "similarity_matrix",
@@ -291,9 +291,60 @@ def test_report_comparison_uses_saved_text_and_returns_report_details(
         "2024-01-15",
         "2025-01-15",
     ]
-    assert payload["comparison"]["parameters"][0]["label"] == "Hemoglobin"
-    assert payload["comparison"]["parameters"][0]["status"] == "different_value"
-    assert payload["disclaimer"].startswith("Local, rule-based")
+    assert payload["ai_summary"] == "Source-grounded report comparison."
+    assert payload["comparison"] is None
+    assert payload["disclaimer"].startswith("Structured values and wording")
+
+
+def test_local_report_comparison_returns_python_differences_and_local_summary(
+    upload_client,
+    monkeypatch,
+):
+    client, owner_patient_id, _ = upload_client
+    token = login(client)
+    with client.application.app_context():
+        first_id = _create_comparison_report(
+            owner_patient_id,
+            "Study date: 2024-01-15\nHemoglobin: 12.1 g/dL",
+            date(2024, 1, 15),
+        )
+        second_id = _create_comparison_report(
+            owner_patient_id,
+            "Study date: 2025-01-15\nHemoglobin: 13.4 g/dL",
+            date(2025, 1, 15),
+        )
+    monkeypatch.setattr(
+        client.application.extensions["research_rag_service"],
+        "similarity_matrix",
+        lambda first, second: [[0.1 for _ in second] for _ in first],
+    )
+    captured = {}
+
+    def local_summary(prompt, system=None, max_tokens=900):
+        captured["prompt"] = prompt
+        captured["system"] = system
+        captured["max_tokens"] = max_tokens
+        return (
+            "The reports state different hemoglobin values. "
+            "The reports state different hemoglobin values."
+        )
+
+    monkeypatch.setattr("backend.routes.reports.local_generate", local_summary)
+    response = client.post(
+        "/api/reports/compare-local",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"report_id_1": first_id, "report_id_2": second_id},
+    )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["ai_summary"] == "The reports state different hemoglobin values."
+    assert body["comparison"]["parameters"]
+    assert body["ai_error"] is None
+    assert "Request:\nCompare only the two sources" in captured["prompt"]
+    assert "Never repeat a sentence or finding" in captured["prompt"]
+    assert captured["max_tokens"] == 240
+    assert captured["system"] is None
 
 
 def test_report_comparison_requires_authentication_and_two_valid_ids(upload_client):
@@ -414,7 +465,47 @@ def test_report_comparison_rejects_missing_saved_extracted_text(
     assert "usable extracted text" in response.get_json()["error"]
 
 
-def test_report_comparison_does_not_depend_on_ai_provider(upload_client, monkeypatch):
+def test_report_comparison_adds_ai_summary_to_local_comparison(upload_client, monkeypatch):
+    client, owner_patient_id, _ = upload_client
+    token = login(client)
+    with client.application.app_context():
+        first_text = "Hemoglobin: 12.0 g/dL"
+        second_text = "Hemoglobin: 12.4 g/dL"
+        report_id_1 = _create_comparison_report(owner_patient_id, first_text)
+        report_id_2 = _create_comparison_report(owner_patient_id, second_text)
+
+    class FakeAIService:
+        def compare(self, report_1, report_2, name_1, name_2):
+            assert report_1 == first_text
+            assert report_2 == second_text
+            assert "Morgan Reed" in name_1
+            assert "Lab Results" in name_1
+            assert "report #" in name_1
+            assert name_1 != name_2
+            return "Report 1 differs from Paper 2."
+
+    monkeypatch.setitem(client.application.extensions, "ai_service", FakeAIService())
+    response = client.post(
+        "/api/reports/compare",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"report_id_1": report_id_1, "report_id_2": report_id_2},
+    )
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert "Morgan Reed" in payload["ai_summary"]
+    assert "Lab Results" in payload["ai_summary"]
+    assert "(report #" in payload["ai_summary"]
+    assert "Report 1" not in payload["ai_summary"]
+    assert "Paper 2" not in payload["ai_summary"]
+    assert payload["comparison"] is None
+    assert payload["ai_error"] is None
+    assert payload["fallback_error"] is None
+
+
+def test_report_comparison_keeps_local_results_when_ai_provider_fails(
+    upload_client,
+    monkeypatch,
+):
     client, owner_patient_id, _ = upload_client
     token = login(client)
     with client.application.app_context():
@@ -423,16 +514,25 @@ def test_report_comparison_does_not_depend_on_ai_provider(upload_client, monkeyp
 
     class UnavailableAIService:
         def compare(self, *_args):
-            raise AssertionError("Report comparison must work without the AI provider")
+            raise AIServiceUnavailable()
 
-    monkeypatch.setitem(client.application.extensions, "ai_service", UnavailableAIService())
+    monkeypatch.setitem(
+        client.application.extensions,
+        "ai_service",
+        UnavailableAIService(),
+    )
     response = client.post(
         "/api/reports/compare",
         headers={"Authorization": f"Bearer {token}"},
         json={"report_id_1": report_id_1, "report_id_2": report_id_2},
     )
+
     assert response.status_code == 200
-    assert response.get_json()["comparison"]["parameters"][0]["status"] == "different_value"
+    payload = response.get_json()
+    assert payload["comparison"]["parameters"][0]["status"] == "different_value"
+    assert payload["ai_summary"] is None
+    assert payload["ai_error"] == "Configured AI providers are unavailable."
+    assert payload["fallback_error"] is None
 
 
 def test_report_summary_uses_saved_extracted_text_and_returns_disclaimer(

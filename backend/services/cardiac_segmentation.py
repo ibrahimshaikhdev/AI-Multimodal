@@ -7,7 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Callable
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageDraw, UnidentifiedImageError
 
 try:
     import numpy as np
@@ -164,11 +164,29 @@ class CardiacSegmentationService:
             base_image[foreground].astype(np.float32) * 0.45
             + class_colors[foreground].astype(np.float32) * 0.55
         ).clip(0, 255).astype(np.uint8)
+        overlay_image = Image.fromarray(overlay)
+        draw = ImageDraw.Draw(overlay_image)
+        for class_index, class_name in enumerate(CARDIAC_CLASS_NAMES[1:], start=1):
+            rows, columns = np.nonzero(mask == class_index)
+            if not len(rows):
+                continue
+            bounds = (
+                int(columns.min()),
+                int(rows.min()),
+                int(columns.max()),
+                int(rows.max()),
+            )
+            draw.rectangle(bounds, outline=(0, 0, 0), width=5)
+            draw.rectangle(
+                bounds,
+                outline=tuple(colors[class_index].tolist()),
+                width=2,
+            )
 
         mask_buffer = BytesIO()
         Image.fromarray(mask * 85).save(mask_buffer, format="PNG")
         overlay_buffer = BytesIO()
-        Image.fromarray(overlay).save(overlay_buffer, format="PNG")
+        overlay_image.save(overlay_buffer, format="PNG")
 
         return CardiacSegmentationResult(
             mask_png=mask_buffer.getvalue(),

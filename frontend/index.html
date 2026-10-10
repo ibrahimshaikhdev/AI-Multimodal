@@ -801,6 +801,21 @@
         font-size: 12px;
         line-height: 1.5;
       }
+      .dental-detection-visualization {
+        position: relative;
+        width: min(100%, 512px);
+        margin: 12px 0;
+      }
+      .dental-detection-visualization .scan-analysis-image {
+        width: 100%;
+      }
+      .dental-detection-box {
+        position: absolute;
+        box-sizing: border-box;
+        border: 2px solid #ff3b30;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+        pointer-events: none;
+      }
       .scan-analysis-image {
         display: block;
         width: min(100%, 512px);
@@ -870,6 +885,21 @@
         border-radius: 6px;
         background: #111;
         box-shadow: 0 8px 22px rgba(29, 53, 42, 0.12);
+      }
+      .knee-roi-visualization {
+        position: relative;
+        width: min(100%, 512px);
+        margin: 12px 0;
+      }
+      .knee-roi-visualization .scan-overlay {
+        width: 100%;
+      }
+      .knee-roi-box {
+        position: absolute;
+        box-sizing: border-box;
+        border: 2px solid #ffd400;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.85);
+        pointer-events: none;
       }
       .scan-class-legend {
         display: flex;
@@ -1906,6 +1936,46 @@
         color: #788995;
         font-size: 12px;
       }
+      .botpress-embedded-chat {
+        width: 100%;
+        height: min(75vh, 760px);
+        min-height: 480px;
+        overflow: hidden;
+        border: 1px solid #dce7dc;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(29, 53, 42, 0.08);
+      }
+      .local-assistant-transcript {
+        display: grid;
+        gap: 12px;
+        max-height: 520px;
+        overflow-y: auto;
+        padding: 14px;
+        border: 1px solid #e4eaf0;
+        border-radius: 10px;
+        background: #f8fafb;
+      }
+      .local-assistant-message {
+        max-width: min(92%, 760px);
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #fff;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .local-assistant-message.user {
+        justify-self: end;
+        background: #e9f3f7;
+      }
+      .local-assistant-message strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #334e5b;
+      }
+      .local-assistant-message p {
+        margin: 0;
+      }
       .timeline-layout {
         display: grid;
         grid-template-columns: minmax(210px, .7fr) minmax(0, 1.8fr);
@@ -2829,7 +2899,7 @@
                   <p>Compare any two reports you are authorized to access, including reports from different patients.</p>
                 </div>
               </div>
-              <p class="workspace-notice">Comparisons use local rules and embedding similarity, not a generative AI API. Similar wording is not proof of clinical equivalence; review the original reports.</p>
+              <p class="workspace-notice">Structured measurements and wording are compared locally. A source-grounded AI narrative summary is also generated when a provider is available. Review the original reports; neither output is a diagnosis.</p>
               <p id="reportComparisonMessage" class="message" role="status" aria-live="polite" hidden></p>
               <div class="report-comparison-section">
                 <section class="comparison-panel" aria-labelledby="comparisonPatientHeading">
@@ -2859,8 +2929,19 @@
                   <div id="reportComparisonTextPanels" class="comparison-text-panels"></div>
                 </section>
                 <section id="reportComparisonResultSection" class="comparison-panel" aria-labelledby="comparisonResultHeading" hidden>
-                  <h3 id="comparisonResultHeading">Structured report comparison</h3>
-                  <div id="reportComparisonResult" class="comparison-result"></div>
+                  <h3 id="comparisonResultHeading">AI report comparison</h3>
+                  <div id="reportComparisonResponseChoices" class="comparison-actions" hidden>
+                    <button id="showGeminiReportComparison" class="secondary-button" type="button">Show Gemini response</button>
+                    <button id="showLocalReportComparison" class="secondary-button" type="button">Show local model response</button>
+                  </div>
+                  <div id="reportComparisonAiSummary" class="comparison-result" hidden></div>
+                  <p id="reportComparisonAiError" class="message" role="status" aria-live="polite" hidden></p>
+                  <section id="reportComparisonLocalFallback" hidden>
+                  <h4>Local parameter and wording comparison</h4>
+                  <p class="comparison-disclaimer">This local comparison uses extracted text and matching rules; it is separate from either AI-generated summary.</p>
+                    <p id="reportComparisonFallbackError" class="message" role="status" aria-live="polite" hidden></p>
+                    <div id="reportComparisonResult" class="comparison-result"></div>
+                  </section>
                   <p id="reportComparisonDisclaimer" class="comparison-disclaimer"></p>
                 </section>
               </div>
@@ -2892,42 +2973,92 @@
             <section id="assistantSection" class="content-view" hidden>
               <div class="section-toolbar">
                 <div>
-                  <h2>Research and records assistant</h2>
-                  <p>Ask a question using one selected, authorized source context. Responses are AI-generated and require human review.</p>
+                  <h2>AI Assistant</h2>
+                  <p>Chat with the Botpress assistant. Responses are AI-generated and should be reviewed.</p>
                 </div>
               </div>
-              <form id="assistantForm" class="comparison-panel ai-query-form">
+              <section class="comparison-panel" aria-labelledby="localAssistantHeading">
+                <div class="profile-heading">
+                  <div>
+                    <h3 id="localAssistantHeading">Local model chat</h3>
+                    <p>Responses are generated by the local llama.cpp server. Your chat history is saved to your account so the model can use recent turns for context.</p>
+                  </div>
+                  <button id="clearLocalAssistantConversation" class="secondary-button" type="button">Clear saved chat</button>
+                </div>
+                <p class="workspace-notice">Selected source excerpts/metadata and your chat turns are sent to the configured local model endpoint. The saved conversation is scoped to your signed-in account. Do not treat responses as medical advice or a diagnosis.</p>
                 <div class="field-group">
-                  <label for="assistantContextType">Use context from</label>
-                  <select id="assistantContextType" required>
+                  <label for="localAssistantContextType">Use context from</label>
+                  <select id="localAssistantContextType" required>
                     <option value="research">My research papers</option>
                     <option value="report">One medical report</option>
                     <option value="patient_timeline">A patient's timeline</option>
                   </select>
                 </div>
-                <div id="assistantPatientGroup" class="field-group" hidden>
-                  <label for="assistantPatientSelect">Patient</label>
-                  <select id="assistantPatientSelect"></select>
+                <div id="localAssistantPatientGroup" class="field-group" hidden>
+                  <label for="localAssistantPatientSelect">Patient</label>
+                  <select id="localAssistantPatientSelect"></select>
                 </div>
-                <div id="assistantReportGroup" class="field-group" hidden>
-                  <label for="assistantReportSelect">Medical report</label>
-                  <select id="assistantReportSelect"></select>
+                <div id="localAssistantReportGroup" class="field-group" hidden>
+                  <label for="localAssistantReportSelect">Medical report</label>
+                  <select id="localAssistantReportSelect"></select>
                 </div>
-                <div class="field-group">
-                  <label for="assistantQuestion">Your question</label>
-                  <textarea id="assistantQuestion" maxlength="2000" rows="4" required placeholder="Ask a question grounded in the selected source context"></textarea>
+                <div id="localAssistantTranscript" class="local-assistant-transcript" aria-live="polite">
+                  <p class="assistant-sources-empty">Loading saved local chat…</p>
                 </div>
-                <button id="assistantSubmitButton" class="primary-button" type="submit">Ask assistant</button>
-                <p class="workspace-notice">For report and timeline context, only saved extracted text and record metadata are sent to the configured AI provider. Uploaded documents themselves are not sent.</p>
-              </form>
-              <p id="assistantMessage" class="message" role="status" aria-live="polite" hidden></p>
-              <section id="assistantAnswerSection" class="comparison-panel" hidden>
-                <h3>Answer</h3>
-                <div id="assistantAnswer" class="comparison-result"></div>
-                <h4>Sources used</h4>
-                <div id="assistantSources" class="research-source-list"></div>
-                <p id="assistantDisclaimer" class="comparison-disclaimer"></p>
+                <form id="localAssistantForm" class="ai-query-form">
+                  <div class="field-group">
+                    <label for="localAssistantQuestion">Your message</label>
+                    <textarea id="localAssistantQuestion" maxlength="2000" rows="3" required placeholder="Ask a question grounded in the selected context"></textarea>
+                  </div>
+                  <button id="localAssistantSubmitButton" class="primary-button" type="submit">Send to local model</button>
+                </form>
+                <p id="localAssistantMessage" class="message" role="status" aria-live="polite" hidden></p>
               </section>
+              <p id="botpressAssistantStatus" class="message" role="status" aria-live="polite" hidden></p>
+              <div
+                id="medicalAssistantBotpress"
+                class="botpress-embedded-chat"
+                aria-label="Botpress AI Assistant"
+              ></div>
+              <p class="workspace-notice">
+                This Botpress chat is not connected to patient records or the app's login identity.
+                Do not enter information you do not intend to share with the Botpress bot.
+              </p>
+              <details class="model-technical-details">
+                <summary>Use the existing source-grounded assistant</summary>
+                <form id="assistantForm" class="comparison-panel ai-query-form">
+                  <div class="field-group">
+                    <label for="assistantContextType">Use context from</label>
+                    <select id="assistantContextType" required>
+                      <option value="research">My research papers</option>
+                      <option value="report">One medical report</option>
+                      <option value="patient_timeline">A patient's timeline</option>
+                    </select>
+                  </div>
+                  <div id="assistantPatientGroup" class="field-group" hidden>
+                    <label for="assistantPatientSelect">Patient</label>
+                    <select id="assistantPatientSelect"></select>
+                  </div>
+                  <div id="assistantReportGroup" class="field-group" hidden>
+                    <label for="assistantReportSelect">Medical report</label>
+                    <select id="assistantReportSelect"></select>
+                  </div>
+                  <div class="field-group">
+                    <label for="assistantQuestion">Your question</label>
+                    <textarea id="assistantQuestion" maxlength="2000" rows="4" required placeholder="Ask a question grounded in the selected source context"></textarea>
+                  </div>
+                  <button id="assistantSubmitButton" class="primary-button" type="submit">Ask assistant</button>
+                  <p class="workspace-notice">For report and timeline context, only saved extracted text and record metadata are sent to the configured AI provider. Uploaded documents themselves are not sent.</p>
+                </form>
+                <p id="assistantMessage" class="message" role="status" aria-live="polite" hidden></p>
+                <section id="assistantAnswerSection" class="comparison-panel" hidden>
+                  <h3>Answer</h3>
+                  <div id="assistantAnswer" class="comparison-result"></div>
+                  <h4>Sources used</h4>
+                  <div id="assistantSources" class="research-source-list"></div>
+                  <p id="assistantDisclaimer" class="comparison-disclaimer"></p>
+                </section>
+              </details>
             </section>
             <section id="researchPapersSection" class="content-view" hidden>
               <div class="section-toolbar">
@@ -2989,6 +3120,13 @@
                 </div>
               </div>
               <p class="workspace-notice">The first search may download the configured sentence-transformer model. Uploaded PDFs and DOCX files stay on this server; only retrieved text excerpts are sent to the AI provider for answers.</p>
+              <section class="comparison-panel research-paper-selection" aria-labelledby="researchRagPaperSelectionHeading">
+                <h3 id="researchRagPaperSelectionHeading">Choose papers for search and Q&amp;A</h3>
+                <p>All papers are selected by default. Only passages from selected papers are retrieved.</p>
+                <div id="researchRagPaperSelection" class="research-comparison-list"></div>
+                <p id="researchRagPaperSelectionEmpty" class="library-empty" hidden></p>
+                <p id="researchRagSelectionCount" class="comparison-disclaimer" aria-live="polite"></p>
+              </section>
               <div class="research-tools-grid">
                 <section class="comparison-panel">
                   <h3>Semantic search</h3>
@@ -3013,6 +3151,10 @@
                     <button id="researchAskButton" class="primary-button" type="submit">Ask research library</button>
                   </form>
                   <p id="researchAskMessage" class="message" role="status" aria-live="polite" hidden></p>
+                  <div id="researchAskResponseChoices" class="comparison-actions" hidden>
+                    <button id="showGeminiResearchAnswer" class="secondary-button" type="button">Show Gemini response</button>
+                    <button id="showLocalResearchAnswer" class="secondary-button" type="button">Show local model response</button>
+                  </div>
                   <section id="researchAskAnswerSection" hidden>
                     <h4>Answer</h4>
                     <div id="researchAskAnswer" class="comparison-result"></div>
@@ -3027,9 +3169,10 @@
               <div class="section-toolbar">
                 <div>
                   <h2>Research paper comparison</h2>
-                  <p>Select exactly two papers from your private library to compare extracted evidence.</p>
+                  <p>Select two or more papers from your private library for an AI-assisted, source-grounded comparison.</p>
                 </div>
               </div>
+              <p class="workspace-notice">Only retrieved excerpts from the selected papers are sent to the configured AI provider. Original paper uploads remain private to your account. AI output and similarity scores require review and do not establish scientific or clinical equivalence.</p>
               <p id="researchComparisonMessage" class="message" role="status" aria-live="polite" hidden></p>
               <section class="comparison-panel">
                 <div id="researchComparisonPaperList" class="research-comparison-list"></div>
@@ -3038,9 +3181,25 @@
                 </div>
               </section>
               <section id="researchComparisonResultSection" class="comparison-panel" hidden>
-                <h3>Structured comparison</h3>
+                <h3>Research comparison</h3>
                 <div id="researchComparisonPaperHeadings" class="comparison-text-panels"></div>
-                <div id="researchComparisonFields" class="research-comparison-fields"></div>
+              <div id="researchComparisonResponseChoices" class="comparison-actions" hidden>
+                <button id="showGeminiResearchComparison" class="secondary-button" type="button">Show Gemini response</button>
+                <button id="showLocalResearchComparison" class="secondary-button" type="button">Show local model response</button>
+              </div>
+              <section id="researchComparisonAiResult">
+                <h4>AI structured comparison</h4>
+                <div id="researchComparisonAiOverall" class="comparison-result"></div>
+                <p id="researchComparisonAiError" class="message" role="status" aria-live="polite" hidden></p>
+                <div id="researchComparisonAiFields" class="research-comparison-fields"></div>
+                </section>
+                <section id="researchComparisonLocalFallback" hidden>
+                  <h3>Temporary local fallback (first two papers)</h3>
+                  <p class="comparison-disclaimer">AI comparison is temporarily unavailable. This local evidence alignment uses retrieved passages and similarity scores; it is not an AI analysis.</p>
+                  <p id="researchComparisonFallbackError" class="message" role="status" aria-live="polite" hidden></p>
+                  <div id="researchComparisonFields" class="research-comparison-fields"></div>
+                </section>
+                <h3>Retrieved source passages</h3>
                 <div id="researchComparisonCitations" class="research-source-list"></div>
                 <p id="researchComparisonDisclaimer" class="comparison-disclaimer"></p>
               </section>
@@ -3150,6 +3309,7 @@
       let reportLibraryItems = [];
       let scanLibraryItems = [];
       let researchPapers = [];
+      let researchRagSelectedIds = new Set();
       let researchComparisonSelectedIds = new Set();
       let comparisonPatients = [];
       let comparisonSelectedPatientId = null;
@@ -3157,6 +3317,9 @@
       let comparisonSelectedReports = new Map();
       let comparisonTextLoaded = false;
       let comparisonRequestVersion = 0;
+      let pairedReportComparison = null;
+      let pairedResearchComparison = null;
+      let pairedResearchAnswer = null;
 
       function updateScanBodyRegionOptions() {
         const modality = scanModalityInput.value;
@@ -3396,6 +3559,9 @@
         const notice = document.getElementById("workspaceContextNotice");
         notice.textContent = view.notice || "";
         notice.hidden = !view.notice;
+        if (activeWorkspaceView === "assistant") {
+          initializeBotpressAssistant();
+        }
         if (view.workspace) selectPatientWorkspace(view.workspace);
         if ([
           "reports",
@@ -3410,6 +3576,69 @@
         ].includes(activeWorkspaceView)) {
           refreshWorkspaceView(activeWorkspaceView);
         }
+      }
+
+      let botpressAssistantInitialized = false;
+      let botpressAssistantLoadPromise = null;
+
+      function mountBotpressAssistant() {
+        if (botpressAssistantInitialized) return;
+        if (!window.botpress?.init) {
+          throw new Error("Botpress Webchat did not initialize.");
+        }
+        window.botpress.init({
+          botId: "e4aee490-de2e-4d37-8d2a-a1794d4a2a44",
+          clientId: "4122bd24-76fe-4f55-993c-e57763980d3d",
+          configuration: {
+            embeddedChatId: "medicalAssistantBotpress",
+          },
+        });
+        botpressAssistantInitialized = true;
+      }
+
+      function initializeBotpressAssistant() {
+        const status = document.getElementById("botpressAssistantStatus");
+        if (botpressAssistantInitialized || botpressAssistantLoadPromise) return;
+        if (window.botpress?.init) {
+          try {
+            mountBotpressAssistant();
+            status.hidden = true;
+            status.textContent = "";
+          } catch (error) {
+            status.textContent =
+              error.message || "The Botpress assistant could not be initialized.";
+            status.hidden = false;
+          }
+          return;
+        }
+
+        status.textContent = "Loading the Botpress assistant…";
+        status.hidden = false;
+        botpressAssistantLoadPromise = new Promise((resolve, reject) => {
+          const loader = document.createElement("script");
+          loader.src = "https://cdn.botpress.cloud/webchat/v3.7/inject.js";
+          loader.onload = () => {
+            try {
+              mountBotpressAssistant();
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          };
+          loader.onerror = () =>
+            reject(new Error("Could not load the Botpress Webchat script."));
+          document.head.append(loader);
+        })
+          .then(() => {
+            status.hidden = true;
+            status.textContent = "";
+          })
+          .catch((error) => {
+            status.textContent =
+              error.message || "The Botpress assistant could not be loaded.";
+            status.hidden = false;
+            botpressAssistantLoadPromise = null;
+          });
       }
 
       window.addEventListener("popstate", () => {
@@ -3514,6 +3743,22 @@
         });
         handleUnauthorized(response);
         return readResponse(response, "Patient request failed");
+      }
+
+      function settledModelResponse(result) {
+        if (result.status === "rejected") {
+          return {
+            ok: false,
+            error: result.reason?.message || "The request failed.",
+          };
+        }
+        if (result.value?.success === false) {
+          return {
+            ok: false,
+            error: result.value.error || "The request failed.",
+          };
+        }
+        return { ok: true, data: result.value };
       }
 
       function handleUnauthorized(response) {
@@ -4172,7 +4417,8 @@
               disclaimer.textContent = scan.analysis.disclaimer;
               const overlay = document.createElement("img");
               overlay.className = "scan-overlay";
-              overlay.alt = "Experimental cardiac MRI segmentation overlay";
+              overlay.alt =
+                "Experimental cardiac MRI segmentation overlay with class-colored outlines around predicted structures";
               const legend = document.createElement("div");
               legend.className = "scan-class-legend";
 
@@ -4190,7 +4436,17 @@
                 legend.append(entry);
               }
 
-              analysisPanel.append(analysisHeading, disclaimer, overlay, legend);
+              const boxNote = document.createElement("p");
+              boxNote.className = "knee-analysis-meta";
+              boxNote.textContent =
+                "Class-colored outlines show the extent of each predicted non-background segmentation mask; they are not diagnostic boundaries.";
+              analysisPanel.append(
+                analysisHeading,
+                disclaimer,
+                overlay,
+                legend,
+                boxNote,
+              );
               outputContainer.append(analysisPanel);
               loadProtectedOverlay(scan.analysis.overlay_url, overlay);
             }
@@ -4213,14 +4469,15 @@
               if (prediction?.has_mask) {
                 const overlay = document.createElement("img");
                 overlay.className = "scan-overlay";
-                overlay.alt = "Experimental abdominal aorta segmentation overlay";
+                overlay.alt =
+                  "Experimental abdominal aorta segmentation overlay with a yellow outline around the predicted mask extent";
                 analysisPanel.append(overlay);
                 loadProtectedOverlay(prediction.overlay_url, overlay);
                 const modelInfo = document.createElement("p");
                 modelInfo.className = "knee-analysis-meta";
                 modelInfo.textContent =
                   `Aorta-like region mask · ${prediction.mask_area_pixels.toLocaleString()} pixels · ` +
-                  `highest detection score ${(prediction.confidence_score * 100).toFixed(1)}% · ` +
+                  `yellow outline shows the mask extent · highest detection score ${(prediction.confidence_score * 100).toFixed(1)}% · ` +
                   `Model: ${prediction.model_name}. Score is an uncalibrated model output.`;
                 analysisPanel.append(modelInfo);
               } else if (prediction) {
@@ -4260,7 +4517,8 @@
                 original.alt = "Original vascular ultrasound image";
                 const overlayLabel = document.createElement("p");
                 overlayLabel.className = "knee-analysis-meta";
-                overlayLabel.textContent = "Predicted region overlay";
+                overlayLabel.textContent =
+                  "Predicted region overlay · yellow outline shows the mask extent";
                 const overlay = document.createElement("img");
                 overlay.className = "scan-overlay";
                 overlay.alt = "Experimental predicted carotid artery region overlay";
@@ -4301,6 +4559,56 @@
               localization.textContent =
                 `Localization: ${scan.knee_analysis.localization_status}. ` +
                 "The ROI was cropped from the original image before classifier preprocessing.";
+              const roiBox = scan.knee_analysis.roi_box;
+              if (
+                scan.original_url &&
+                scan.knee_analysis.localization_status === "localized" &&
+                roiBox &&
+                [roiBox.x, roiBox.y, roiBox.width, roiBox.height].every(Number.isFinite)
+              ) {
+                const imageLabel = document.createElement("p");
+                imageLabel.className = "knee-analysis-meta";
+                imageLabel.textContent =
+                  "Original knee MRI slice · yellow outline shows the experimental ACL ROI used for classification.";
+                const visualization = document.createElement("div");
+                visualization.className = "knee-roi-visualization";
+                const originalImage = document.createElement("img");
+                originalImage.className = "scan-overlay";
+                originalImage.alt =
+                  "Original knee MRI slice with an experimental ACL region-of-interest outline";
+                const roiOutline = document.createElement("span");
+                roiOutline.className = "knee-roi-box";
+                roiOutline.setAttribute("aria-hidden", "true");
+                originalImage.addEventListener(
+                  "load",
+                  () => {
+                    const left = Math.max(0, Math.min(originalImage.naturalWidth, roiBox.x));
+                    const top = Math.max(0, Math.min(originalImage.naturalHeight, roiBox.y));
+                    const right = Math.max(
+                      left,
+                      Math.min(originalImage.naturalWidth, roiBox.x + roiBox.width),
+                    );
+                    const bottom = Math.max(
+                      top,
+                      Math.min(originalImage.naturalHeight, roiBox.y + roiBox.height),
+                    );
+                    if (right <= left || bottom <= top) {
+                      roiOutline.hidden = true;
+                      return;
+                    }
+                    roiOutline.style.left = `${(left / originalImage.naturalWidth) * 100}%`;
+                    roiOutline.style.top = `${(top / originalImage.naturalHeight) * 100}%`;
+                    roiOutline.style.width =
+                      `${((right - left) / originalImage.naturalWidth) * 100}%`;
+                    roiOutline.style.height =
+                      `${((bottom - top) / originalImage.naturalHeight) * 100}%`;
+                  },
+                  { once: true },
+                );
+                visualization.append(originalImage, roiOutline);
+                analysisPanel.append(imageLabel, visualization);
+                loadProtectedOverlay(scan.original_url, originalImage);
+              }
               const probabilities = document.createElement("ul");
               probabilities.className = "knee-probabilities";
 
@@ -4641,6 +4949,77 @@
                   "This does not rule out a dental condition.";
                 analysisPanel.append(none);
               } else {
+                const detections = scan.dental_xray_analysis.findings
+                  .map((finding) => {
+                    const box = finding.box;
+                    if (
+                      !Array.isArray(box) ||
+                      box.length !== 4 ||
+                      !box.every(Number.isFinite)
+                    ) {
+                      return null;
+                    }
+                    const outline = document.createElement("span");
+                    outline.className = "dental-detection-box";
+                    outline.setAttribute("aria-hidden", "true");
+                    return { finding, outline };
+                  })
+                  .filter(Boolean);
+                if (scan.original_url && detections.length > 0) {
+                  const imageLabel = document.createElement("p");
+                  imageLabel.className = "knee-analysis-meta";
+                  imageLabel.textContent =
+                    "Original dental X-ray · red outlines show model-proposed candidate regions.";
+                  const visualization = document.createElement("div");
+                  visualization.className = "dental-detection-visualization";
+                  const originalImage = document.createElement("img");
+                  originalImage.className = "scan-analysis-image";
+                  originalImage.alt =
+                    "Original dental X-ray with experimental OralGuard candidate boxes";
+                  originalImage.addEventListener(
+                    "load",
+                    () => {
+                      for (const { finding, outline } of detections) {
+                        const [x1, y1, x2, y2] = finding.box;
+                        const left = Math.max(
+                          0,
+                          Math.min(originalImage.naturalWidth, x1),
+                        );
+                        const top = Math.max(
+                          0,
+                          Math.min(originalImage.naturalHeight, y1),
+                        );
+                        const right = Math.max(
+                          left,
+                          Math.min(originalImage.naturalWidth, x2),
+                        );
+                        const bottom = Math.max(
+                          top,
+                          Math.min(originalImage.naturalHeight, y2),
+                        );
+                        if (right <= left || bottom <= top) {
+                          outline.hidden = true;
+                          continue;
+                        }
+                        outline.style.left =
+                          `${(left / originalImage.naturalWidth) * 100}%`;
+                        outline.style.top =
+                          `${(top / originalImage.naturalHeight) * 100}%`;
+                        outline.style.width =
+                          `${((right - left) / originalImage.naturalWidth) * 100}%`;
+                        outline.style.height =
+                          `${((bottom - top) / originalImage.naturalHeight) * 100}%`;
+                      }
+                    },
+                    { once: true },
+                  );
+                  visualization.append(
+                    originalImage,
+                    ...detections.map(({ outline }) => outline),
+                  );
+                  analysisPanel.append(imageLabel, visualization);
+                  loadProtectedOverlay(scan.original_url, originalImage);
+                }
                 const findingsList = document.createElement("ul");
                 findingsList.className = "knee-probabilities";
                 const descriptions = {
@@ -4721,7 +5100,7 @@
               if (scan.ct_head_analysis.localization_url) {
                 const heatmap = document.createElement("img");
                 heatmap.alt =
-                  "Qualitative AI localization overlay on the model-selected CT slice";
+                  "Qualitative AI localization overlay on the model-selected CT slice; green outline shows the extent of pixels at or above 0.5";
                 heatmap.className = "scan-analysis-image";
                 loadProtectedOverlay(
                   scan.ct_head_analysis.localization_url,
@@ -4766,7 +5145,8 @@
               legend.className = "scan-analysis-disclaimer";
               legend.textContent =
                 "Overlay key: blue = ground-glass opacity mask; orange = consolidation mask; " +
-                "yellow = overlapping masks. The masks can overlap.";
+                "yellow = overlapping masks. Class-colored outlines show each mask's extent. " +
+                "The reported test Dice is 0.1711, so these regions and outlines may be inaccurate.";
               analysisPanel.append(
                 heading,
                 disclaimer,
@@ -4777,7 +5157,7 @@
               if (scan.chest_ct_analysis.overlay_url) {
                 const overlay = document.createElement("img");
                 overlay.alt =
-                  "Experimental color overlay of model-marked chest CT slice regions";
+                  "Experimental color overlay of model-marked chest CT slice regions with class-colored mask extent outlines";
                 overlay.className = "scan-analysis-image";
                 loadProtectedOverlay(
                   scan.chest_ct_analysis.overlay_url,
@@ -5521,20 +5901,57 @@
         try {
           const data = await patientRequest("/api/research-papers");
           researchPapers = data.papers;
+          researchRagSelectedIds = new Set(researchPapers.map((paper) => paper.id));
           renderResearchPapers();
+          renderResearchRagPapers();
+          renderResearchComparisonPapers();
           showWorkspaceMessage(
             "researchPaperMessage",
             `${researchPapers.length} ${researchPapers.length === 1 ? "paper" : "papers"} in your library.`,
           );
         } catch (error) {
           researchPapers = [];
+          researchRagSelectedIds.clear();
           renderResearchPapers();
+          renderResearchRagPapers();
+          renderResearchComparisonPapers();
           showWorkspaceMessage(
             "researchPaperMessage",
             error.message || "Could not load research papers.",
             "error",
           );
         }
+      }
+
+      function renderResearchRagPapers() {
+        const list = document.getElementById("researchRagPaperSelection");
+        const empty = document.getElementById("researchRagPaperSelectionEmpty");
+        list.replaceChildren();
+        empty.hidden = researchPapers.length > 0;
+        empty.textContent = "Upload research papers before searching or asking questions.";
+        for (const paper of researchPapers) {
+          const label = document.createElement("label");
+          label.className = "research-comparison-option";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = String(paper.id);
+          checkbox.checked = researchRagSelectedIds.has(paper.id);
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+              researchRagSelectedIds.add(paper.id);
+            } else {
+              researchRagSelectedIds.delete(paper.id);
+            }
+            document.getElementById("researchRagSelectionCount").textContent =
+              `${researchRagSelectedIds.size} ${researchRagSelectedIds.size === 1 ? "paper" : "papers"} selected.`;
+          });
+          const title = document.createElement("strong");
+          title.textContent = paper.title;
+          label.append(checkbox, title);
+          list.append(label);
+        }
+        document.getElementById("researchRagSelectionCount").textContent =
+          `${researchRagSelectedIds.size} ${researchRagSelectedIds.size === 1 ? "paper" : "papers"} selected.`;
       }
 
       function renderResearchComparisonPapers() {
@@ -5550,6 +5967,11 @@
           return;
         }
 
+        for (const selectedId of researchComparisonSelectedIds) {
+          if (!researchPapers.some((paper) => paper.id === selectedId)) {
+            researchComparisonSelectedIds.delete(selectedId);
+          }
+        }
         for (const paper of researchPapers) {
           const label = document.createElement("label");
           label.className = "research-comparison-option";
@@ -5557,8 +5979,6 @@
           checkbox.type = "checkbox";
           checkbox.value = String(paper.id);
           checkbox.checked = researchComparisonSelectedIds.has(paper.id);
-          checkbox.disabled =
-            !checkbox.checked && researchComparisonSelectedIds.size >= 2;
           checkbox.addEventListener("change", () => {
             if (checkbox.checked) {
               researchComparisonSelectedIds.add(paper.id);
@@ -5569,7 +5989,7 @@
             renderResearchComparisonPapers();
             showWorkspaceMessage(
               "researchComparisonMessage",
-              `${researchComparisonSelectedIds.size} of 2 papers selected.`,
+              `${researchComparisonSelectedIds.size} papers selected; select at least two.`,
             );
           });
           const details = document.createElement("div");
@@ -5585,7 +6005,7 @@
           label.append(checkbox, details);
           list.append(label);
         }
-        button.disabled = researchComparisonSelectedIds.size !== 2;
+        button.disabled = researchComparisonSelectedIds.size < 2;
       }
 
       function renderResearchSources(targetId, sources, includeExcerpt = true) {
@@ -5597,6 +6017,7 @@
           const heading = document.createElement("strong");
           heading.textContent = [
             source.citation,
+            source.field ? readableResearchField(source.field) : "",
             source.title || source.paper_title,
             source.date || source.paper_date
               ? formatLibraryDate(source.date || source.paper_date)
@@ -5622,8 +6043,22 @@
         button.textContent = busy ? busyText : idleText;
       }
 
+      function scrollToWorkspaceResult(elementId) {
+        requestAnimationFrame(() => {
+          document.getElementById(elementId).scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      }
+
       async function submitResearchSearch(event) {
         event.preventDefault();
+        const paperIds = [...researchRagSelectedIds];
+        if (paperIds.length === 0) {
+          showWorkspaceMessage("researchSearchMessage", "Select at least one paper to search.", "error");
+          return;
+        }
         const query = document.getElementById("researchSearchQuery").value.trim();
         const results = document.getElementById("researchSearchResults");
         const empty = document.getElementById("researchSearchEmpty");
@@ -5635,7 +6070,7 @@
           const data = await patientRequest("/api/research/search", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query, top_k: 5 }),
+            body: JSON.stringify({ query, top_k: 5, paper_ids: paperIds }),
           });
           if (data.results.length === 0) {
             empty.textContent = data.message || "No matching excerpts were found.";
@@ -5660,6 +6095,11 @@
 
       async function submitResearchQuestion(event) {
         event.preventDefault();
+        const paperIds = [...researchRagSelectedIds];
+        if (paperIds.length === 0) {
+          showWorkspaceMessage("researchAskMessage", "Select at least one paper to ask a question about.", "error");
+          return;
+        }
         document.getElementById("researchAskAnswerSection").hidden = true;
         showWorkspaceMessage("researchAskMessage", "Retrieving paper excerpts and generating a grounded answer…");
         setButtonBusy("researchAskButton", true, "Preparing answer…", "Ask research library");
@@ -5670,6 +6110,7 @@
             body: JSON.stringify({
               question: document.getElementById("researchAskQuestion").value.trim(),
               top_k: 5,
+              paper_ids: paperIds,
             }),
           });
           document.getElementById("researchAskAnswer").textContent = data.answer;
@@ -5677,6 +6118,7 @@
           renderResearchSources("researchAskSources", data.citations, true);
           document.getElementById("researchAskAnswerSection").hidden = false;
           showWorkspaceMessage("researchAskMessage", "Answer generated from the cited paper excerpts.", "success");
+          scrollToWorkspaceResult("researchAskAnswerSection");
         } catch (error) {
           showWorkspaceMessage(
             "researchAskMessage",
@@ -5685,6 +6127,89 @@
           );
         } finally {
           setButtonBusy("researchAskButton", false, "Preparing answer…", "Ask research library");
+        }
+      }
+
+      function showPairedResearchAnswer(modelName) {
+        if (!pairedResearchAnswer) return;
+        const response = pairedResearchAnswer[modelName];
+        const answerSection = document.getElementById("researchAskAnswerSection");
+        if (!response.ok) {
+          answerSection.hidden = true;
+          showWorkspaceMessage("researchAskMessage", response.error, "error");
+          return;
+        }
+        const data = response.data;
+        document.getElementById("researchAskAnswer").textContent = data.answer;
+        document.getElementById("researchAskDisclaimer").textContent = data.disclaimer;
+        renderResearchSources("researchAskSources", data.citations, true);
+        answerSection.hidden = false;
+        showWorkspaceMessage(
+          "researchAskMessage",
+          `${modelName === "gemini" ? "Gemini" : "Local model"} answer shown with retrieved sources.`,
+          "success",
+        );
+        scrollToWorkspaceResult("researchAskAnswerSection");
+      }
+
+      async function submitPairedResearchQuestion(event) {
+        event.preventDefault();
+        const paperIds = [...researchRagSelectedIds];
+        if (paperIds.length === 0) {
+          showWorkspaceMessage(
+            "researchAskMessage",
+            "Select at least one paper to ask a question about.",
+            "error",
+          );
+          return;
+        }
+        document.getElementById("researchAskAnswerSection").hidden = true;
+        document.getElementById("researchAskResponseChoices").hidden = true;
+        showWorkspaceMessage(
+          "researchAskMessage",
+          "Retrieving sources and generating both answers. The local model may take several minutes…",
+        );
+        setButtonBusy(
+          "researchAskButton",
+          true,
+          "Waiting for both responses…",
+          "Ask research library",
+        );
+        const body = JSON.stringify({
+          question: document.getElementById("researchAskQuestion").value.trim(),
+          top_k: 5,
+          paper_ids: paperIds,
+        });
+        try {
+          const [geminiResult, localResult] = await Promise.allSettled([
+            patientRequest("/api/research/ask", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            }),
+            patientRequest("/api/research/ask-local", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            }),
+          ]);
+          pairedResearchAnswer = {
+            gemini: settledModelResponse(geminiResult),
+            local: settledModelResponse(localResult),
+          };
+          document.getElementById("researchAskResponseChoices").hidden = false;
+          showWorkspaceMessage(
+            "researchAskMessage",
+            "Both response attempts finished. Choose which answer to display.",
+            "success",
+          );
+        } finally {
+          setButtonBusy(
+            "researchAskButton",
+            false,
+            "Waiting for both responses…",
+            "Ask research library",
+          );
         }
       }
 
@@ -5867,11 +6392,221 @@
         root.append(narrativeSection);
       }
 
+      function renderPairedResearchComparisonShared(data) {
+        const headings = document.getElementById("researchComparisonPaperHeadings");
+        headings.replaceChildren();
+        const fields = document.getElementById("researchComparisonFields");
+        fields.replaceChildren();
+        if (!data) {
+          renderResearchSources("researchComparisonCitations", [], true);
+          document.getElementById("researchComparisonDisclaimer").textContent = "";
+          document.getElementById("researchComparisonLocalFallback").hidden = true;
+          return;
+        }
+        for (const paper of data.papers) {
+          const panel = document.createElement("article");
+          panel.className = "comparison-text-panel";
+          panel.append(
+            comparisonTextElement("h4", "", paper.title),
+            comparisonTextElement(
+              "p",
+              "research-paper-meta",
+              [
+                paper.topic,
+                paper.paper_date ? formatLibraryDate(paper.paper_date) : "Date not provided",
+              ].join(" · "),
+            ),
+          );
+          headings.append(panel);
+        }
+        if (data.comparison) {
+          const statusOrder = {
+            related_evidence: 0,
+            different_evidence: 1,
+            only_in_paper_1: 2,
+            only_in_paper_2: 2,
+            not_found: 3,
+          };
+          const orderedFields = [...data.fields].sort(
+            (first, second) =>
+              statusOrder[data.comparison[first].status] -
+              statusOrder[data.comparison[second].status],
+          );
+          for (const field of orderedFields) {
+            const values = data.comparison[field];
+            const card = document.createElement("article");
+            card.className = "research-comparison-field";
+            card.append(
+              comparisonTextElement("h4", "", readableResearchField(field)),
+              comparisonTextElement(
+                "span",
+                `comparison-status ${
+                  ["different_evidence", "only_in_paper_1", "only_in_paper_2"].includes(values.status)
+                    ? "is-different"
+                    : ""
+                }`,
+                `${comparisonStatusLabel(values.status)}${
+                  values.similarity === null
+                    ? ""
+                    : ` · similarity score ${values.similarity.toFixed(3)}`
+                }`,
+              ),
+            );
+            const evidence = document.createElement("div");
+            evidence.className = "research-comparison-evidence";
+            for (const [paperLabel, text, citation] of [
+              [data.papers[0].title, values.paper_1, values.paper_1_citation],
+              [data.papers[1].title, values.paper_2, values.paper_2_citation],
+            ]) {
+              const panel = document.createElement("div");
+              panel.append(
+                comparisonTextElement(
+                  "strong",
+                  "",
+                  citation ? `${paperLabel} · ${citation}` : paperLabel,
+                ),
+                comparisonTextElement("p", "", text),
+              );
+              evidence.append(panel);
+            }
+            card.append(
+              evidence,
+              comparisonTextElement("p", "comparison-disclaimer", values.comparison),
+            );
+            fields.append(card);
+          }
+          document.getElementById("researchComparisonLocalFallback").hidden = false;
+        } else {
+          document.getElementById("researchComparisonLocalFallback").hidden = true;
+        }
+        renderResearchSources("researchComparisonCitations", data.citations, true);
+        document.getElementById("researchComparisonDisclaimer").textContent =
+          data.disclaimer;
+      }
+
+      function showPairedResearchComparison(modelName) {
+        if (!pairedResearchComparison) return;
+        const response = pairedResearchComparison[modelName];
+        const overall = document.getElementById("researchComparisonAiOverall");
+        const fields = document.getElementById("researchComparisonAiFields");
+        const error = document.getElementById("researchComparisonAiError");
+        fields.replaceChildren();
+        let message = "";
+        let data = null;
+        if (!response.ok) {
+          message = response.error;
+        } else {
+          data = response.data;
+          message = data.ai_error || "";
+          if (!message && !data.ai_comparison) {
+            message = "The selected model returned no structured comparison.";
+          }
+        }
+        if (message) {
+          overall.textContent = "AI analysis is unavailable for this response.";
+          error.textContent = message;
+          error.className = "message error";
+          error.hidden = false;
+          showWorkspaceMessage("researchComparisonMessage", message, "error");
+          return;
+        }
+        error.textContent = "";
+        error.className = "message";
+        error.hidden = true;
+        overall.textContent = data.ai_comparison.overall;
+        for (const field of data.fields) {
+          const card = document.createElement("article");
+          card.className = "research-comparison-field";
+          card.append(comparisonTextElement("h4", "", readableResearchField(field)));
+          const evidence = document.createElement("div");
+          evidence.className = "research-comparison-evidence";
+          for (const paper of data.ai_comparison.papers) {
+            const panel = document.createElement("div");
+            panel.append(
+              comparisonTextElement("strong", "", paper.title),
+              comparisonTextElement("p", "", paper[field]),
+            );
+            evidence.append(panel);
+          }
+          card.append(evidence);
+          fields.append(card);
+        }
+        showWorkspaceMessage(
+          "researchComparisonMessage",
+          `${modelName === "gemini" ? "Gemini" : "Local model"} response shown. Review the original papers.`,
+          "success",
+        );
+      }
+
+      async function compareSelectedResearchPapersPaired() {
+        if (researchComparisonSelectedIds.size < 2) return;
+        document.getElementById("researchComparisonResultSection").hidden = true;
+        document.getElementById("researchComparisonResponseChoices").hidden = true;
+        showWorkspaceMessage(
+          "researchComparisonMessage",
+          "Retrieving source passages and generating both comparisons. The local model may take several minutes…",
+        );
+        setButtonBusy(
+          "compareResearchPapersButton",
+          true,
+          "Waiting for both responses…",
+          "Compare selected papers",
+        );
+        const body = JSON.stringify({
+          paper_ids: [...researchComparisonSelectedIds],
+        });
+        try {
+          const [geminiResult, localResult] = await Promise.allSettled([
+            patientRequest("/api/research/compare", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            }),
+            patientRequest("/api/research/compare-local", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            }),
+          ]);
+          pairedResearchComparison = {
+            gemini: settledModelResponse(geminiResult),
+            local: settledModelResponse(localResult),
+          };
+          const sharedResponse = [
+            pairedResearchComparison.gemini,
+            pairedResearchComparison.local,
+          ].find((response) => response.ok);
+          renderPairedResearchComparisonShared(
+            sharedResponse ? sharedResponse.data : null,
+          );
+          document.getElementById("researchComparisonAiOverall").textContent = "";
+          document.getElementById("researchComparisonAiFields").replaceChildren();
+          document.getElementById("researchComparisonAiError").hidden = true;
+          document.getElementById("researchComparisonResponseChoices").hidden = false;
+          document.getElementById("researchComparisonResultSection").hidden = false;
+          showWorkspaceMessage(
+            "researchComparisonMessage",
+            "Both response attempts finished. Choose which comparison to display.",
+            "success",
+          );
+          scrollToWorkspaceResult("researchComparisonResultSection");
+        } finally {
+          setButtonBusy(
+            "compareResearchPapersButton",
+            false,
+            "Waiting for both responses…",
+            "Compare selected papers",
+          );
+          document.getElementById("compareResearchPapersButton").disabled =
+            researchComparisonSelectedIds.size < 2;
+        }
+      }
+
       async function compareSelectedResearchPapers() {
-        if (researchComparisonSelectedIds.size !== 2) return;
+        if (researchComparisonSelectedIds.size < 2) return;
         const button = document.getElementById("compareResearchPapersButton");
         document.getElementById("researchComparisonResultSection").hidden = true;
-        showWorkspaceMessage("researchComparisonMessage", "Retrieving source passages and comparing them locally…");
+        showWorkspaceMessage("researchComparisonMessage", "Retrieving source passages and generating an AI comparison…");
         setButtonBusy("compareResearchPapersButton", true, "Comparing…", "Compare selected papers");
         try {
           const data = await patientRequest("/api/research/compare", {
@@ -5895,69 +6630,114 @@
             panel.append(title, details);
             headings.append(panel);
           }
+          const aiOverall = document.getElementById("researchComparisonAiOverall");
+          const aiFields = document.getElementById("researchComparisonAiFields");
+          const aiError = document.getElementById("researchComparisonAiError");
+          aiFields.replaceChildren();
+          if (data.ai_comparison) {
+            document.getElementById("researchComparisonAiResult").hidden = false;
+            aiOverall.textContent = data.ai_comparison.overall;
+            for (const field of data.fields) {
+              const card = document.createElement("article");
+              card.className = "research-comparison-field";
+              card.append(comparisonTextElement("h4", "", readableResearchField(field)));
+              const evidence = document.createElement("div");
+              evidence.className = "research-comparison-evidence";
+              for (const paper of data.ai_comparison.papers) {
+                const panel = document.createElement("div");
+                panel.append(
+                  comparisonTextElement("strong", "", paper.title),
+                  comparisonTextElement("p", "", paper[field]),
+                );
+                evidence.append(panel);
+              }
+              card.append(evidence);
+              aiFields.append(card);
+            }
+          } else {
+            document.getElementById("researchComparisonAiResult").hidden = false;
+            aiOverall.textContent = "AI analysis is temporarily unavailable.";
+          }
+          aiError.hidden = !data.ai_error;
+          aiError.textContent = data.ai_error || "";
+          const fallbackError = document.getElementById("researchComparisonFallbackError");
+          fallbackError.hidden = !data.fallback_error;
+          fallbackError.textContent = data.fallback_error || "";
+          document.getElementById("researchComparisonLocalFallback").hidden =
+            Boolean(data.ai_comparison);
+
           const fields = document.getElementById("researchComparisonFields");
           fields.replaceChildren();
-          const statusOrder = {
-            related_evidence: 0,
-            different_evidence: 1,
-            only_in_paper_1: 2,
-            only_in_paper_2: 2,
-            not_found: 3,
-          };
-          const orderedFields = [...data.fields].sort(
-            (first, second) =>
-              statusOrder[data.comparison[first].status] -
-              statusOrder[data.comparison[second].status],
-          );
-          for (const field of orderedFields) {
-            const values = data.comparison[field];
-            const card = document.createElement("article");
-            card.className = "research-comparison-field";
-            const title = document.createElement("h4");
-            title.textContent = readableResearchField(field);
-            card.append(
-              title,
-              comparisonTextElement(
-                "span",
-                `comparison-status ${
-                  ["different_evidence", "only_in_paper_1", "only_in_paper_2"].includes(values.status)
-                    ? "is-different"
-                    : ""
-                }`,
-                `${comparisonStatusLabel(values.status)}${
-                  values.similarity === null
-                    ? ""
-                    : ` · similarity score ${values.similarity.toFixed(3)}`
-                }`,
-              ),
+          if (data.comparison) {
+            const statusOrder = {
+              related_evidence: 0,
+              different_evidence: 1,
+              only_in_paper_1: 2,
+              only_in_paper_2: 2,
+              not_found: 3,
+            };
+            const orderedFields = [...data.fields].sort(
+              (first, second) =>
+                statusOrder[data.comparison[first].status] -
+                statusOrder[data.comparison[second].status],
             );
-            const evidence = document.createElement("div");
-            evidence.className = "research-comparison-evidence";
-            for (const [paperLabel, text, citation] of [
-              ["Paper 1", values.paper_1, values.paper_1_citation],
-              ["Paper 2", values.paper_2, values.paper_2_citation],
-            ]) {
-              const panel = document.createElement("div");
-              panel.append(
+            for (const field of orderedFields) {
+              const values = data.comparison[field];
+              const card = document.createElement("article");
+              card.className = "research-comparison-field";
+              const title = document.createElement("h4");
+              title.textContent = readableResearchField(field);
+              card.append(
+                title,
                 comparisonTextElement(
-                  "strong",
-                  "",
-                  citation ? `${paperLabel} · ${citation}` : paperLabel,
+                  "span",
+                  `comparison-status ${
+                    ["different_evidence", "only_in_paper_1", "only_in_paper_2"].includes(values.status)
+                      ? "is-different"
+                      : ""
+                  }`,
+                  `${comparisonStatusLabel(values.status)}${
+                    values.similarity === null
+                      ? ""
+                      : ` · similarity score ${values.similarity.toFixed(3)}`
+                  }`,
                 ),
-                comparisonTextElement("p", "", text),
               );
-              evidence.append(panel);
+              const evidence = document.createElement("div");
+              evidence.className = "research-comparison-evidence";
+              for (const [paperLabel, text, citation] of [
+                [data.papers[0].title, values.paper_1, values.paper_1_citation],
+                [data.papers[1].title, values.paper_2, values.paper_2_citation],
+              ]) {
+                const panel = document.createElement("div");
+                panel.append(
+                  comparisonTextElement(
+                    "strong",
+                    "",
+                    citation ? `${paperLabel} · ${citation}` : paperLabel,
+                  ),
+                  comparisonTextElement("p", "", text),
+                );
+                evidence.append(panel);
+              }
+              card.append(
+                evidence,
+                comparisonTextElement("p", "comparison-disclaimer", values.comparison),
+              );
+              fields.append(card);
             }
-            card.append(
-              evidence,
-              comparisonTextElement("p", "comparison-disclaimer", values.comparison),
-            );
-            fields.append(card);
           }
-          renderResearchSources("researchComparisonCitations", data.citations, false);
+          renderResearchSources("researchComparisonCitations", data.citations, true);
           document.getElementById("researchComparisonDisclaimer").textContent = data.disclaimer;
           document.getElementById("researchComparisonResultSection").hidden = false;
-          showWorkspaceMessage("researchComparisonMessage", "Comparison built locally from retrieved source passages; no generative AI was used.", "success");
+          showWorkspaceMessage(
+            "researchComparisonMessage",
+            data.ai_error
+              ? `AI comparison is temporarily unavailable. Showing local fallback: ${data.ai_error}`
+              : "AI comparison is ready. Review the original papers.",
+            data.ai_error ? "error" : "success",
+          );
+          scrollToWorkspaceResult("researchComparisonResultSection");
         } catch (error) {
           showWorkspaceMessage(
             "researchComparisonMessage",
@@ -5972,7 +6752,7 @@
             "Compare selected papers",
           );
           document.getElementById("compareResearchPapersButton").disabled =
-            researchComparisonSelectedIds.size !== 2;
+            researchComparisonSelectedIds.size < 2;
         }
       }
 
@@ -6077,6 +6857,209 @@
           );
         } finally {
           setButtonBusy("assistantSubmitButton", false, "Thinking…", "Ask assistant");
+        }
+      }
+
+      function renderLocalAssistantMessages(messages) {
+        const transcript = document.getElementById("localAssistantTranscript");
+        transcript.replaceChildren();
+        if (!messages.length) {
+          const empty = document.createElement("p");
+          empty.className = "assistant-sources-empty";
+          empty.textContent = "No saved local chat yet. Start a conversation below.";
+          transcript.append(empty);
+          return;
+        }
+        for (const message of messages) {
+          const item = document.createElement("article");
+          item.className = `local-assistant-message ${message.role}`;
+          const speaker = document.createElement("strong");
+          speaker.textContent = message.role === "user" ? "You" : "Local model";
+          const content = document.createElement("p");
+          content.textContent = message.content;
+          item.append(speaker, content);
+          if (message.role === "assistant" && message.sources?.length) {
+            const sourceList = document.createElement("div");
+            sourceList.className = "research-source-list";
+            for (const source of message.sources) {
+              const sourceItem = document.createElement("p");
+              sourceItem.className = "assistant-sources-empty";
+              sourceItem.textContent = [
+                source.citation,
+                source.title || source.report_type || source.type || "",
+                source.date || source.report_date || source.study_date || "",
+              ].filter(Boolean).join(" · ");
+              sourceList.append(sourceItem);
+            }
+            item.append(sourceList);
+          }
+          transcript.append(item);
+        }
+        transcript.scrollTop = transcript.scrollHeight;
+      }
+
+      async function loadLocalAssistantConversation() {
+        const transcript = document.getElementById("localAssistantTranscript");
+        try {
+          const data = await patientRequest("/api/ai/local-conversation");
+          renderLocalAssistantMessages(data.messages);
+          showWorkspaceMessage("localAssistantMessage", "");
+        } catch (error) {
+          transcript.replaceChildren();
+          showWorkspaceMessage(
+            "localAssistantMessage",
+            error.message || "Could not load the saved local conversation.",
+            "error",
+          );
+        }
+      }
+
+      function renderLocalAssistantPatientChoices() {
+        const select = document.getElementById("localAssistantPatientSelect");
+        const previous = select.value;
+        select.replaceChildren();
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = patients.length ? "Select a patient" : "No patient records";
+        select.append(placeholder);
+        for (const patient of patients) {
+          const option = document.createElement("option");
+          option.value = String(patient.id);
+          option.textContent = `${patient.first_name} ${patient.last_name} · #${patient.id}`;
+          select.append(option);
+        }
+        if (patients.some((patient) => String(patient.id) === previous)) {
+          select.value = previous;
+        }
+      }
+
+      async function loadLocalAssistantReports() {
+        const patientId = document.getElementById("localAssistantPatientSelect").value;
+        const select = document.getElementById("localAssistantReportSelect");
+        select.replaceChildren();
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = patientId ? "Loading reports…" : "Select a patient first";
+        select.append(placeholder);
+        if (!patientId) return;
+        try {
+          const data = await patientRequest(
+            `/api/reports?patient_id=${encodeURIComponent(patientId)}`,
+          );
+          select.replaceChildren();
+          const emptyOption = document.createElement("option");
+          emptyOption.value = "";
+          emptyOption.textContent = data.reports.length
+            ? "Select a report"
+            : "No reports for this patient";
+          select.append(emptyOption);
+          for (const report of data.reports) {
+            const option = document.createElement("option");
+            option.value = String(report.id);
+            option.textContent = `#${report.id} · ${report.report_type} · ${report.report_date || "Date not provided"}`;
+            select.append(option);
+          }
+        } catch (error) {
+          select.replaceChildren();
+          const errorOption = document.createElement("option");
+          errorOption.value = "";
+          errorOption.textContent = error.message || "Could not load reports";
+          select.append(errorOption);
+        }
+      }
+
+      function updateLocalAssistantContextControls() {
+        const contextType = document.getElementById("localAssistantContextType").value;
+        const usesPatient =
+          contextType === "report" || contextType === "patient_timeline";
+        document.getElementById("localAssistantPatientGroup").hidden = !usesPatient;
+        document.getElementById("localAssistantReportGroup").hidden =
+          contextType !== "report";
+        if (usesPatient) renderLocalAssistantPatientChoices();
+        if (contextType === "report") loadLocalAssistantReports();
+      }
+
+      async function submitLocalAssistantQuestion(event) {
+        event.preventDefault();
+        const contextType = document.getElementById("localAssistantContextType").value;
+        const payload = {
+          question: document.getElementById("localAssistantQuestion").value.trim(),
+          context_type: contextType,
+        };
+        if (contextType === "report") {
+          const reportId = document.getElementById("localAssistantReportSelect").value;
+          if (!reportId) {
+            showWorkspaceMessage("localAssistantMessage", "Select a report to use as context.", "error");
+            return;
+          }
+          payload.report_id = Number(reportId);
+        } else if (contextType === "patient_timeline") {
+          const patientId = document.getElementById("localAssistantPatientSelect").value;
+          if (!patientId) {
+            showWorkspaceMessage("localAssistantMessage", "Select a patient to use as context.", "error");
+            return;
+          }
+          payload.patient_id = Number(patientId);
+        }
+        showWorkspaceMessage(
+          "localAssistantMessage",
+          "Retrieving authorized context and waiting for the local model…",
+        );
+        setButtonBusy(
+          "localAssistantSubmitButton",
+          true,
+          "Waiting for local model…",
+          "Send to local model",
+        );
+        try {
+          const data = await patientRequest("/api/ai/query-local", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          renderLocalAssistantMessages(data.messages);
+          document.getElementById("localAssistantQuestion").value = "";
+          showWorkspaceMessage(
+            "localAssistantMessage",
+            "Local response saved to your account conversation.",
+            "success",
+          );
+        } catch (error) {
+          showWorkspaceMessage(
+            "localAssistantMessage",
+            error.message || "Could not generate a local assistant response.",
+            "error",
+          );
+        } finally {
+          setButtonBusy(
+            "localAssistantSubmitButton",
+            false,
+            "Waiting for local model…",
+            "Send to local model",
+          );
+        }
+      }
+
+      async function clearLocalAssistantConversation() {
+        if (!window.confirm("Permanently clear your saved local assistant conversation?")) {
+          return;
+        }
+        const button = document.getElementById("clearLocalAssistantConversation");
+        button.disabled = true;
+        try {
+          const data = await patientRequest("/api/ai/local-conversation", {
+            method: "DELETE",
+          });
+          renderLocalAssistantMessages(data.messages);
+          showWorkspaceMessage("localAssistantMessage", "Saved local chat cleared.", "success");
+        } catch (error) {
+          showWorkspaceMessage(
+            "localAssistantMessage",
+            error.message || "Could not clear the saved local conversation.",
+            "error",
+          );
+        } finally {
+          button.disabled = false;
         }
       }
 
@@ -6445,7 +7428,10 @@
         button.disabled = true;
         button.textContent = "Comparing…";
         document.getElementById("reportComparisonResultSection").hidden = true;
-        showWorkspaceMessage("reportComparisonMessage", "Matching explicit measurements and report wording locally…");
+        document.getElementById("reportComparisonLocalFallback").hidden = true;
+        document.getElementById("reportComparisonAiSummary").hidden = true;
+        document.getElementById("reportComparisonAiError").hidden = true;
+        showWorkspaceMessage("reportComparisonMessage", "Comparing source text locally and generating an AI narrative summary…");
         try {
           const data = await patientRequest("/api/reports/compare", {
             method: "POST",
@@ -6455,28 +7441,160 @@
               report_id_2: selected[1].id,
             }),
           });
-          renderReportComparison(
-            data.comparison,
-            data.reports.map((report, index) =>
-              `Report ${index + 1} · ${report.patient_name}${
-                report.report_date ? ` · ${formatLibraryDate(report.report_date)}` : ""
-              }`,
-            ),
-          );
+          const localComparison = document.getElementById("reportComparisonResult");
+          if (data.comparison) {
+            renderReportComparison(
+              data.comparison,
+              data.reports.map((report, index) =>
+                `${report.patient_name} · ${report.report_type || "Medical report"}${
+                  report.report_date ? ` · ${formatLibraryDate(report.report_date)}` : ""
+                } · #${report.id}`,
+              ),
+            );
+          } else {
+            localComparison.replaceChildren();
+          }
           document.getElementById("reportComparisonDisclaimer").textContent =
             data.disclaimer;
+          const aiSummary = document.getElementById("reportComparisonAiSummary");
+          aiSummary.textContent = data.ai_summary || "";
+          aiSummary.hidden = !data.ai_summary;
+          const aiError = document.getElementById("reportComparisonAiError");
+          aiError.textContent = data.ai_error || "";
+          aiError.hidden = !data.ai_error;
+          const fallbackError = document.getElementById("reportComparisonFallbackError");
+          fallbackError.textContent = data.fallback_error || "";
+          fallbackError.hidden = !data.fallback_error;
+          document.getElementById("reportComparisonLocalFallback").hidden =
+            Boolean(data.ai_summary);
           document.getElementById("reportComparisonResultSection").hidden = false;
           showWorkspaceMessage(
             "reportComparisonMessage",
-            "Local comparison complete. Similarity does not establish clinical equivalence; review the original reports.",
-            "success",
+            data.ai_error
+              ? `AI analysis is temporarily unavailable. Showing local fallback: ${data.ai_error}`
+              : "AI report comparison is ready. Review the original reports.",
+            data.ai_error ? "error" : "success",
           );
+          scrollToWorkspaceResult("reportComparisonResultSection");
         } catch (error) {
           showWorkspaceMessage(
             "reportComparisonMessage",
             error.message || "Could not compare these reports.",
             "error",
           );
+        } finally {
+          button.textContent = "Compare reports";
+          updateReportComparisonSelection();
+        }
+      }
+
+      function showReportComparisonResponse(modelName) {
+        if (!pairedReportComparison) return;
+        const response = pairedReportComparison[modelName];
+        const summary = document.getElementById("reportComparisonAiSummary");
+        const error = document.getElementById("reportComparisonAiError");
+        const data = response.ok ? response.data : null;
+        const message = response.ok
+          ? data.ai_error || (!data.ai_summary ? "The model returned no comparison summary." : "")
+          : response.error;
+        summary.textContent = message ? "" : data.ai_summary;
+        summary.hidden = Boolean(message);
+        error.textContent = message;
+        error.className = message ? "message error" : "message";
+        error.hidden = !message;
+        if (message) {
+          showWorkspaceMessage("reportComparisonMessage", message, "error");
+        } else {
+          showWorkspaceMessage(
+            "reportComparisonMessage",
+            `${modelName === "gemini" ? "Gemini" : "Local model"} response shown. Review the original reports.`,
+            "success",
+          );
+        }
+      }
+
+      async function requestPairedReportComparison() {
+        const selected = getSelectedComparisonReports();
+        if (
+          selected.length !== 2 ||
+          !comparisonTextLoaded ||
+          selected.some(
+            (report) =>
+              typeof report.extracted_text !== "string" ||
+              !report.extracted_text.trim(),
+          )
+        ) {
+          return;
+        }
+        const button = document.getElementById("compareReportsButton");
+        button.disabled = true;
+        button.textContent = "Waiting for both responses…";
+        document.getElementById("reportComparisonResultSection").hidden = true;
+        document.getElementById("reportComparisonResponseChoices").hidden = true;
+        document.getElementById("reportComparisonAiSummary").hidden = true;
+        document.getElementById("reportComparisonAiError").hidden = true;
+        document.getElementById("reportComparisonLocalFallback").hidden = true;
+        showWorkspaceMessage(
+          "reportComparisonMessage",
+          "Comparing reports with Gemini and the local model. The local model may take several minutes…",
+        );
+        const body = JSON.stringify({
+          report_id_1: selected[0].id,
+          report_id_2: selected[1].id,
+        });
+        try {
+          const [geminiResult, localResult] = await Promise.allSettled([
+            patientRequest("/api/reports/compare", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            }),
+            patientRequest("/api/reports/compare-local", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body,
+            }),
+          ]);
+          pairedReportComparison = {
+            gemini: settledModelResponse(geminiResult),
+            local: settledModelResponse(localResult),
+          };
+          const available = [
+            pairedReportComparison.gemini,
+            pairedReportComparison.local,
+          ].filter((result) => result.ok);
+          const comparisonSource =
+            available.find((result) => result.data.comparison) || available[0];
+          const comparisonRoot = document.getElementById("reportComparisonResult");
+          comparisonRoot.replaceChildren();
+          if (comparisonSource) {
+            const data = comparisonSource.data;
+            if (data.comparison) {
+              renderReportComparison(
+                data.comparison,
+                data.reports.map((report) =>
+                  `${report.patient_name} · ${report.report_type || "Medical report"}${
+                    report.report_date ? ` · ${formatLibraryDate(report.report_date)}` : ""
+                  } · #${report.id}`,
+                ),
+              );
+              document.getElementById("reportComparisonLocalFallback").hidden = false;
+            }
+            document.getElementById("reportComparisonDisclaimer").textContent =
+              data.disclaimer;
+            document.getElementById("reportComparisonFallbackError").textContent =
+              data.fallback_error || "";
+            document.getElementById("reportComparisonFallbackError").hidden =
+              !data.fallback_error;
+          }
+          document.getElementById("reportComparisonResponseChoices").hidden = false;
+          document.getElementById("reportComparisonResultSection").hidden = false;
+          showWorkspaceMessage(
+            "reportComparisonMessage",
+            "Both response attempts finished. Choose which summary to display.",
+            "success",
+          );
+          scrollToWorkspaceResult("reportComparisonResultSection");
         } finally {
           button.textContent = "Compare reports";
           updateReportComparisonSelection();
@@ -6499,6 +7617,9 @@
         if (viewName === "assistant") {
           renderAssistantPatientChoices();
           updateAssistantContextControls();
+          renderLocalAssistantPatientChoices();
+          updateLocalAssistantContextControls();
+          await loadLocalAssistantConversation();
           return;
         }
         if (viewName === "research-papers") return loadResearchPapers();
@@ -6531,19 +7652,55 @@
         .addEventListener("click", extractSelectedComparisonText);
       document
         .getElementById("compareReportsButton")
-        .addEventListener("click", requestReportComparison);
+        .addEventListener("click", requestPairedReportComparison);
+      document
+        .getElementById("showGeminiReportComparison")
+        .addEventListener("click", () => showReportComparisonResponse("gemini"));
+      document
+        .getElementById("showLocalReportComparison")
+        .addEventListener("click", () => showReportComparisonResponse("local"));
       document
         .getElementById("researchSearchForm")
         .addEventListener("submit", submitResearchSearch);
       document
         .getElementById("researchAskForm")
-        .addEventListener("submit", submitResearchQuestion);
+        .addEventListener("submit", submitPairedResearchQuestion);
+      document
+        .getElementById("showGeminiResearchAnswer")
+        .addEventListener("click", () => showPairedResearchAnswer("gemini"));
+      document
+        .getElementById("showLocalResearchAnswer")
+        .addEventListener("click", () => showPairedResearchAnswer("local"));
       document
         .getElementById("compareResearchPapersButton")
-        .addEventListener("click", compareSelectedResearchPapers);
+        .addEventListener("click", compareSelectedResearchPapersPaired);
+      document
+        .getElementById("showGeminiResearchComparison")
+        .addEventListener("click", () => showPairedResearchComparison("gemini"));
+      document
+        .getElementById("showLocalResearchComparison")
+        .addEventListener("click", () => showPairedResearchComparison("local"));
       document
         .getElementById("assistantForm")
         .addEventListener("submit", submitAssistantQuestion);
+      document
+        .getElementById("localAssistantForm")
+        .addEventListener("submit", submitLocalAssistantQuestion);
+      document
+        .getElementById("localAssistantContextType")
+        .addEventListener("change", updateLocalAssistantContextControls);
+      document
+        .getElementById("localAssistantPatientSelect")
+        .addEventListener("change", () => {
+          if (
+            document.getElementById("localAssistantContextType").value === "report"
+          ) {
+            loadLocalAssistantReports();
+          }
+        });
+      document
+        .getElementById("clearLocalAssistantConversation")
+        .addEventListener("click", clearLocalAssistantConversation);
       document
         .getElementById("assistantContextType")
         .addEventListener("change", updateAssistantContextControls);
@@ -6769,6 +7926,7 @@
             patients = [];
             selectedPatient = null;
             researchPapers = [];
+            researchRagSelectedIds.clear();
             researchComparisonSelectedIds.clear();
             comparisonSelectedReports.clear();
             comparisonSelectedPatientId = null;

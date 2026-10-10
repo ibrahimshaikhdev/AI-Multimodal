@@ -240,6 +240,21 @@ This repo is being prepared as a team-friendly GitHub project. The local environ
 
 ## Local setup
 
+Model checkpoints are stored with Git LFS. Install Git LFS before cloning so
+the checkpoint files are downloaded with the repository:
+
+```powershell
+git lfs install
+git clone https://github.com/ibrahimshaikhdev/AI-Multimodal-.git
+cd AI-Multimodal-
+git lfs pull
+```
+
+If the repository is already cloned, install Git LFS and run `git lfs pull`
+from the repository root. The tracked patterns cover model weight files only;
+sample images, notebooks, and uploaded patient files are not added by these
+rules.
+
 1. Open a terminal in the project root.
 2. Create and activate a virtual environment:
 
@@ -295,13 +310,36 @@ timeouts. The example OpenRouter model is a free-tier route when available;
 provider quotas, pricing, and availability are controlled by the providers and
 are not guaranteed to remain free or continuously available.
 
-Report summaries and research Q&A use the configured AI provider. Report
-comparison uses explicit extracted values plus local embedding similarity;
-research comparison aligns locally retrieved passages and their citations.
-Those comparison workflows do not call a generative AI API. The embedding
-model runs locally and may download its weights on first use. Similarity is a
-text-matching aid, not a probability or evidence of clinical or scientific
-equivalence.
+Report summaries, report-comparison narratives, research comparisons, and
+research Q&A use the configured AI provider. Report comparisons retain their
+local structured value and wording comparison only if AI generation is
+unavailable.
+Research comparison supports two or more account-owned papers, generates
+structured field summaries from bounded retrieved excerpts, and retains local
+evidence alignment for the first two selected papers only if AI generation is
+unavailable. Research search and Q&A
+can be scoped to selected account-owned papers. The embedding model runs
+locally and may download its weights on first use. Similarity is a text-matching
+aid, not a probability or evidence of clinical or scientific equivalence.
+Generated content and experimental model output require human review and are
+not medical diagnoses.
+
+The report-comparison narrative, research comparison, and research Q&A pages
+also request a response from a local llama.cpp server alongside the configured
+cloud AI provider. Start the server separately; the local endpoint defaults to
+`http://localhost:8080/v1/chat/completions` and can be changed with
+`LOCAL_LLM_URL`. The local request has a 300-second timeout and does not fall
+back to a cloud provider. The UI waits for both requests and lets the user
+choose which response to display. The Botpress AI Assistant is unchanged.
+
+The AI Assistant page also includes a separate local-model chat. It can use
+account-owned research papers, a selected report, or a patient's report/scan
+timeline as source context. Chat history is saved per signed-in account, with
+the most recent 10 exchanges retained and a control to clear it. Selected
+source excerpts/metadata and recent turns are sent to the configured
+`LOCAL_LLM_URL`; this local assistant does not fall back to the cloud AI
+providers. The existing Botpress and cloud-backed Assistant experiences remain
+separate and unchanged.
 
 The `/api/ai/test` endpoint requires a signed-in user and accepts:
 

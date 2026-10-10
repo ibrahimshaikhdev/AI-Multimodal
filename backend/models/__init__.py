@@ -23,6 +23,7 @@ from .echoview47_analysis import EchoView47AnalysisRecord
 from .vascular_ultrasound_analysis import VascularUltrasoundAnalysisRecord
 from .research_paper import ResearchPaper
 from .audit_log import AuditLog
+from .local_assistant_conversation import LocalAssistantConversation
 
 __all__ = [
 	"User",
@@ -47,4 +48,5 @@ __all__ = [
 	"VascularUltrasoundAnalysisRecord",
 	"ResearchPaper",
 	"AuditLog",
+	"LocalAssistantConversation",
 ]
