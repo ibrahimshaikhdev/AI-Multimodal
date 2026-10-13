@@ -25,6 +25,7 @@ from backend.services.audit_logging import record_audit_event
 from backend.services.ai_service import AIServiceError
 from backend.services.document_comparison import compare_report_texts
 from backend.services.local_llm import local_generate
+from backend.services.patient_context import get_owned_reports
 
 reports_bp = Blueprint("reports", __name__)
 SUMMARY_DISCLAIMER = (
@@ -279,20 +280,11 @@ def compare_reports():
             {"success": False, "error": "Select two different reports to compare."}
         ), 400
 
-    reports = (
-        db.session.query(MedicalReport)
-        .join(Patient)
-        .filter(
-            MedicalReport.id.in_(report_ids),
-            Patient.created_by_id == g.current_user.id,
-        )
-        .all()
-    )
-    if len(reports) != 2:
+    reports = get_owned_reports(g.current_user.id, report_ids)
+    if reports is None:
         return jsonify({"success": False, "error": "One or both reports were not found."}), 404
 
-    reports_by_id = {report.id: report for report in reports}
-    report_1, report_2 = (reports_by_id[report_id] for report_id in report_ids)
+    report_1, report_2 = reports
     report_texts = (report_1.extracted_text, report_2.extracted_text)
     if any(
         not isinstance(text, str) or not text.strip()

@@ -29,8 +29,10 @@ direct-entry paths at `/medicalreports.html`, `/scan.html`, and
 
 Research Papers accepts PDF and DOCX uploads with title, topic, publication
 date, authors, and journal/source metadata. Paper files and records are private
-to the signed-in account. Library search matches saved metadata only; full-text
-indexing, semantic search, and generated research answers are not implemented.
+to the signed-in account. The Research Search and RAG workflows retrieve
+source excerpts from uploaded papers and provide citations; Research Comparison
+summarizes selected papers. These research features do not provide clinical
+advice.
 
 ## Tech stack
 
@@ -299,6 +301,38 @@ silently creating a new empty database next to the project.
 The project uses values from `.env`. Keep real database credentials and secrets out of version control.
 
 Example values are included in [.env.example](.env.example).
+
+The own-model responses for Report Comparison, Research Comparison, Research
+RAG, and the AI Assistant run in-process through `llama-cpp-python`. Set
+`OWN_MODEL_PATH` to the v3 GGUF in `.env`; `OWN_N_CTX` defaults to 4096.
+This own-model path does not use an HTTP server. The in-process model uses
+available physical CPU cores for both generation and prompt batch evaluation;
+long comparison prompts can still take longer to process than short assistant
+questions.
+
+## Assistant project knowledge
+
+The Assistant retrieves current project context from `project_kb/`. Rebuild
+the generated overview, feature, API, data-model, and usage documents after
+changing application behavior by running:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_kb.py
+```
+
+The builder does not overwrite `project_kb/notes.md`, which is reserved for
+hand-edited notes. Patient reports and scan records are retrieved live from
+the signed-in user's database records and are never copied into the shared
+project knowledge files. Set `ASSISTANT_DEBUG=1` temporarily to log the final
+Assistant prompt; those logs can contain retrieved patient information and
+must be handled as sensitive data.
+
+The Assistant routes greetings, project questions, account counts, lab-term
+definitions, and patient-record questions to intent-specific handlers. It uses
+deterministic replies for straightforward lookups, including a chronological
+patient timeline built directly from saved reports and scan records; the own
+model is used only for grounded narrative answers. Unmatched questions receive
+a reminder of the Assistant's supported scope.
 
 ## Cloud text generation
 

@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.gguf
+models/
 .venv/
 venv/
 ENV/
@@ -12,6 +13,7 @@ ENV/
 # Database
 *.sqlite3
 instance/cardiac_debug/
+instance/assistant_unmatched.jsonl
 
 # Logs
 *.log

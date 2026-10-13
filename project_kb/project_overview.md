@@ -1,28 +1,85 @@
-# Project knowledge
+# Project overview
 
-## Purpose
-The project is a Flask web app that organises medical reports and research papers, extracts structured data with OCR, compares reports over time, and answers questions about research papers using RAG. It supports information retrieval and does not diagnose.
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
 
-## Report comparison
-Report comparison: two reports of one patient are ordered by date. Parameter differences (old value, new value, change, normal/high/low) are computed in Python; the AI only writes a short summary.
+We are building an AI-powered platform that processes and organizes medical and research information.
 
-## Research comparison
-Research comparison compares uploaded papers on methodology, dataset, model, results, limitations and future work and shows them in a table. Long papers are read in sections and merged before comparing.
+The system combines:
 
-## Research RAG
-Research RAG splits uploaded papers into chunks, retrieves the most relevant chunks for a question, and answers only from them with citations like [S1].
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+
+**Important:** This is not intended to replace clinical judgment or provide autonomous medical diagnosis.
+
+---
+
+This application is designed to help teams work with:
+
+- medical document uploads
+- OCR and text extraction
+- structured patient/report data
+- AI-based report summaries
+- health timeline and comparison workflows
+- research paper indexing and semantic search
+- secure user access and audit-friendly operations
+
+> This project is intended for research, experimentation, and internal team workflows. It is not a replacement for clinical judgment.
+
+The authenticated workspace includes dedicated Medical Reports and Medical
+Scans views that collect the current user's patient uploads into searchable
+libraries. Original files can be opened or downloaded through the existing
+patient-scoped APIs. Health Timeline lists a patient's uploaded reports and
+scans, ordered by upload time, with report/study dates shown when available.
+It does not infer missing medical dates. The library screens also have
+direct-entry paths at `/medicalreports.html`, `/scan.html`, and
+`/healthtimeline.html`, served by the same authenticated frontend shell.
+
+Research Papers accepts PDF and DOCX uploads with title, topic, publication
+date, authors, and journal/source metadata. Paper files and records are private
+to the signed-in account. The Research Search and RAG workflows retrieve
+source excerpts from uploaded papers and provide citations; Research Comparison
+summarizes selected papers. These research features do not provide clinical
+advice.
+
+## Main capabilities
+
+1. Upload and process medical reports and scanned documents.
+2. Extract useful structured medical information.
+3. Generate source-grounded AI summaries.
+4. Analyze supported medical images.
+5. Combine text, image and research information.
+6. Compare medical reports across dates.
+7. Build a chronological patient timeline.
+8. Upload and index research papers.
+9. Provide semantic research search.
+10. Provide RAG-based research Q&A.
+11. Compare research papers.
+12. Provide a controlled AI query interface.
+13. Maintain authentication, authorization and audit logs.
+
+---
 
 ## Technology stack
-Tech stack: Python, Flask, PostgreSQL, SQLAlchemy, PyMuPDF, Tesseract OCR, scikit-learn TF-IDF retrieval, JWT authentication, and a plain HTML/JavaScript frontend.
 
-## Privacy
-Privacy: the project runs its own fine-tuned open model locally, so patient and project data is not sent to third-party AI services. Only synthetic or public data is used for training.
+- Python
+- Flask
+- SQLAlchemy
+- PostgreSQL
+- HTML / JavaScript frontend shell
+- pytest for testing
 
-## Limitations
-Limits: AI output can be wrong and needs human review. The project is a research prototype and is not for clinical use or diagnosis.
+## Safety and privacy
 
-## OCR
-OCR: PDFs are read with PyMuPDF, and scanned pages or images (JPG, PNG) fall back to Tesseract OCR. The extracted text is stored in the database.
-
-## Health timeline
-Health timeline: a patient's documents and extracted events are arranged chronologically.
+The platform is a research and experimental information-management tool, not a clinical diagnosis system. Patient records are associated with user-owned patient accounts and must be accessed through the authenticated, ownership-checked application workflows.

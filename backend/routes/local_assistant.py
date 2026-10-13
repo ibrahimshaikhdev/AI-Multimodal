@@ -1,14 +1,25 @@
 import json
+import os
+import re
+from difflib import SequenceMatcher
 
 from flask import Blueprint, current_app, g, jsonify, request
 
 from backend.auth import require_auth
 from backend.extensions import db
 from backend.models import LocalAssistantConversation
-from backend.services.own_llm import (
-    OWN_ASSISTANT_SYSTEM,
-    build_own_assistant_prompt,
-    own_generate,
+from backend.services.assistant_desks import (
+    MISSING_SELECTION,
+    _prepare_patient_data,
+    format_timeline_answer,
+    generate_grounded_answer,
+    handle_fixed_intent,
+    retrieve_project_knowledge,
+)
+from backend.services.assistant_router import (
+    classify,
+    log_unmatched_question,
+    normalize,
 )
 from backend.services.web_search import search_web
 from .ai import (
@@ -19,7 +30,43 @@ from .ai import (
 
 
 local_assistant_bp = Blueprint("local_assistant", __name__)
-LOCAL_ASSISTANT_MAX_OUTPUT_TOKENS = 500
+_MEDICAL_RECOMMENDATION_PATTERN = re.compile(
+    r"\b(?:recommend\w*|should|must|need to|advis\w*|suggest\w*|"
+    r"dietary|repeat testing|follow[- ]?up\s+(?:testing|tests|appointment|"
+    r"care|visit|with|in)|consult)\b",
+    re.IGNORECASE,
+)
+
+
+def _repeats_recent_answer(answer, previous_messages):
+    normalized_answer = re.sub(r"\W+", " ", answer.casefold()).strip()
+    if not normalized_answer:
+        return False
+    recent_answers = [
+        message["content"]
+        for message in reversed(previous_messages)
+        if message["role"] == "assistant"
+    ][:3]
+    return any(
+        SequenceMatcher(
+            None,
+            normalized_answer,
+            re.sub(r"\W+", " ", previous.casefold()).strip(),
+        ).ratio()
+        >= 0.78
+        for previous in recent_answers
+    )
+
+
+def _has_unsupported_recommendation(answer, patient_data):
+    normalized_source = re.sub(r"\W+", " ", patient_data.casefold()).strip()
+    for sentence in re.split(r"(?<=[.!?])\s+", answer):
+        if not _MEDICAL_RECOMMENDATION_PATTERN.search(sentence):
+            continue
+        normalized_sentence = re.sub(r"\W+", " ", sentence.casefold()).strip()
+        if normalized_sentence not in normalized_source:
+            return True
+    return False
 
 
 @local_assistant_bp.get("/ai/local-conversation")
@@ -113,17 +160,119 @@ def query_local_assistant():
         return jsonify(
             {"success": False, "error": "web_search must be a boolean."}
         ), 400
-    if data.get("context_type") == "research":
-        context = {"context_type": "research"}
-        sources = []
-        context_error = None
-    else:
-        context, sources, context_error = _local_assistant_sources(
-            g.current_user.id,
-            {**data, "question": question},
+    context_type = data.get("context_type")
+    if context_type not in {"research", "report", "patient_timeline"}:
+        return jsonify(
+            {
+                "success": False,
+                "error": "context_type must be research, report, or patient_timeline.",
+            }
+        ), 400
+    route_context = {
+        "context_type": context_type,
+        "patient_id": data.get("patient_id"),
+        "report_id": data.get("report_id"),
+    }
+    intent, score = classify(question, route_context)
+    normalized_question = normalize(question)
+    if intent == "fallback":
+        try:
+            log_unmatched_question(
+                question,
+                g.current_user.id,
+                current_app.instance_path,
+            )
+        except RuntimeError as exc:
+            current_app.logger.exception(
+                "Could not record unmatched Assistant question for user %s",
+                g.current_user.id,
+            )
+            return jsonify({"success": False, "error": str(exc)}), 500
+
+    if os.environ.get("ASSISTANT_DEBUG", "").strip() == "1":
+        current_app.logger.info(
+            "Assistant router: question=%r normalized=%r intent=%s score=%.3f",
+            question,
+            normalized_question,
+            intent,
+            score,
         )
-    if context_error:
-        return context_error
+
+    needs_patient = intent in {
+        "patient_values",
+        "timeline",
+        "scans",
+        "compare_reports",
+    }
+    if intent == "selected_report" and not route_context["report_id"]:
+        answer = MISSING_SELECTION
+        context = {"context_type": context_type}
+        sources = []
+    elif needs_patient and not route_context["patient_id"]:
+        answer = MISSING_SELECTION
+        context = {"context_type": context_type}
+        sources = []
+    else:
+        answer = None
+        context = {"context_type": context_type}
+        sources = []
+        if intent in {
+            "selected_report",
+            "patient_values",
+            "timeline",
+            "scans",
+            "compare_reports",
+        }:
+            source_context_type = (
+                "report" if intent == "selected_report" else "patient_timeline"
+            )
+            if intent == "timeline":
+                report_limit = None
+                scan_limit = None
+            elif intent == "compare_reports":
+                report_limit = None
+                scan_limit = 2
+            elif intent == "scans":
+                report_limit = 0
+                scan_limit = 10
+            else:
+                report_limit = 10
+                scan_limit = 2
+            context, sources, context_error = _local_assistant_sources(
+                g.current_user.id,
+                {
+                    **data,
+                    "question": question,
+                    "context_type": source_context_type,
+                },
+                report_limit=report_limit,
+                scan_limit=scan_limit,
+            )
+            if context_error:
+                error_response, error_status = context_error
+                error_body = error_response.get_json(silent=True) or {}
+                if (
+                    intent == "selected_report"
+                    and error_status == 422
+                    and "no readable text" in str(error_body.get("error", "")).casefold()
+                ):
+                    answer = "This report has no readable text."
+                    context = {"context_type": context_type}
+                    sources = []
+                elif (
+                    intent in {"scans", "timeline"}
+                    and error_status == 422
+                    and "no reports or scans" in str(error_body.get("error", "")).casefold()
+                ):
+                    context = {"context_type": "patient_timeline"}
+                    sources = []
+                    context["user_id"] = g.current_user.id
+                    context["patient_id"] = route_context["patient_id"]
+                else:
+                    return context_error
+            else:
+                context["user_id"] = g.current_user.id
+                context["patient_id"] = route_context["patient_id"]
 
     conversation = (
         db.session.query(LocalAssistantConversation)
@@ -177,19 +326,118 @@ def query_local_assistant():
             )
 
     try:
-        if web_search_results:
-            prompt = build_own_assistant_prompt(
+        if (
+            answer is None
+            and web_search_enabled
+            and web_search_results
+            and intent in {"fallback", "research"}
+        ):
+            answer, final_prompt = generate_grounded_answer(
+                intent,
                 question,
                 g.current_user.id,
+                project_knowledge="(none)",
                 web_search_results=web_search_results,
+                max_tokens=300,
             )
-        else:
-            prompt = build_own_assistant_prompt(question, g.current_user.id)
-        answer = own_generate(
-            prompt,
-            LOCAL_ASSISTANT_MAX_OUTPUT_TOKENS,
-            system=OWN_ASSISTANT_SYSTEM,
-        )
+            if os.environ.get("ASSISTANT_DEBUG", "").strip() == "1":
+                current_app.logger.info(
+                    "Assistant final prompt (intent=%s):\n%s",
+                    intent,
+                    final_prompt,
+                )
+
+        if answer is None:
+            answer = handle_fixed_intent(intent, question, g.current_user.id)
+
+        if intent == "project_info" and answer is None:
+            project_knowledge = retrieve_project_knowledge(
+                question,
+                g.current_user.id,
+                top_k=2,
+                min_score=0.08,
+            )
+            if not project_knowledge:
+                answer = "I don't have that information in the project notes."
+            else:
+                answer, final_prompt = generate_grounded_answer(
+                    intent,
+                    question,
+                    g.current_user.id,
+                    project_knowledge=project_knowledge,
+                    max_tokens=200,
+                )
+                if os.environ.get("ASSISTANT_DEBUG", "").strip() == "1":
+                    current_app.logger.info(
+                        "Assistant final prompt (intent=%s):\n%s",
+                        intent,
+                        final_prompt,
+                    )
+        elif intent in {
+            "selected_report",
+            "patient_values",
+            "timeline",
+            "scans",
+            "compare_reports",
+        } and answer is None:
+            if intent == "timeline":
+                answer = format_timeline_answer(context)
+            else:
+                patient_data = _prepare_patient_data(intent, context)
+            if intent == "selected_report" and not patient_data:
+                answer = "This report has no readable text."
+            elif intent != "timeline" and answer is None:
+                max_tokens_by_intent = {
+                    "selected_report": 350,
+                    "timeline": 400,
+                    "compare_reports": 350,
+                    "scans": 250,
+                    "patient_values": 250,
+                }
+                answer, final_prompt = generate_grounded_answer(
+                    intent,
+                    question,
+                    g.current_user.id,
+                    patient_data=patient_data,
+                    max_tokens=max_tokens_by_intent[intent],
+                )
+                if _repeats_recent_answer(answer, previous_messages):
+                    previous_answer = next(
+                        message["content"]
+                        for message in reversed(previous_messages)
+                        if message["role"] == "assistant"
+                    )
+                    answer, final_prompt = generate_grounded_answer(
+                        intent,
+                        question,
+                        g.current_user.id,
+                        patient_data=patient_data,
+                        max_tokens=max_tokens_by_intent[intent],
+                        previous_answer=previous_answer,
+                    )
+                if _repeats_recent_answer(answer, previous_messages):
+                    answer = (
+                        "I couldn't produce a distinct selected-record answer "
+                        "without repeating the earlier response. Please ask "
+                        "about a specific result or phrase in the selected record."
+                    )
+                if _has_unsupported_recommendation(answer, patient_data):
+                    answer = (
+                        "The selected record does not substantiate that "
+                        "recommendation. I can help explain specific results "
+                        "or wording shown in it."
+                    )
+                if os.environ.get("ASSISTANT_DEBUG", "").strip() == "1":
+                    current_app.logger.info(
+                        "Assistant final prompt (intent=%s):\n%s",
+                        intent,
+                        final_prompt,
+                    )
+        if answer is None:
+            answer = (
+                "I can help with patient reports, lab values, timelines, scans, "
+                "research papers, medical terms, and questions about this project."
+            )
     except Exception as exc:
         current_app.logger.exception(
             "Own-model assistant generation failed for user %s",
@@ -238,6 +486,7 @@ def query_local_assistant():
         {
             "success": True,
             "answer": answer,
+            "intent": intent,
             "context_type": context["context_type"],
             "sources": sources,
             "web_search_enabled": web_search_enabled,

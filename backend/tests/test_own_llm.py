@@ -1,187 +1,261 @@
-import json
+import re
 import sys
 import types
-from urllib.error import URLError
 
 import pytest
 
 from backend.services import own_llm
 
 
-class _Response:
-    def __init__(self, payload):
-        self.payload = payload
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_args):
-        return False
-
-    def read(self, _limit):
-        return json.dumps(
-            {"choices": [{"message": {"content": self.payload}}]}
-        ).encode("utf-8")
+class _FormattedPrompt:
+    def __init__(self, prompt, added_special=False):
+        self.prompt = prompt
+        self.added_special = added_special
 
 
-def test_own_generate_http_sends_user_only_when_no_system_is_given(monkeypatch):
-    monkeypatch.setenv("OWN_MODEL_PATH", "")
-    monkeypatch.setenv("OWN_LLM_URL", "http://localhost:8081/v1/chat/completions")
-    captured = {}
+class _ChatFormatter:
+    def __init__(self, prompt_tokens=5):
+        self.prompt_tokens = prompt_tokens
+        self.messages = []
 
-    def fake_urlopen(request, timeout):
-        captured["body"] = json.loads(request.data.decode("utf-8"))
-        captured["timeout"] = timeout
-        return _Response("Own-model response")
-
-    monkeypatch.setattr(own_llm, "urlopen", fake_urlopen)
-
-    result = own_llm.own_generate("Question", 1500)
-
-    assert result == "Own-model response"
-    assert captured["body"] == {
-        "messages": [{"role": "user", "content": "Question"}],
-        "temperature": 0.1,
-        "max_tokens": 1500,
-    }
-    assert captured["timeout"] == 600
+    def __call__(self, *, messages):
+        self.messages.append(messages)
+        return _FormattedPrompt(
+            "rendered chat prompt",
+            added_special=True,
+        )
 
 
-def test_own_generate_http_includes_system_message_when_given(monkeypatch):
-    monkeypatch.setenv("OWN_MODEL_PATH", "")
-    monkeypatch.setenv("OWN_LLM_URL", "http://localhost:8081/v1/chat/completions")
-    captured = {}
+def _completion_handler(formatter):
+    def handler(*, llama, messages, **_kwargs):
+        return formatter(messages=messages)
 
-    def fake_urlopen(request, timeout):
-        captured["body"] = json.loads(request.data.decode("utf-8"))
-        return _Response("Answer")
-
-    monkeypatch.setattr(own_llm, "urlopen", fake_urlopen)
-
-    assert own_llm.own_generate("Question", 500, system="System") == "Answer"
-    assert captured["body"]["messages"] == [
-        {"role": "system", "content": "System"},
-        {"role": "user", "content": "Question"},
-    ]
+    return handler
 
 
-def test_own_generate_http_requests_json_mode(monkeypatch):
-    monkeypatch.setenv("OWN_MODEL_PATH", "")
-    monkeypatch.setenv("OWN_LLM_URL", "http://localhost:8081/v1/chat/completions")
-    captured = {}
+class _FakeLlama:
+    def __init__(self, *, n_ctx=4096, prompt_tokens=5):
+        self.context_size = n_ctx
+        self.token_count = prompt_tokens
+        self.chat_format = "qwen"
+        self.formatter = _ChatFormatter(prompt_tokens)
+        self._chat_handlers = {"qwen": _completion_handler(self.formatter)}
+        self.calls = []
 
-    def fake_urlopen(request, timeout):
-        captured["body"] = json.loads(request.data.decode("utf-8"))
-        return _Response('{"valid": true}')
+    def tokenize(self, _text, *, add_bos, special):
+        assert add_bos is False
+        assert special is True
+        return list(range(self.token_count))
 
-    monkeypatch.setattr(own_llm, "urlopen", fake_urlopen)
+    def n_ctx(self):
+        return self.context_size
 
-    assert own_llm.own_generate("Question", 1500, json_mode=True) == (
-        '{"valid": true}'
+    def create_chat_completion(self, **kwargs):
+        self.calls.append(kwargs)
+        return {"choices": [{"message": {"content": "Fake in-process response"}}]}
+
+
+def _fake_model_import(monkeypatch, captured, *, cores=8, llama_cls=None):
+    class FakeLlama:
+        def __init__(self, **kwargs):
+            captured.setdefault("instances", []).append(kwargs)
+            captured.setdefault("models", []).append(
+                _FakeLlama(n_ctx=kwargs["n_ctx"])
+            )
+
+        def _instance(self):
+            return captured["models"][-1]
+
+        def __getattr__(self, name):
+            return getattr(self._instance(), name)
+
+    selected_class = llama_cls or FakeLlama
+    monkeypatch.setitem(
+        sys.modules,
+        "llama_cpp",
+        types.SimpleNamespace(Llama=selected_class),
     )
-    assert captured["body"]["response_format"] == {"type": "json_object"}
+    monkeypatch.setitem(
+        sys.modules,
+        "psutil",
+        types.SimpleNamespace(cpu_count=lambda logical: cores if not logical else cores * 2),
+    )
 
 
-def test_own_generate_in_process_loads_once_and_uses_physical_cores(
+@pytest.fixture(autouse=True)
+def reset_model_cache(monkeypatch):
+    monkeypatch.setattr(own_llm, "_MODEL", None)
+
+
+def test_own_generate_in_process_loads_once_with_config_and_physical_cores(
     monkeypatch,
     tmp_path,
 ):
-    model_path = tmp_path / "fine-tuned.gguf"
+    model_path = tmp_path / "fine-tuned-v3.gguf"
     model_path.write_bytes(b"test model file")
     monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
-    monkeypatch.setenv("OWN_LLM_URL", "http://localhost:8081/v1/chat/completions")
-    monkeypatch.setattr(own_llm, "_MODEL", None)
-    captured = {"instances": 0, "calls": []}
+    monkeypatch.setenv("OWN_N_CTX", "8192")
+    captured = {}
+    _fake_model_import(monkeypatch, captured, cores=8)
 
-    class FakeLlama:
-        def __init__(self, **kwargs):
-            captured["instances"] += 1
-            captured["load_kwargs"] = kwargs
-
-        def create_chat_completion(self, **kwargs):
-            captured["calls"].append(kwargs)
-            return {"choices": [{"message": {"content": "In-process response"}}]}
-
-    monkeypatch.setitem(
-        sys.modules,
-        "llama_cpp",
-        types.SimpleNamespace(Llama=FakeLlama),
+    assert own_llm._MODEL is None
+    assert (
+        own_llm.own_generate("Question", 600, system="System")
+        == "Fake in-process response"
     )
-    monkeypatch.setitem(
-        sys.modules,
-        "psutil",
-        types.SimpleNamespace(cpu_count=lambda logical: 8 if not logical else 16),
-    )
-
-    assert own_llm.own_generate("Question", 600, system="System") == "In-process response"
-    assert own_llm.own_generate("Second question", 500) == "In-process response"
-    assert captured["instances"] == 1
-    assert captured["load_kwargs"] == {
-        "model_path": str(model_path),
-        "n_ctx": 16384,
-        "n_threads": 8,
-        "verbose": False,
-    }
-    assert captured["calls"][0]["messages"] == [
-        {"role": "system", "content": "System"},
-        {"role": "user", "content": "Question"},
+    assert own_llm.own_generate("Second question", 500) == "Fake in-process response"
+    assert captured["instances"] == [
+        {
+            "model_path": str(model_path),
+            "n_ctx": 8192,
+            "n_threads": 8,
+            "n_threads_batch": 8,
+            "use_mmap": True,
+            "verbose": False,
+        }
     ]
-    assert captured["calls"][1]["messages"] == [
+    model = captured["models"][0]
+    assert model.calls[0] == {
+        "messages": [
+            {"role": "system", "content": "System"},
+            {"role": "user", "content": "Question"},
+        ],
+        "temperature": 0.1,
+        "max_tokens": 600,
+    }
+    assert model.calls[1]["messages"] == [
         {"role": "user", "content": "Second question"}
     ]
+    assert len(model.formatter.messages) == 2
 
 
-def test_own_generate_in_process_requests_json_mode(monkeypatch, tmp_path):
-    model_path = tmp_path / "fine-tuned.gguf"
-    model_path.write_bytes(b"test model file")
+def test_own_generate_uses_default_context_and_at_least_one_thread(
+    monkeypatch,
+    tmp_path,
+):
+    model_path = tmp_path / "model.gguf"
+    model_path.write_bytes(b"model")
     monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
-    monkeypatch.setattr(own_llm, "_MODEL", None)
     captured = {}
+    _fake_model_import(monkeypatch, captured, cores=None)
 
-    class FakeLlama:
+    own_llm.own_generate("Question", 12)
+
+    assert captured["instances"][0]["n_ctx"] == 4096
+    assert captured["instances"][0]["n_threads"] == 1
+    assert captured["instances"][0]["n_threads_batch"] == 1
+
+
+def test_own_generate_keeps_json_response_mode_for_existing_route(
+    monkeypatch,
+    tmp_path,
+):
+    model_path = tmp_path / "model.gguf"
+    model_path.write_bytes(b"model")
+    monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
+    captured = {}
+    _fake_model_import(monkeypatch, captured)
+
+    own_llm.own_generate("Question", 20, json_mode=True)
+
+    assert captured["models"][0].calls[0]["response_format"] == {
+        "type": "json_object"
+    }
+
+
+def test_own_generate_rejects_prompt_that_exceeds_context(
+    monkeypatch,
+    tmp_path,
+):
+    model_path = tmp_path / "model.gguf"
+    model_path.write_bytes(b"model")
+    monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
+    captured = {}
+    _fake_model_import(monkeypatch, captured, cores=1)
+    fake_model = _FakeLlama(n_ctx=30, prompt_tokens=20)
+
+    class FixedLlama:
         def __init__(self, **_kwargs):
-            pass
+            captured["instances"] = captured.get("instances", 0) + 1
 
-        def create_chat_completion(self, **kwargs):
-            captured.update(kwargs)
-            return {"choices": [{"message": {"content": '{"valid": true}'}}]}
+        def __getattr__(self, name):
+            return getattr(fake_model, name)
 
-    monkeypatch.setitem(
-        sys.modules,
-        "llama_cpp",
-        types.SimpleNamespace(Llama=FakeLlama),
-    )
-    monkeypatch.setitem(
-        sys.modules,
-        "psutil",
-        types.SimpleNamespace(cpu_count=lambda logical: 8 if not logical else 16),
-    )
-
-    assert own_llm.own_generate("Question", 1500, json_mode=True) == (
-        '{"valid": true}'
-    )
-    assert captured["response_format"] == {"type": "json_object"}
-
-
-def test_own_generate_requires_a_model_configuration(monkeypatch):
-    monkeypatch.setenv("OWN_MODEL_PATH", "")
-    monkeypatch.setenv("OWN_LLM_URL", "")
+    _fake_model_import(monkeypatch, captured, llama_cls=FixedLlama)
 
     with pytest.raises(
         RuntimeError,
-        match="Own model is not configured \\(set OWN_MODEL_PATH or OWN_LLM_URL\\)",
+        match=r"Prompt too long for the own model \(40 > 30 tokens\)",
     ):
-        own_llm.own_generate("Question", 500)
+        own_llm.own_generate("Question", 20)
+    assert fake_model.calls == []
 
 
-def test_own_generate_reports_http_connection_failure(monkeypatch):
+def test_own_generate_requires_model_path(monkeypatch):
     monkeypatch.setenv("OWN_MODEL_PATH", "")
-    monkeypatch.setenv("OWN_LLM_URL", "http://localhost:8081/v1/chat/completions")
-    monkeypatch.setattr(
-        own_llm,
-        "urlopen",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(URLError("refused")),
-    )
 
-    with pytest.raises(RuntimeError, match="Own model generation failed: refused"):
-        own_llm.own_generate("Question", 500)
+    with pytest.raises(
+        RuntimeError,
+        match=r"Own model is not configured\. Set OWN_MODEL_PATH in \.env\.",
+    ):
+        own_llm.own_generate("Question", 10)
+
+
+def test_own_generate_reports_missing_model_file(monkeypatch, tmp_path):
+    missing_path = tmp_path / "missing.gguf"
+    monkeypatch.setenv("OWN_MODEL_PATH", str(missing_path))
+
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            f"Own model file not found at {missing_path}. "
+            "Check OWN_MODEL_PATH in .env."
+        ),
+    ):
+        own_llm.own_generate("Question", 10)
+
+
+def test_own_generate_reports_missing_llama_cpp(monkeypatch, tmp_path):
+    model_path = tmp_path / "model.gguf"
+    model_path.write_bytes(b"model")
+    monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
+    monkeypatch.setitem(sys.modules, "llama_cpp", None)
+
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "llama-cpp-python is not installed. "
+            "Run: python -m pip install llama-cpp-python"
+        ),
+    ):
+        own_llm.own_generate("Question", 10)
+
+
+def test_own_generate_rejects_invalid_context_size(monkeypatch, tmp_path):
+    model_path = tmp_path / "model.gguf"
+    model_path.write_bytes(b"model")
+    monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
+    monkeypatch.setenv("OWN_N_CTX", "not-a-number")
+    captured = {}
+    _fake_model_import(monkeypatch, captured)
+
+    with pytest.raises(RuntimeError, match="OWN_N_CTX must be a positive integer"):
+        own_llm.own_generate("Question", 10)
+
+
+def test_own_generate_wraps_generation_failures(monkeypatch, tmp_path):
+    model_path = tmp_path / "model.gguf"
+    model_path.write_bytes(b"model")
+    monkeypatch.setenv("OWN_MODEL_PATH", str(model_path))
+    captured = {}
+    _fake_model_import(monkeypatch, captured)
+    own_llm._load_model()
+    fake_model = captured["models"][0]
+
+    def fail_generation(**_kwargs):
+        raise ValueError("backend failure")
+
+    fake_model.create_chat_completion = fail_generation
+
+    with pytest.raises(RuntimeError, match="Own model generation failed: backend failure"):
+        own_llm.own_generate("Question", 10)

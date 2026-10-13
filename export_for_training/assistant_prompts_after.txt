@@ -1,0 +1,328 @@
+===== PROMPT 1 =====
+SYSTEM MESSAGE:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient D, use ONLY the Patient D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a doctor. Be concise.
+
+USER MESSAGE:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+## Assistant context
+The Assistant retrieves project information from the Markdown and text files in `project_kb/`. When a question names a Patient D, it retrieves that signed-in user's current reports and scan summaries from the database. Those records are not copied into this shared knowledge base.
+---
+# Project notes
+select two or more papers; the AI compares methodology, dataset, model, results, limitations and future work.
+- AI Assistant: answers questions about the project and about a named Patient D's reports and scan results. It does not diagnose.
+- Patient D records are private to the signed-in user.
+- Medical image model outputs are experimental and are not confirmed diagnoses.
+- Own model: a small Qwen2.5-1.5B model fine-tuned by the team on synthetic data and run locally. The Gemini option sends text to Google; the own model does not.
+---
+# How to use the application
+The default database is `instance/medical_ai.db`; uploaded documents and scans
+are stored under `instance/uploads/`. Back up the whole `instance/` folder.
+Set `DATABASE_URL` only when intentionally selecting another persistent
+database. If a legacy relative `medical_ai.db` or `app.db` does not exist but
+`instance/medical_ai.db` does, the app uses the existing database rather than
+silently creating a new empty database next to the project.
+
+Patient D DATA:
+(none)
+
+QUESTION: What does this project do?
+
+ANSWER: (not run)
+
+===== PROMPT 2 =====
+SYSTEM MESSAGE:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient D, use ONLY the Patient D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a doctor. Be concise.
+
+USER MESSAGE:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+# Application features
+The signed-in workspace is divided into these frontend sections:
+---
+# Data model
+Database models are defined in `backend/models/`. These records are persisted by SQLAlchemy; Patient D information is scoped through the Patient D owner.
+---
+# How to use the application
+4. Copy the example environment file and fill in your local settings:
+
+```powershell
+```
+
+5. Start the backend:
+
+```powershell
+$env:SKIP_MODEL_WARMUP="1"
+```
+
+from the same origin; no second frontend port or hardcoded API host is needed.
+
+Patient D DATA:
+Patient J, latest report (2026-09-29):
+Hemoglobin: 17.8 g/dl (high)
+RBC: 4.33 10^6/uL (low)
+WBC: 5,831 10^3/uL (high)
+Platelets: 1.68 10^3/uL (low)
+Hematocrit: 49.0 % (normal)
+Total cholesterol: 182 mg/dl (normal)
+LDL cholesterol: 76 mg/dL (normal)
+HDL cholesterol: 57 mg/dl (normal)
+Triglycerides: 144 mg/dl (normal)
+ALT/SGPT: 15 U/L (normal)
+AST/SGOT: 34 U/L (normal)
+Creatinine: 1.47 mg/dl (high)
+Urea: 40 mg/dl (normal)
+Vitamin D: 25 ng/mL (low)
+Scan (2025-10-01): X_RAY Bone/joint, analysis_complete; predicted label: Fractured; confidence score: 91.51671528816223
+
+QUESTION: What is Patient J's latest HbA1c?
+
+ANSWER: (not run)
+
+===== PROMPT 3 =====
+SYSTEM MESSAGE:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient D, use ONLY the Patient D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a doctor. Be concise.
+
+USER MESSAGE:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+## Patients
+- `GET /api/patients` — `list_patients`
+- `GET /api/patients/<int:patient_id>` — `get_patient`
+- `POST /api/patients` — `create_patient`
+- `PUT /api/patients/<int:patient_id>` — `update_patient`
+---
+## Patient D
+Database table: `patients`.
+
+Stored fields: `id` (db.Integer), `first_name` (db.String(80)), `last_name` (db.String(80)), `date_of_birth` (db.Date), `created_by_id` (db.Integer), `created_at` (db.DateTime(timezone=True)), `updated_at` (db.DateTime(timezone=True)).
+---
+# Application features
+rowse and download uploaded imaging →** (`scans`)
+- **Open Patient D workspace →** (`patients`)
+- **Review medical reports →** (`reports`)
+- **Review medical scans →** (`scans`)
+
+Patient D DATA:
+Patient L: HbA1c 6.7 % (high)
+Patient M: HbA1c 6.5 % (high)
+Patient N: HbA1c 8.1 % (high)
+Patient O: HbA1c 8.0 % (high)
+
+QUESTION: Which patients have high HbA1c?
+
+ANSWER: (not run)
+
+===== PROMPT 4 =====
+SYSTEM MESSAGE:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient D, use ONLY the Patient D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a doctor. Be concise.
+
+USER MESSAGE:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+# Application features
+- **⌂ Dashboard** (`dashboard`)
+- **♙ Patients** (`patients`)
+- **▤ Medical Reports** (`reports`)
+- **▧ Medical Scans** (`scans`)
+- **⇄ Report Comparison** (`report-comparison`)
+- **◷ Health Timeline** (`timeline`)
+- **✳ AI Assistant** (`assistant`)
+- **▧ Research Papers** (`research-papers`)
+- **⌕ Research RAG** (`research-rag`)
+- **⇆ Research Comparison** (`research-comparison`)
+- **◎ Profile** (`profile`)
+- **⚙ Settings** (`settings`)
+- **☷ Activity** (`activity`)
+- **Medical reports Available Browse and download uploaded documents →** (`reports`)
+- **Medical scans Available Browse and download uploaded imaging →** (`scans`)
+- **Open Patient D workspace →**
+---
+## SRS functional requirements
+| FR-01 | User Registration |
+| FR-02 | Authentication and Authorization |
+| FR-03 | Patient D Management |
+| FR-04 | Medical Document Upload |
+| FR-05 | OCR and Text Extraction |
+| FR-06 | Medical Information Extraction |
+| FR-07 | AI Report Summary |
+| FR-08 | Medical Image Analysis |
+| FR-09 | Multimodal Fusion |
+| FR-10 | Report Comparison |
+| FR-11 | Health Timeline |
+| FR-12 | Research Paper Upload |
+| FR-13 | Research RAG |
+| FR-14 | Research Comparison |
+| FR-15 | AI Query Interface |
+| FR-16 | Audit Logging |
+
+Medical image-model outputs are experimental and must not be presented as confirmed diagnoses.
+---
+# Project notes
+select two or more papers; the AI compares methodology, dataset, model, results, limitations and future work.
+- AI Assistant: answers questions about the project and about a named Patient D's reports and scan results. It does not diagnose.
+- Patient D records are private to the signed-in user.
+- Medical image model outputs are experimental and are not confirmed diagnoses.
+- Own model: a small Qwen2.5-1.5B model fine-tuned by the team on synthetic data and run locally. The Gemini option sends text to Google; the own model does not.
+
+Patient D DATA:
+(none)
+
+QUESTION: How does report comparison work?
+
+ANSWER: (not run)
+
+===== PROMPT 5 =====
+SYSTEM MESSAGE:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient D, use ONLY the Patient D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a doctor. Be concise.
+
+USER MESSAGE:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+## Reports
+- `DELETE /api/reports/<int:report_id>` — `delete_report`
+- `GET /api/reports` — `list_reports`
+- `GET /api/reports/<int:report_id>/original` — `get_original_report`
+- `POST /api/reports/<int:report_id>/extract-text` — `extract_report_text`
+- `POST /api/reports/<int:report_id>/summary` — `summarize_report`
+- `POST /api/reports/compare` — `compare_reports`
+- `POST /api/reports/compare-local` — `compare_reports_local`
+- `POST /api/reports/upload` — `upload_report`
+---
+## Own Model
+- `POST /api/reports/compare-own` — `compare_reports_own`
+- `POST /api/research/ask-own` — `ask_research_question_own`
+- `POST /api/research/compare-own` — `compare_research_papers_own`
+---
+# Project notes
+- Report Comparison: pick a Patient D, choose two of their reports, click Extract text, then compare. The app orders the reports by date and itself computes each parameter's old value, new value, change and normal/high/low status; the AI only writes the short summary. Answers can come from Gemini, a local model, or our own model.
+- Research Papers: upload PDF or DOCX papers; they are private to the signed-in account.
+- Research RAG: ask a question about uploaded papers; the app retrieves the most relevant passages and the AI answers only from them, citing sources like [S1].
+- Research Comparison: select two or more papers; the AI compares methodology, dataset, model, results,
+
+Patient D DATA:
+Patient J, latest report (2026-09-29):
+Hemoglobin: 17.8 g/dl (high)
+RBC: 4.33 10^6/uL (low)
+WBC: 5,831 10^3/uL (high)
+Platelets: 1.68 10^3/uL (low)
+Hematocrit: 49.0 % (normal)
+Total cholesterol: 182 mg/dl (normal)
+LDL cholesterol: 76 mg/dL (normal)
+HDL cholesterol: 57 mg/dl (normal)
+Triglycerides: 144 mg/dl (normal)
+ALT/SGPT: 15 U/L (normal)
+AST/SGOT: 34 U/L (normal)
+Creatinine: 1.47 mg/dl (high)
+Urea: 40 mg/dl (normal)
+Vitamin D: 25 ng/mL (low)
+Scan (2025-10-01): X_RAY Bone/joint, analysis_complete; predicted label: Fractured; confidence score: 91.51671528816223
+
+QUESTION: Compare Patient J's two latest reports.
+
+ANSWER: (not run)

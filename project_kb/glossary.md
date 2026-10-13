@@ -1,0 +1,47 @@
+# General lab-term glossary
+
+Requires human review before demo. These plain-language descriptions are general information, not personal interpretation or medical advice.
+
+- HbA1c: HbA1c is a blood test that reflects average blood glucose over roughly the previous few months.
+- Hemoglobin: Hemoglobin is the red-blood-cell protein that carries oxygen through the body.
+- Haemoglobin: Haemoglobin is another spelling of hemoglobin, the oxygen-carrying protein in red blood cells.
+- RBC: RBC is a count of red blood cells in a blood sample.
+- Red blood cell: A red blood cell carries oxygen using hemoglobin.
+- WBC: WBC is a count of white blood cells, which are part of the immune system.
+- White blood cell: A white blood cell is an immune-system cell measured in some blood tests.
+- Platelets: Platelets are blood components involved in clot formation.
+- Hematocrit: Hematocrit is the proportion of blood volume made up of red blood cells.
+- PCV: PCV, or packed cell volume, is another name for hematocrit.
+- Fasting glucose: Fasting glucose measures blood glucose after a period without food.
+- Fasting blood sugar: Fasting blood sugar is a common name for a fasting glucose measurement.
+- Post-prandial glucose: Post-prandial glucose is measured after a meal.
+- Blood glucose: Blood glucose is the amount of glucose measured in a blood sample.
+- Cholesterol: Cholesterol is a lipid carried in the blood and measured in lipid tests.
+- Total cholesterol: Total cholesterol is a measure of cholesterol carried across several blood lipoproteins.
+- LDL: LDL is a lipoprotein that carries cholesterol in the blood.
+- HDL: HDL is a lipoprotein that carries cholesterol in the blood.
+- Triglycerides: Triglycerides are a type of fat measured in blood lipid testing.
+- ALT: ALT is an enzyme measured in blood tests that can provide information about the liver.
+- SGPT: SGPT is another name used for the ALT enzyme.
+- AST: AST is an enzyme measured in blood tests and is present in several body tissues.
+- SGOT: SGOT is another name used for the AST enzyme.
+- Creatinine: Creatinine is a waste product measured in blood or urine and commonly considered in kidney assessment.
+- Urea: Urea is a waste product formed when the body processes protein and can be measured in blood.
+- BUN: BUN is a blood measurement of nitrogen that comes from urea.
+- Vitamin D: Vitamin D is a nutrient involved in bone health and other body functions.
+- 25-hydroxy vitamin D: 25-hydroxy vitamin D is a blood measurement commonly used to assess vitamin D status.
+- TSH: TSH is a pituitary hormone that helps regulate thyroid hormone production.
+- Thyroid-stimulating hormone: Thyroid-stimulating hormone is another name for TSH.
+- Sodium: Sodium is an electrolyte that contributes to fluid balance and nerve and muscle function.
+- Potassium: Potassium is an electrolyte involved in nerve signaling and muscle function.
+- MCV: MCV is the average size of red blood cells.
+- MCH: MCH is the average amount of hemoglobin in an individual red blood cell.
+- MCHC: MCHC is the average concentration of hemoglobin in red blood cells.
+- Uric acid: Uric acid is a waste product formed during the breakdown of purines.
+- Calcium: Calcium is a mineral involved in bone structure, muscle contraction, and nerve signaling.
+- Albumin: Albumin is a protein made mainly by the liver and measured in blood tests.
+- Bilirubin: Bilirubin is a yellow pigment formed during the normal breakdown of red blood cells.
+- Alkaline phosphatase: Alkaline phosphatase is an enzyme found in several tissues, including the liver and bones.
+- C-reactive protein: C-reactive protein is a protein that can rise in response to inflammation.
+- ESR: ESR is a blood test that measures how quickly red blood cells settle in a tube.
+- eGFR: eGFR is an estimate of kidney filtering function calculated from blood test information.

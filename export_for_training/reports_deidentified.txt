@@ -1,0 +1,197 @@
+===== REPORT 1 =====
+Patient E D B Backend Developer Pune, India — +91-7020062288 — [REDACTED EMAIL]
+
+===== REPORT 2 =====
+Medical Reports of Patients
+Patient E D Information:
+Name: Emily Johnson
+[REDACTED DOB]
+Patient E D [REDACTED ID]
+Date of Report: 03/11/2026
+[REDACTED PROVIDER]
+Specialty: Cardiology
+Contact Information: [[REDACTED PROVIDER]
+Introduction:
+This medical report is prepared for Emily Johnson, following her consultation and
+comprehensive evaluation in our cardiology department on: 03/09/2026. The purpose of
+this report is to document Ms. Johnson'Patient F current cardiac health status and outline the
+management plan recommended based on our findings.
+Medical History:
+Ms. Johnson has a history of hypertension, diagnosed three years ago, which she has
+been managing with medication. She has no known drug allergies. Family history
+reveals her father had coronary artery disease. She is a non-smoker and maintains a
+generally active lifestyle.
+Presenting Complaints:
+Ms. Johnson presented with intermittent chest pain, primarily on exertion, and
+occasional episodes of palpitations over the last two months. She also reported
+shortness of breath during her regular jogging sessions. which was previously
+well-tolerated.
+Diagnostic Tests Conducted:
+Copynght @ SampleTemplates.com
+
+===== REPORT 3 =====
+DEMO ONLY - SYNTHETIC TEST REPORT
+Patient E D: Patient E D N
+Record type: synthetic interface test; not a real Patient E D record.
+No Patient E D-specific medical history, test values, or diagnosis is included.
+The attached public sample scan is unrelated to this fictional demo Patient E D.
+Any AI output is experimental and is not a confirmed medical diagnosis.
+Image attribution (image is unmodified):
+Image: 7 Tesla MRI of the ex vivo human brain at 100 micron resolution
+Author(Patient F): Brian L. Edlow, Azma Mareyam, Andreas Horn, Jonathan R. Polimeni,
+Thomas Witzel, M. Dylan Tisdall, Jean C. Augustinack, Jason Patient A. Stockmann, Bram R.
+Diamond, Allison Stevens, Patient C Patient F. Tirrell, Lawrence L. Wald, Bruce Fischl, and
+Andre van der Kouwe
+License: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+Source: https://commons.wikimedia.org/wiki/File:7_Tesla_MRI_of_the_ex_vivo_human_b
+rain_at_100_micron_resolution.png
+
+===== REPORT 4 =====
+MediCare Diagnostics Lab
+Pune, Manarasitra
+Patient E D Name:
+[REDACTED DOB]
+Report Date:
+NABL Accreditea ‘Demo)
+Patient E D O
+[REDACTED [REDACTED DOB]
+05 Oct 2028
++91 29 COOC 9906
+Patient E D [REDACTED ID]
+Age / Sex: 21Y/ Male
+Referred By: Dr. A. Deshmukh
+LABORATORY REPORT
+COMPLETE BLOOD COUNT
+Test Result Unit Reference Range
+Hemoglobin: 16.2 g/dl 13.0-17.0
+RBC Count: 5.24 million/ul 45-55
+WEC Count: 4,203 ful 4000 - 11000
+Platelet Count: 3.95 lakh/uL 15-41
+Hematocrit (PCV): 49.0 % 40-50
+BLOOD GLUCOSE & HbA1c
+Test Result Unit Reference Range
+Fasting Blood Sugar: 130 a mg/dL 70-100
+Post-Prandial Sugar: 95 mg/dl 70-140
+HbAlc: 8.0 a % 40-56
+LIPID PROFILE
+Test Result Unit Reference Range
+Total Cholesterol: 208 ry mg/dl < 200
+LDL Cholesterol: 100 mag/db < 100
+HDL Cholesterol: 59 mg/dl > 40
+Triglycerides: 168 ry mg/dl. < 150
+LIVER & KIDNEY FUNCTION
+Test Result Unit Reference Range
+SGPT (ALT): 42 U/L 7-56
+SGOT (AST): 60 A U/L 10 - 40
+Serum Creatinine: 1.44 ry mg/dl 06-1.3
+Blood Urea: 44 Aa mg/dl 15-40
+Vitamin D (25-OH): 47.7 ng/mL 30 - 100
+Remarks
+Some parameters outside reference range. Clinical correlation and[REDACTED PROVIDER]
+aHigh WLlow (abnormal values shown in red) [REDACTED] F. Kulkarni, MD (Pathology)
+[REDACTED PROVIDER]
+SYNTHETIC DEMO DATA - for academic/testing use only. Not a real medical report.
+Generated for project demonstration | Page 1 of 1
+
+===== REPORT 5 =====
+Patient E D B
+Backend Developer
+
+Pune, India — +91-7020062288 — [REDACTED EMAIL]
+Summary
+Backend-focused developer with: 2 internships and 3 live projects. Comfortable building RESTful APIs and microser-
+vices with Spring Boot, JPA/Hibernate, and Python, working with MySQL, and integrating backend services with
+React.js frontends.
+
+Skills
+Languages: Java (OOP, Data Structures), Python, JavaScript
+Backend: Spring Boot, REST APIs, JPA/Hibernate, Maven, Microservices
+Database: MySQL, MongoDB
+Frontend: React.js
+Tools: Git, Postman
+
+Experience
+Frontend Developer Intern – Dreamcare Developers Pvt. Ltd. Dec 2025 – Feb 2026
+Hinjewadi, Pune
+
+ Built the REST API-backed testimonials module and collaborated closely with the backend team on API contracts
+for a production React.js web app for a US-based law firm (admin dashboard, role-based access control).
+ Resolved 15+ cross-browser compatibility bugs across Chrome, Firefox, and Safari using Chrome DevTools; coor-
+dinated with backend and QA teams over Git, cutting review cycle time by 20%.
+
+Python Backend Developer Intern – Wexdi Software Services Pvt. Ltd. Mar 2025 – May 2025
+Remote (Hyderabad)
+
+ Designed and built 5+ backend modules and CRUD REST APIs (attendance, task tracking) for an employee
+management portal using Python and MySQL, handling schema design and query logic.
+ Wrote Python automation scripts that cut manual operational effort by 30%; debugged and optimized backend
+query performance and secure data handling.
+
+Projects
+Autonomous Ops AI – Live Demo Next.js, React.js, TypeScript, NestJS, MySQL (Prisma)
+
+ Designed and built a NestJS REST API (JWT authentication, OTP-based password reset, MySQL schema via
+Prisma ORM) powering a workflow-automation platform (n8n-style), including a sequential execution engine with
+configurable runtime nodes and execution logging.
+
+AI Resume Analyzer – Live Demo Java, Spring Boot, JPA, React.js, MySQL, Gemini API
+
+ Built the Spring Boot REST API (JPA/Hibernate for MySQL persistence) for an ATS-style resume-analysis
+platform, integrating the Google Gemini API for resume scoring and job-match suggestions; improved job-match
+accuracy by: 35% through keyword-matching logic.
+
+Skin Disease Detection System – Live Demo Python, PyTorch, Java, Spring Boot, JPA, React.js, MySQL
+
+ Developed a Spring Boot backend (JWT auth, JPA, prediction history) as the API gateway in a microservices
+setup connecting a React frontend to a separate Python/PyTorch inference service for skin lesion classification;
+model achieves ˜92% validation accuracy.
+
+Education
+Bachelor of Engineering, Computer Engineering – NMIET, SPPU 2023 – Present
+Higher Secondary Certificate (HSC), Science – Shivbhumi Junior College, Pune 2022 – 2023
+Secondary School Certificate (SSC) – Dnyandeep Vidyalaya, Talawade, Pune 2020 – 2021
+
+Certifications
+ Problem Solving (Intermediate) – HackerRank
+ Responsive Web Design – freeCodeCamp
+
+===== REPORT 6 =====
+MediCare Diagnostics Lab
+Pune, Manarasitra
+NABL Accreditea ‘Demo)
++91 29 COOC 9906
+Patient E D Name: Patient M Reddy Patient E D [REDACTED ID]
+[REDACTED DOB]
+Report Date: 04 Oct 2028 Referred By: [REDACTED] F. Kulkarni
+LABORATORY REPORT
+COMPLETE BLOOD COUNT
+Test Result Unit Reference Range
+Hemoglobin: 14.0 g/dl 13.0-17.0
+RBC Count: 5.12 million/ul 45-55
+WEC Count: 3,772 v ful 4000 - 11000
+Platelet Count: 4.34 a lakh/uL 15-41
+Hematocrit (PCV): 42.5 % 40-50
+BLOOD GLUCOSE & HbA1c
+Test Result Unit Reference Range
+Fasting Blood Sugar: 156 a mg/dL 70-100
+Post-Prandial Sugar: 123 mg/dl 70-140
+HbAlc: 6.5 a % 40-56
+LIPID PROFILE
+Test Result Unit Reference Range
+Total Cholesterol: 162 mg/dl < 200
+LDL Cholesterol: 75 mag/db < 100
+HDL Cholesterol: 34 Vv mg/dl > 40
+Triglycerides: 209 ry mg/dl. < 150
+LIVER & KIDNEY FUNCTION
+Test Result Unit Reference Range
+SGPT (ALT): 40 U/L 7-56
+SGOT (AST): 19 U/L 10 - 40
+Serum Creatinine: 0.91 mg/dl 06-1.3
+Blood Urea: 39 mg/dl 15 - 40
+Vitamin D (25-OH): 32.4 ng/mL 30 - 100
+Remarks
+Some parameters outside reference range. Clinical correlation and[REDACTED PROVIDER]
+aHigh WLlow (abnormal values shown in red) Dr. A. Deshmukh, MD (Medicine)
+[REDACTED PROVIDER]
+SYNTHETIC DEMO DATA - for academic/testing use only. Not a real medical report.
+Generated for project demonstration | Page 1 of 1

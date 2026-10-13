@@ -3052,14 +3052,14 @@
                   </div>
                   <button id="clearLocalAssistantConversation" class="secondary-button" type="button">Clear saved chat</button>
                 </div>
-                <p class="workspace-notice">Project knowledge and the latest report for any patient named in your question are sent to the configured own model. Saved chat history is scoped to your signed-in account and is not sent as conversation context. Do not treat responses as medical advice or a diagnosis.</p>
+                <p class="workspace-notice">Project knowledge and the report or timeline selected above are sent to the configured own model. The selected patient context is used even if you do not name the patient in your question. Saved chat history is scoped to your signed-in account and is not sent as conversation context. Do not treat responses as medical advice or a diagnosis.</p>
                 <p class="workspace-notice">Web search uses SerpApi when enabled. Your question is sent to that external service, so do not include patient names or private medical details in a web-search question.</p>
                 <div class="field-group">
                   <label for="localAssistantContextType">Use context from</label>
                   <select id="localAssistantContextType" required>
                     <option value="research">Project knowledge</option>
-                    <option value="report">A report (name the patient in your question)</option>
-                    <option value="patient_timeline">A patient's timeline (name them in your question)</option>
+                    <option value="report">A selected patient report</option>
+                    <option value="patient_timeline">A selected patient's timeline</option>
                   </select>
                 </div>
                 <div id="localAssistantPatientGroup" class="field-group" hidden>
@@ -3084,7 +3084,7 @@
                   </label>
                   <div class="field-group">
                     <label for="localAssistantQuestion">Your message</label>
-                    <textarea id="localAssistantQuestion" maxlength="2000" rows="3" required placeholder="Ask about the project, or name a patient for report context"></textarea>
+                    <textarea id="localAssistantQuestion" maxlength="2000" rows="3" required placeholder="Ask about the project, selected report, or patient timeline"></textarea>
                   </div>
                   <button id="localAssistantSubmitButton" class="primary-button" type="submit">Send to own model</button>
                 </form>
@@ -7252,11 +7252,13 @@
           web_search: document.getElementById("localAssistantWebSearch").checked,
         };
         if (contextType === "report") {
+          const patientId = document.getElementById("localAssistantPatientSelect").value;
           const reportId = document.getElementById("localAssistantReportSelect").value;
-          if (!reportId) {
-            showWorkspaceMessage("localAssistantMessage", "Select a report to use as context.", "error");
+          if (!patientId || !reportId) {
+            showWorkspaceMessage("localAssistantMessage", "Select a patient and report to use as context.", "error");
             return;
           }
+          payload.patient_id = Number(patientId);
           payload.report_id = Number(reportId);
         } else if (contextType === "patient_timeline") {
           const patientId = document.getElementById("localAssistantPatientSelect").value;

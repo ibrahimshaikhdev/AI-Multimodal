@@ -20,6 +20,7 @@ skp @ git+https://github.com/i-pan/ct-head-hemorrhage-detection.git@914c57d
 huggingface-hub>=1.23.0
 transformers==5.0.0
 sentence-transformers>=5.0,<6
+scikit-learn>=1.6,<2
 faiss-cpu>=1.12,<2
 ultralytics==8.4.173
 psycopg[binary]==3.3.6

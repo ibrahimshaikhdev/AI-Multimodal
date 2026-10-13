@@ -7,9 +7,10 @@ from werkzeug.exceptions import BadRequest
 
 from backend.auth import require_auth
 from backend.extensions import db
-from backend.models import MedicalReport, Patient, ResearchPaper
+from backend.models import ResearchPaper
 from backend.services.document_comparison import compare_report_texts
 from backend.services.own_llm import own_generate
+from backend.services.patient_context import get_owned_reports
 from backend.services.report_metadata import extract_report_metadata
 from backend.services.research_rag_service import ResearchIndexError
 from .reports import COMPARISON_DISCLAIMER
@@ -56,20 +57,11 @@ def compare_reports_own():
             {"success": False, "error": "Select two different reports to compare."}
         ), 400
 
-    reports = (
-        db.session.query(MedicalReport)
-        .join(Patient)
-        .filter(
-            MedicalReport.id.in_(report_ids),
-            Patient.created_by_id == g.current_user.id,
-        )
-        .all()
-    )
-    if len(reports) != 2:
+    reports = get_owned_reports(g.current_user.id, report_ids)
+    if reports is None:
         return jsonify({"success": False, "error": "One or both reports were not found."}), 404
 
-    reports_by_id = {report.id: report for report in reports}
-    report_1, report_2 = (reports_by_id[report_id] for report_id in report_ids)
+    report_1, report_2 = reports
     report_texts = (report_1.extracted_text, report_2.extracted_text)
     if any(not isinstance(text, str) or not text.strip() for text in report_texts):
         return jsonify(
@@ -222,41 +214,44 @@ def compare_research_papers_own():
         "future_work": "future work further research next steps",
     }
     try:
-        for paper in ordered_papers:
-            rag_service.paper_text(g.current_user.id, papers, paper.id)
-            paper_evidence = {}
-            for field, query in field_queries.items():
-                passages = rag_service.search(
-                    g.current_user.id,
-                    papers,
-                    query,
-                    top_k=1,
-                    paper_ids={paper.id},
-                )
-                paper_evidence[field] = [
-                    {
-                        "citation": passage["citation"],
-                        "excerpt": passage["text"],
-                    }
-                    for passage in passages
-                ]
-                citations.extend(
-                    {
-                        "citation": passage["citation"],
-                        "paper_id": passage["paper_id"],
-                        "paper_title": passage["paper_title"],
-                        "field": field,
-                        "excerpt": passage["text"],
-                    }
-                    for passage in passages
-                )
-            evidence_by_paper.append(
+        query_specs = [
+            (paper, field, query)
+            for paper in ordered_papers
+            for field, query in field_queries.items()
+        ]
+        retrieved_passages = rag_service.search_many(
+            g.current_user.id,
+            papers,
+            [(query, {paper.id}) for paper, _, query in query_specs],
+            top_k=1,
+        )
+        evidence_by_id = {
+            paper.id: {
+                "id": paper.id,
+                "title": paper.title,
+                "evidence": {},
+            }
+            for paper in ordered_papers
+        }
+        for (paper, field, _), passages in zip(query_specs, retrieved_passages):
+            evidence_by_id[paper.id]["evidence"][field] = [
                 {
-                    "id": paper.id,
-                    "title": paper.title,
-                    "evidence": paper_evidence,
+                    "citation": passage["citation"],
+                    "excerpt": passage["text"],
                 }
+                for passage in passages
+            ]
+            citations.extend(
+                {
+                    "citation": passage["citation"],
+                    "paper_id": passage["paper_id"],
+                    "paper_title": passage["paper_title"],
+                    "field": field,
+                    "excerpt": passage["text"],
+                }
+                for passage in passages
             )
+        evidence_by_paper = list(evidence_by_id.values())
     except ResearchIndexError as exc:
         return jsonify({"success": False, "error": str(exc)}), 422
     except Exception:

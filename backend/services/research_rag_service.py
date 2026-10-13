@@ -50,33 +50,62 @@ class ResearchRAGService:
         top_k: int = 5,
         paper_ids: set[int] | None = None,
     ) -> list[dict[str, Any]]:
-        if not isinstance(query, str) or not query.strip():
-            raise ValueError("query must be a non-empty string")
+        return self.search_many(
+            user_id,
+            papers,
+            [(query, paper_ids)],
+            top_k=top_k,
+        )[0]
+
+    def search_many(
+        self,
+        user_id: int,
+        papers: list[Any],
+        queries: list[tuple[str, set[int] | None]],
+        *,
+        top_k: int = 5,
+    ) -> list[list[dict[str, Any]]]:
         if isinstance(top_k, bool) or not isinstance(top_k, int) or not 1 <= top_k <= self.MAX_TOP_K:
             raise ValueError(f"top_k must be between 1 and {self.MAX_TOP_K}")
+        if not isinstance(queries, list):
+            raise ValueError("queries must be a list")
+        if not queries:
+            return []
+        for query, paper_ids in queries:
+            if not isinstance(query, str) or not query.strip():
+                raise ValueError("query must be a non-empty string")
+            if paper_ids is not None and not isinstance(paper_ids, set):
+                raise ValueError("paper_ids must be a set or None")
 
         index, chunks, _ = self._load_or_build(user_id, papers)
         if index.ntotal == 0:
-            return []
+            return [[] for _ in queries]
 
-        query_vector = self._encode([query.strip()])
+        query_vectors = self._encode([query.strip() for query, _ in queries])
         candidate_count = (
             index.ntotal
-            if paper_ids is not None
+            if any(paper_ids is not None for _, paper_ids in queries)
             else min(index.ntotal, top_k * 4)
         )
-        scores, indexes = index.search(query_vector, candidate_count)
-        matches = []
-        for score, chunk_index in zip(scores[0], indexes[0]):
-            if chunk_index < 0:
-                continue
-            chunk = chunks[int(chunk_index)]
-            if paper_ids is not None and chunk["paper_id"] not in paper_ids:
-                continue
-            matches.append({**chunk, "score": float(score)})
-            if len(matches) == top_k:
-                break
-        return matches
+        scores, indexes = index.search(query_vectors, candidate_count)
+        results = []
+        for (query, paper_ids), query_scores, query_indexes in zip(
+            queries,
+            scores,
+            indexes,
+        ):
+            matches = []
+            for score, chunk_index in zip(query_scores, query_indexes):
+                if chunk_index < 0:
+                    continue
+                chunk = chunks[int(chunk_index)]
+                if paper_ids is not None and chunk["paper_id"] not in paper_ids:
+                    continue
+                matches.append({**chunk, "score": float(score)})
+                if len(matches) == top_k:
+                    break
+            results.append(matches)
+        return results
 
     def paper_text(self, user_id: int, papers: list[Any], paper_id: int) -> str:
         _, _, texts = self._load_or_build(user_id, papers)

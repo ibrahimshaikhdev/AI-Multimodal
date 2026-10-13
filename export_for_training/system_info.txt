@@ -1,0 +1,6 @@
+RAM: 7.80 GB
+CPU model: Intel64 Family 6 Model 140 Stepping 1, GenuineIntel
+CPU cores: 2 physical, 4 logical
+GPU: None detected
+Python: 3.13.3
+OS: Windows-11-10.0.26200-SP0

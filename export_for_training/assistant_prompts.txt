@@ -1,0 +1,141 @@
+===== QUESTION 1 =====
+SYSTEM:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient E D, use ONLY the Patient E D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a[REDACTED PROVIDER]
+
+USER:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient E D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+# Hand-edited project knowledge
+Add stable project facts here that are not yet represented in the source documentation.
+This file is intentionally not generated or overwritten by `scripts/build_kb.py`.
+---
+# How to use the application
+The default database is `instance/medical_ai.db`; uploaded documents and scans
+are stored under `instance/uploads/`. Back up the whole `instance/` folder.
+Set `DATABASE_URL` only when intentionally selecting another persistent
+database. If a legacy relative `medical_ai.db` or `app.db` does not exist but
+`instance/medical_ai.db` does, the app uses the existing database rather than
+silently creating a new empty database next to the project.
+---
+## Assistant context
+The Assistant retrieves project information from the Markdown and text files in `project_kb/`. When a question names a Patient E D, it retrieves that signed-in user'Patient F current reports and scan summaries from the database. Those records are not copied into this shared knowledge base.
+
+Patient E D DATA:
+(none)
+
+QUESTION: What does this project do?
+
+===== QUESTION 2 =====
+SYSTEM:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient E D, use ONLY the Patient E D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a[REDACTED PROVIDER]
+
+USER:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient E D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+# Application features
+The signed-in workspace is divided into these frontend sections:
+---
+# Data model
+Database models are defined in `backend/models/`. These records are persisted by SQLAlchemy; Patient E D information is scoped through the Patient E D owner.
+---
+# Hand-edited project knowledge
+Add stable project facts here that are not yet represented in the source documentation.
+This file is intentionally not generated or overwritten by `scripts/build_kb.py`.
+
+Patient E D DATA:
+Patient E D A, latest report (date unavailable):
+Patient E D B Backend Developer Pune, India — +91-7020062288 — [REDACTED EMAIL]
+
+QUESTION: What is Patient E D A'Patient F latest HbA1c?
+
+===== QUESTION 3 =====
+SYSTEM:
+You are the built-in assistant of the project 'Multimodal AI Research & Medical Report Intelligence'. Answer questions about the project using ONLY the PROJECT KNOWLEDGE provided. For questions about a Patient E D, use ONLY the Patient E D DATA provided. If the answer is not in the provided context, say you don't have that information. Never diagnose or prescribe; for personal medical decisions tell the user to consult a[REDACTED PROVIDER]
+
+USER:
+PROJECT KNOWLEDGE:
+# Project overview
+This is the Multimodal AI Research & Medical Report Intelligence platform, a Flask web application with a browser-based HTML and JavaScript interface.
+
+We are building an AI-powered platform that processes and organizes medical and research information.
+
+The system combines:
+
+- Document intelligence
+- OCR
+- NLP / Medical NLP
+- Medical image analysis
+- Multimodal fusion
+- RAG
+- LLMs
+- Structured database storage
+- Report comparison
+- Patient E D health timeline
+- Research-paper search and Q&A
+- Audit logging
+
+The system is intended to support information retrieval, document understanding, longitudinal record organization and research analysis.
+---
+## Patients
+- `GET /api/patients` — `list_patients`
+- `GET /api/patients/<int:patient_id>` — `get_patient`
+- `POST /api/patients` — `create_patient`
+- `PUT /api/patients/<int:patient_id>` — `update_patient`
+---
+## Patient E D
+Database table: `patients`.
+
+Stored fields: `id` (db.Integer), `first_name` (db.String(80)), `last_name` (db.String(80)), `date_of_birth` (db.Date), `created_by_id` (db.Integer), `created_at` (db.DateTime(timezone=True)), `updated_at` (db.DateTime(timezone=True)).
+---
+# Application features
+rowse and download uploaded imaging →** (`scans`)
+- **Open Patient E D workspace →** (`patients`)
+- **Review medical reports →** (`reports`)
+- **Review medical scans →** (`scans`)
+
+Patient E D DATA:
+No explicitly flagged hba1c results were found.
+
+QUESTION: Which patients have high HbA1c?

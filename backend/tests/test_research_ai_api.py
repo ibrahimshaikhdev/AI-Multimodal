@@ -135,6 +135,54 @@ def test_research_search_extracts_real_local_text_and_is_account_scoped(ai_works
     assert other_id != owner_id
 
 
+def test_research_search_many_loads_index_once_and_filters_each_query(ai_workspace):
+    _, app, owner_id, _, uploads = ai_workspace
+    with app.app_context():
+        first_id = _add_paper(
+            owner_id,
+            uploads,
+            "First methods",
+            "The first study used a cohort of 42 participants.",
+        )
+        second_id = _add_paper(
+            owner_id,
+            uploads,
+            "Second results",
+            "The second study reported improved outcomes.",
+        )
+        papers = (
+            db.session.query(ResearchPaper)
+            .filter(ResearchPaper.id.in_([first_id, second_id]))
+            .all()
+        )
+        rag_service = app.extensions["research_rag_service"]
+        original_load_or_build = rag_service._load_or_build
+        load_count = 0
+
+        def count_loads(*args, **kwargs):
+            nonlocal load_count
+            load_count += 1
+            return original_load_or_build(*args, **kwargs)
+
+        rag_service._load_or_build = count_loads
+        results = rag_service.search_many(
+            owner_id,
+            papers,
+            [
+                ("methodology", {first_id}),
+                ("results", {second_id}),
+            ],
+            top_k=1,
+        )
+
+    assert load_count == 1
+    assert len(results) == 2
+    assert results[0][0]["paper_id"] == first_id
+    assert results[0][0]["citation"] == f"[P{first_id}-C1]"
+    assert results[1][0]["paper_id"] == second_id
+    assert results[1][0]["citation"] == f"[P{second_id}-C1]"
+
+
 def test_research_ask_uses_retrieved_excerpts_and_returns_citations(ai_workspace):
     client, app, owner_id, _, uploads = ai_workspace
     token = _login(client, "research-ai-owner@example.com")
@@ -522,19 +570,25 @@ def test_own_research_comparison_truncates_evidence_and_parses_fenced_json(
     captured = {}
     fields = ("methodology", "dataset", "model", "results", "limitations", "future_work")
     rag_service = app.extensions["research_rag_service"]
-    monkeypatch.setattr(rag_service, "paper_text", lambda *_args: "Source text")
 
-    def search(user_id, papers, query, top_k, paper_ids=None):
-        paper = next(paper for paper in papers if paper.id in paper_ids)
-        return [
-            {
-                "citation": f"[P{paper.id}-C1]",
-                "paper_id": paper.id,
-                "paper_title": paper.title,
-                "paper_date": "2024-01-01",
-                "text": "E" * 1200,
-            }
-        ]
+    def search_many(user_id, papers, queries, top_k):
+        results = []
+        for _, paper_ids in queries:
+            paper = next(paper for paper in papers if paper.id in paper_ids)
+            results.append(
+                [
+                    {
+                        "citation": f"[P{paper.id}-C1]",
+                        "paper_id": paper.id,
+                        "paper_title": paper.title,
+                        "paper_date": "2024-01-01",
+                        "text": "E" * 1200,
+                    }
+                ]
+            )
+        captured["query_count"] = len(queries)
+        captured["top_k"] = top_k
+        return results
 
     def generate(prompt, max_tokens, system=None, json_mode=False):
         captured["prompt"] = prompt
@@ -556,7 +610,7 @@ def test_own_research_comparison_truncates_evidence_and_parses_fenced_json(
         }
         return f"```json\n{json.dumps(result)}\n```"
 
-    monkeypatch.setattr(rag_service, "search", search)
+    monkeypatch.setattr(rag_service, "search_many", search_many)
     monkeypatch.setattr("backend.routes.own_model.own_generate", generate)
     response = client.post(
         "/api/research/compare-own",
@@ -569,6 +623,8 @@ def test_own_research_comparison_truncates_evidence_and_parses_fenced_json(
         "The evidence supports this comparison."
     )
     assert captured["max_tokens"] == 1500
+    assert captured["query_count"] == 12
+    assert captured["top_k"] == 1
     assert captured["json_mode"] is True
     assert "Compare these papers using ONLY their text." in captured["prompt"]
     assert 'Return ONLY JSON like {"papers":[' in captured["prompt"]
